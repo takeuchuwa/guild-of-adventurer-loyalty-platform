@@ -1,0 +1,18 @@
+{
+  "name": "@loyalty/api",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config wrangler.jsonc",
+    "deploy:staging": "wrangler deploy --env staging --config wrangler.jsonc",
+    "deploy:prod": "wrangler deploy --env production --config wrangler.jsonc",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250913.0",
+    "typescript": "^5.6.0",
+    "wrangler": "^4.36.0"
+  },
+  "dependencies": {
+    "hono": "^4.9.7"
+  }
+}

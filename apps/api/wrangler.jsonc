@@ -1,0 +1,20 @@
+{
+  "name": "loyalty-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-13",
+  "observability": {
+    "enabled": true
+  },
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging"
+      }
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      }
+    }
+  }
+}

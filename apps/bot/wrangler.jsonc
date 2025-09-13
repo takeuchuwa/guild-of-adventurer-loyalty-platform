@@ -1,0 +1,17 @@
+{
+  "name": "loyalty-bot",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-13",
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging"
+      }
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      }
+    }
+  }
+}
