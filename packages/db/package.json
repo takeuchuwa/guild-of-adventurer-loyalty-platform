@@ -1,0 +1,26 @@
+{
+  "name": "@loyalty/db",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/*.js",
+      "types": "./dist/*.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20250913.0",
+    "drizzle-orm": "^0.44.5"
+  }
+}

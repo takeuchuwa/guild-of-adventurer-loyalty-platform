@@ -1,0 +1,1 @@
+ALTER TABLE `points_ledger` ADD `promo_id` text REFERENCES promotions(promo_id);

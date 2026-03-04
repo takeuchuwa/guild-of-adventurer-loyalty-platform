@@ -24,3 +24,13 @@ pnpm-debug.log*
 # misc
 .env
 .env.*
+
+# wrangler and local db state
+.wrangler-shared-state/
+
+# temporary sql outputs
+output.sql
+schema.sql
+
+# typescript cache
+*.tsbuildinfo

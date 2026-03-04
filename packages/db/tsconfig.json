@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "declaration": true,
+    "moduleResolution": "node",
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["client.ts", "schema.ts"],
+  "exclude": ["node_modules", "dist"]
+}

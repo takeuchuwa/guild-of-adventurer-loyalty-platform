@@ -1,7 +1,6 @@
 {
   "name": "loyalty-platform",
   "private": true,
-  "packageManager": "pnpm@10.16.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -10,11 +9,32 @@
     "dev:api": "pnpm --filter @loyalty/api dev",
     "dev:bot": "pnpm --filter @loyalty/bot dev",
     "dev:admin": "pnpm --filter @loyalty/admin dev",
+    "dev:mini-app": "pnpm --filter @loyalty/mini-app dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "setWebhook:dev": "BOT_ENV=dev tsx scripts/setWebhook.ts",
+    "setWebhook:staging": "BOT_ENV=staging tsx scripts/setWebhook.ts",
+    "setWebhook:prod": "BOT_ENV=prod tsx scripts/setWebhook.ts",
+    "db:migrate:generate": "pnpm --filter @loyalty/api db:migrate:gen",
+    "db:migrate:local": "pnpm --filter @loyalty/api db:migrate:local",
+    "db:migrate:staging": "pnpm --filter @loyalty/api db:migrate:staging",
+    "db:migrate:prod": "pnpm --filter @loyalty/api db:migrate:prod",
+    "db:bootstrap:local": "pnpm --filter @loyalty/api db:bootstrap:local",
+    "dev:all": "npx tsx scripts/start-dev.ts",
+    "start-dev": "npx tsx scripts/start-dev.ts"
   },
   "devDependencies": {
-    "typescript": "^5.6.0"
+    "@types/http-proxy": "^1.17.17",
+    "dotenv": "^17.2.2",
+    "drizzle-kit": "^0.31.4",
+    "http-proxy": "^1.18.1",
+    "shadcn": "^3.8.4",
+    "tsx": "^4.20.6",
+    "typescript": "^5.6.0",
+    "wrangler": "^4.36.0"
+  },
+  "dependencies": {
+    "uuid": "^13.0.0"
   }
 }

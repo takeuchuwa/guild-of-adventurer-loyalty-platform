@@ -1,17 +1,45 @@
 {
-  "name": "loyalty-bot",
+  "name": "dnd-studio-bot",
   "main": "src/index.ts",
   "compatibility_date": "2025-09-13",
+  "dev": {
+    "port": 8686
+  },
   "env": {
     "staging": {
+      "workers_dev": true,
       "vars": {
-        "ENVIRONMENT": "staging"
-      }
+        "ENVIRONMENT": "staging",
+        "BOT_INFO": "{\"id\":8322493074,\"is_bot\":true,\"first_name\":\"Loyalty dev test\",\"username\":\"loyalty_Dev_test123_bot\",\"can_join_groups\":true,\"can_read_all_group_messages\":false,\"supports_inline_queries\":false,\"can_connect_to_business\":false,\"has_main_web_app\":false}"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "dnd-studio-db-staging",
+          "database_id": "fd0d4d78-70c7-4031-b287-ad5364367542"
+        }
+      ]
     },
     "production": {
       "vars": {
-        "ENVIRONMENT": "production"
-      }
+        "ENVIRONMENT": "production",
+        "BOT_INFO": "{\"id\":7969873880,\"is_bot\":true,\"first_name\":\"Гільдія Авантюристів\",\"username\":\"dnd_studio_bot\",\"can_join_groups\":true,\"can_read_all_group_messages\":false,\"supports_inline_queries\":false,\"can_connect_to_business\":false,\"has_main_web_app\":false}"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "dnd-studio-db",
+          "database_id": "7a808ae3-6e78-43c5-940d-761eca0b3ccd"
+        }
+      ]
     }
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dnd-studio-db",
+      "database_id": "local",
+      "migrations_dir": "drizzle/migrations"
+    }
+  ]
 }

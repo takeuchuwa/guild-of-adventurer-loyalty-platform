@@ -2,7 +2,8 @@
   "name": "@loyalty/bot",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --config wrangler.jsonc",
+    "predev": "pnpm --filter @loyalty/db build",
+    "dev": "wrangler dev --config wrangler.jsonc --persist-to=../../packages/db/.wrangler-shared-state",
     "deploy:staging": "wrangler deploy --env staging --config wrangler.jsonc",
     "deploy:prod": "wrangler deploy --env production --config wrangler.jsonc",
     "typecheck": "tsc -p tsconfig.json"
@@ -13,6 +14,10 @@
     "wrangler": "^4.36.0"
   },
   "dependencies": {
-    "hono": "^4.9.7"
+    "@loyalty/db": "workspace:*",
+    "drizzle-orm": "^0.44.5",
+    "grammy": "^1.38.2",
+    "hono": "^4.9.7",
+    "workers-og": "^0.0.27"
   }
 }

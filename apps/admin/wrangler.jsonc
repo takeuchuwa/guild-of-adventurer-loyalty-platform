@@ -1,0 +1,24 @@
+{
+  "name": "dnd-studio-admin",
+  "compatibility_date": "2025-10-30",
+  "assets": {
+    "directory": "./dist",              // path to your built Vite static assets
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [                           // optional: custom domain routing
+    // e.g. "example.com/*"
+  ],
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "VITE_BE_HOST": "https://dnd-studio-api-staging.dmytro-horban01.workers.dev"
+      }
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      }
+    }
+  }
+}

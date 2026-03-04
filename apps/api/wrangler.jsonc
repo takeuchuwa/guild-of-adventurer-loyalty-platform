@@ -1,20 +1,84 @@
 {
-  "name": "loyalty-api",
+  "name": "dnd-studio-api",
   "main": "src/index.ts",
   "compatibility_date": "2025-09-13",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "observability": {
     "enabled": true
   },
+  "services": [
+    {
+      "binding": "BOT",
+      "service": "dnd-studio-bot"
+    }
+  ],
   "env": {
     "staging": {
       "vars": {
         "ENVIRONMENT": "staging"
-      }
+      },
+      "services": [
+        {
+          "binding": "BOT",
+          "service": "dnd-studio-bot-staging"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "dnd-studio-db-staging",
+          "database_id": "fd0d4d78-70c7-4031-b287-ad5364367542",
+          "migrations_dir": "drizzle/migrations"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV_POS_CART",
+          "id": "<YOUR_STAGING_KV_ID>"
+        }
+      ]
     },
     "production": {
       "vars": {
         "ENVIRONMENT": "production"
-      }
+      },
+      "services": [
+        {
+          "binding": "BOT",
+          "service": "dnd-studio-bot-production"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "dnd-studio-db",
+          "database_id": "7a808ae3-6e78-43c5-940d-761eca0b3ccd",
+          "migrations_dir": "drizzle/migrations"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV_POS_CART",
+          "id": "<YOUR_PRODUCTION_KV_ID>"
+        }
+      ]
     }
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dnd-studio-db-dev",
+      "database_id": "local",
+      "migrations_dir": "drizzle/migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV_POS_CART",
+      "id": "<YOUR_PRODUCTION_KV_ID>",
+      "preview_id": "<YOUR_PREVIEW_KV_ID>"
+    }
+  ]
 }
