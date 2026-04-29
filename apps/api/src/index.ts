@@ -11,7 +11,6 @@ import { roomsRoute } from "@/routes/rooms"
 import { levelsRoute } from "@/routes/levels"
 import { configsRoute } from "@/routes/configs"
 import { promotionsRoute } from "@/routes/promotions"
-
 import { cartRoute } from "@/routes/cart"
 
 const app = new Hono<Env>()

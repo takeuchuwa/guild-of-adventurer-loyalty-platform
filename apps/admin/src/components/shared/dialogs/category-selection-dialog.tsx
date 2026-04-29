@@ -30,7 +30,7 @@ export function CategorySelectionDialog({
     onOpenChange,
     onConfirm,
     initialCategoryIds = [],
-    kind = "ACTIVITY",
+    kind,
 }: CategorySelectionDialogProps) {
     const [currentStep, setCurrentStep] = useState<Step>("selection")
     const [selectedCategories, setSelectedCategories] = useState<Map<string, Category>>(new Map())

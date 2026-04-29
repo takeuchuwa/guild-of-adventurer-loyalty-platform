@@ -162,7 +162,6 @@ lines.push("-- Generated at: " + new Date().toISOString())
 lines.push(`-- Total promotions to create: ${promos.length}`)
 lines.push("-- ================================================================")
 lines.push("")
-lines.push("BEGIN TRANSACTION;")
 lines.push("")
 
 for (const p of promos) {
@@ -175,8 +174,8 @@ for (const p of promos) {
     lines.push(`   start_date, end_date, usage_remaining, config, created_at, updated_at)`)
     lines.push(`VALUES`)
     lines.push(`  ('${p.promoId}', NULL, 'AUTO', '${promoName}', NULL,`)
-    lines.push(`   1, 0, 0, 1,`)
-    lines.push(`   NULL, NULL, NULL,`)          // start_date=NULL, end_date=NULL → permanent / infinite
+    lines.push(`   1, 0, 1, 1,`)
+    lines.push(`   -1, -1, NULL,`)          // start_date=NULL, end_date=NULL → permanent / infinite
     lines.push(`   '${configJson}', ${now}, ${now});`)
     lines.push("")
     lines.push(`INSERT INTO level_promotions (level_id, promo_id, created_at)`)
@@ -184,7 +183,6 @@ for (const p of promos) {
     lines.push("")
 }
 
-lines.push("COMMIT;")
 lines.push("")
 
 const levelsWithDiscounts = levelData.filter(

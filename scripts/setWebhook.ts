@@ -35,19 +35,23 @@ async function main() {
     console.log(`🤖 BOT_ENV=${BOT_ENV}`);
     console.log(`🔗 Setting webhook: ${url}`);
 
-    let res = await fetch(`https://api.telegram.org/bot${TOKEN}/setWebhook`, {
+    const botApiBasePath = BOT_ENV === "dev"
+        ? `https://api.telegram.org/bot${TOKEN}/test`
+        : `https://api.telegram.org/bot${TOKEN}`;
+
+    let res = await fetch(`${botApiBasePath}/setWebhook`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ url: url + "/bot/webhook" }),
     });
     console.log("setWebhook:", await res.json());
 
-    res = await fetch(`https://api.telegram.org/bot${TOKEN}/getWebhookInfo`);
+    res = await fetch(`${botApiBasePath}/getWebhookInfo`);
     console.log("getWebhookInfo:", await res.json());
 
     if (BOT_ENV === "dev") {
         console.log(`🔗 Setting chat menu button: ${url}`);
-        res = await fetch(`https://api.telegram.org/bot${TOKEN}/setChatMenuButton`, {
+        res = await fetch(`${botApiBasePath}/setChatMenuButton`, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({

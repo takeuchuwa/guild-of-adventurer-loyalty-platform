@@ -10,6 +10,7 @@ export interface LevelUpResult {
     batchOperations: any[]
     ledgerEntries: any[]
     notifications: Array<{
+        memberId?: string
         kind: "level_up" | "referral_bonus"
         body: any
     }>
@@ -164,6 +165,7 @@ async function processLevelNotifications(
 
     if (member.telegramUserId) {
         result.notifications.push({
+            memberId: member.memberId,
             kind: "level_up",
             body: {
                 kind: "level_up",
@@ -315,6 +317,7 @@ async function processReferrerRewards(
     // Add notification for referrer
     if (hasNotifyReferrer && referrer.telegramUserId) {
         result.notifications.push({
+            memberId: referrer.memberId,
             kind: "referral_bonus",
             body: {
                 kind: "referral_bonus",

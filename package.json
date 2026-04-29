@@ -9,7 +9,7 @@
     "dev:api": "pnpm --filter @loyalty/api dev",
     "dev:bot": "pnpm --filter @loyalty/bot dev",
     "dev:admin": "pnpm --filter @loyalty/admin dev",
-    "dev:mini-app": "pnpm --filter @loyalty/mini-app dev",
+    "dev:mini-app": "pnpm --filter @loyalty/mini-app dev --host",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",

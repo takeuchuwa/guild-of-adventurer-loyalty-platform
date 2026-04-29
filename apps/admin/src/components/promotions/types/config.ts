@@ -34,6 +34,8 @@ export interface PromotionConfig {
         // Member conditions (only one from this group)
         memberConditions?: {
             member_is_new?: number
+            member_is_birthday?: number
+            max_usage_per_member?: { limit: number, period: "global" | "year" | "month" }
         }
     }
     effects?: {
@@ -68,6 +70,8 @@ export type ConditionType =
     | "contains_product"
     | "contains_activity"
     | "member_is_new"
+    | "member_is_birthday"
+    | "max_usage_per_member"
 
 export interface ConditionOption {
     type: ConditionType
@@ -88,4 +92,6 @@ export const CONDITION_OPTIONS: ConditionOption[] = [
 
     // Member conditions
     { type: "member_is_new", label: "New Member", category: "Member", icon: "🆕" },
+    { type: "member_is_birthday", label: "День народження", category: "Member", icon: "🎂" },
+    { type: "max_usage_per_member", label: "Максимальних використань на користувача", category: "Member", icon: "🔄" },
 ]

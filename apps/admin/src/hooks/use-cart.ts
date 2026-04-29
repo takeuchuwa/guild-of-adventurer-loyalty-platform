@@ -122,6 +122,7 @@ export function useCart() {
             const res = await checkoutCart(getCartId(), expectedTotal)
             clearCartId()
             setCartState(null)
+            toast.success("Каса успішно закрита! Бали нараховані!")
             return res
         } catch (error: any) {
             const msg = error.response?.data?.error || error.response?.data?.message || error.message || "Помилка при обробці каси"

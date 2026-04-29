@@ -18,9 +18,11 @@ interface ProductFormProps {
     onCancel: () => void
     isLoading?: boolean
     mode: "create" | "edit"
+    showCreateAndAdd?: boolean
 }
 
-export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false, mode }: ProductFormProps) {
+export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false, mode, showCreateAndAdd }: ProductFormProps) {
+    const [submitAction, setSubmitAction] = useState<"standard" | "createAndAdd">("standard")
     const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
     const [selectedCategories, setSelectedCategories] = useState<Array<{ categoryId: string; name: string }>>(
         initialData?.categories?.map((c) => ({ categoryId: c.categoryId, name: c.name })) || [],
@@ -94,7 +96,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
         }
 
         try {
-            await onSubmit(formData)
+            await (onSubmit as any)(formData, submitAction === "createAndAdd")
         } catch (error) {
             console.error("Form submission error:", error)
         }
@@ -246,10 +248,27 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
                 >
                     Скасувати
                 </Button>
-                <Button type="submit" className="cursor-pointer" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {mode === "create" ? "Створити" : "Зберегти"}
-                </Button>
+                {showCreateAndAdd ? (
+                    <Button
+                        type="submit"
+                        className="cursor-pointer"
+                        disabled={isLoading}
+                        onClick={() => setSubmitAction("createAndAdd")}
+                    >
+                        {isLoading && submitAction === "createAndAdd" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Створити та додати в кошик
+                    </Button>
+                ) : (
+                    <Button
+                        type="submit"
+                        className="cursor-pointer"
+                        disabled={isLoading}
+                        onClick={() => setSubmitAction("standard")}
+                    >
+                        {isLoading && submitAction === "standard" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {mode === "create" ? "Створити" : "Зберегти"}
+                    </Button>
+                )}
             </div>
 
             <CategorySelectionDialog

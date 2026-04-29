@@ -2,8 +2,8 @@
 import { Buffer } from "node:buffer"
 import { Hono } from "hono"
 import { getDb } from "@loyalty/db/client"
-import { levelsTiers, benefits, prizes, levelPromotions, promotions } from "@loyalty/db/schema"
-import { eq, sql, and, lt, desc } from "drizzle-orm"
+import { levelsTiers, benefits, prizes, levelPromotions, promotions, loyaltyConfigs } from "@loyalty/db/schema"
+import { eq, sql, and, lt, desc, inArray } from "drizzle-orm"
 import { parsePagination, parseSort, buildPagination, buildSearch } from "@/utils/query-helpers"
 import type { Env } from "@/types/env"
 import { z } from "zod"
@@ -126,6 +126,152 @@ levelsRoute.get("/", async (c) => {
     } catch (err: any) {
         console.error("[GET /levels] error", err)
         return c.json({ ok: false, error: "INTERNAL_ERROR", message: err?.message }, 500)
+    }
+})
+
+import { telegramAuth } from "@/middleware/telegramAuth"
+import { asc } from "drizzle-orm"
+
+function safeParse(json: string | null | undefined) {
+    if (!json) return null
+    try {
+        return JSON.parse(json)
+    } catch {
+        return null
+    }
+}
+
+// GET /referral-rules - Public mini-app endpoint to get level change referral rules
+levelsRoute.get("/referral-rules", telegramAuth, async (c) => {
+    try {
+        const db = getDb(c.env)
+        const rows = await db
+            .select()
+            .from(loyaltyConfigs)
+            .where(eq(loyaltyConfigs.triggerKey, "level_change"))
+            .all()
+
+        const active = rows
+            .filter((r) => r.active)
+            .map((r) => ({ id: r.configId, cfg: safeParse(r.configJson) }))
+            .filter((x) => !!x.cfg) as Array<{ id: string; cfg: any }>
+
+        const flat = active
+            .map((x, idx) => {
+                const lvl = String(x.cfg?.targetLevel || "")
+                if (!lvl) return null
+                const a = Number(x.cfg?.pointsForReferrer || 0)
+                const b = Number(x.cfg?.pointsForReferred || 0)
+                return { index: idx, levelId: lvl, pointsForReferrer: a, pointsForReferred: b }
+            })
+            .filter(Boolean) as Array<{
+                index: number;
+                levelId: string;
+                pointsForReferrer: number;
+                pointsForReferred: number
+            }>
+
+        if (flat.length === 0) return c.json([])
+
+        const uniqueLevelIds = Array.from(new Set(flat.map((f) => f.levelId)))
+        const levelRows = await db
+            .select({ levelId: levelsTiers.levelId, name: levelsTiers.name, minPoints: levelsTiers.minPoints })
+            .from(levelsTiers)
+            .where(inArray(levelsTiers.levelId, uniqueLevelIds))
+            .all()
+            
+        const levelMap = new Map(levelRows.map((l) => [l.levelId, { name: l.name, minPoints: l.minPoints }]))
+
+        const items = flat.map((f) => {
+            const meta = levelMap.get(f.levelId)
+            return {
+                index: f.index,
+                levelId: f.levelId,
+                levelName: meta?.name ?? null,
+                minPoints: meta?.minPoints,
+                pointsForReferrer: f.pointsForReferrer,
+                pointsForReferred: f.pointsForReferred,
+            }
+        })
+
+        items.sort((x, y) => {
+            const mx = x.minPoints ?? Number.MAX_SAFE_INTEGER
+            const my = y.minPoints ?? Number.MAX_SAFE_INTEGER
+            if (mx !== my) return mx - my
+            return x.index - y.index
+        })
+
+        const finalItems = items.map(({ index, ...rest }) => rest)
+        return c.json(finalItems)
+    } catch (err: any) {
+        console.error("[GET /levels/referral-rules] error", err)
+        return c.json({ error: "INTERNAL_ERROR", details: String(err?.message ?? err) }, 500)
+    }
+})
+
+// GET /info - Public mini-app endpoint to get all levels and their benefits/prizes
+levelsRoute.get("/info", telegramAuth, async (c) => {
+    try {
+        const db = getDb(c.env)
+        const result = await db
+            .select({
+                level: levelsTiers,
+                benefit: benefits,
+                prize: prizes,
+                promotionList: {
+                    promoId: promotions.promoId,
+                    name: promotions.name,
+                    description: promotions.description,
+                    active: promotions.active,
+                    mode: promotions.mode,
+                    priority: promotions.priority,
+                    config: promotions.config,
+                    startDate: promotions.startDate,
+                    endDate: promotions.endDate,
+                    promoCode: promotions.code,
+                }
+            })
+            .from(levelsTiers)
+            .leftJoin(benefits, eq(levelsTiers.levelId, benefits.levelId))
+            .leftJoin(prizes, eq(levelsTiers.levelId, prizes.levelId))
+            .leftJoin(levelPromotions, eq(levelsTiers.levelId, levelPromotions.levelId))
+            .leftJoin(promotions, eq(levelPromotions.promoId, promotions.promoId))
+            .orderBy(asc(levelsTiers.sortOrder))
+            .all()
+
+        const levelsMap = new Map<string, any>()
+        
+        // Use a stable sort order list based on the query return order
+        const orderList: string[] = []
+
+        for (const row of result) {
+            if (!levelsMap.has(row.level.levelId)) {
+                levelsMap.set(row.level.levelId, {
+                    ...row.level,
+                    benefits: [],
+                    prizes: [],
+                    promotions: []
+                })
+                orderList.push(row.level.levelId)
+            }
+            const lvl = levelsMap.get(row.level.levelId)
+            
+            if (row.benefit && !lvl.benefits.some((b: any) => b.benefitId === row.benefit!.benefitId)) {
+                lvl.benefits.push(row.benefit)
+            }
+            if (row.prize && !lvl.prizes.some((p: any) => p.prizeId === row.prize!.prizeId)) {
+                lvl.prizes.push(row.prize)
+            }
+            if (row.promotionList && row.promotionList.promoId && !lvl.promotions.some((p: any) => p.promoId === row.promotionList!.promoId)) {
+                lvl.promotions.push(row.promotionList)
+            }
+        }
+
+        const sortedLevels = orderList.map(id => levelsMap.get(id))
+        return c.json(sortedLevels)
+    } catch (err: any) {
+        console.error("[GET /levels/info] error", err)
+        return c.json({ error: "INTERNAL_ERROR", details: String(err?.message ?? err) }, 500)
     }
 })
 

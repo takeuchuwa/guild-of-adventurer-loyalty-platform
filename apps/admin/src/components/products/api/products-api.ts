@@ -33,6 +33,7 @@ export interface CreateProductRequest {
     sku: string
     price: number
     overridePoints?: number | null
+    categoryIds: string[]
 }
 
 export interface UpdateProductRequest {

@@ -3,7 +3,7 @@
 import { Layout } from "@/components/layout/layout.tsx"
 import { ConfigsTable } from "@/components/configs/configs-table"
 import { configColumns } from "@/components/configs/columns/config-columns"
-import { Pencil, PlusCircle, Trash2 } from "lucide-react"
+import { Pencil, PlusCircle, Trash2, RefreshCcw } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useRef, useState } from "react"
 import type { LoyaltyConfig } from "@/components/configs/api/configs-api"
@@ -41,6 +41,12 @@ export default function ConfigsPage() {
     }
   }
 
+  const handleRefresh = async () => {
+    localStorage.removeItem("activityTimeSlotConfigs")
+    if (loadRef.current) await loadRef.current()
+    toast.success("Дані оновлено")
+  }
+
   return (
     <Layout breadcrumbs={[{ label: "Конфігурації", path: "/configs" }]}>
       <div className="container mx-auto py-10">
@@ -52,6 +58,7 @@ export default function ConfigsPage() {
           actions={[
             { label: "Додати", icon: <PlusCircle className="mr-0.5 h-4 w-4" />, onClick: handleCreate },
             { label: "Редагувати", icon: <Pencil className="mr-0.5 h-4 w-4" />, onClick: handleEdit, isDisabled: (s) => s.length !== 1 },
+            { label: "Cкинути кеш", icon: <RefreshCcw className="mr-0.5 h-4 w-4" />, onClick: handleRefresh },
             { label: "Видалити", icon: <Trash2 className="mr-0.5 h-4 w-4" />, onClick: handleDelete, isDisabled: (s) => s.length !== 1, variant: "destructiveOutline" },
           ]}
         />

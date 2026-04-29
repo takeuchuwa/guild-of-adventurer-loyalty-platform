@@ -1,0 +1,1 @@
+ALTER TABLE `members` ADD `birth_date_changed_at` integer;

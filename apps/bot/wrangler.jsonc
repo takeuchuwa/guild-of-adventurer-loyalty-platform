@@ -10,6 +10,7 @@
       "workers_dev": true,
       "vars": {
         "ENVIRONMENT": "staging",
+        "MINI_APP_URL": "https://dnd-studio-mini-app-staging.dmytro-horban01.workers.dev",
         "BOT_INFO": "{\"id\":8322493074,\"is_bot\":true,\"first_name\":\"Loyalty dev test\",\"username\":\"loyalty_Dev_test123_bot\",\"can_join_groups\":true,\"can_read_all_group_messages\":false,\"supports_inline_queries\":false,\"can_connect_to_business\":false,\"has_main_web_app\":false}"
       },
       "d1_databases": [
@@ -23,6 +24,7 @@
     "production": {
       "vars": {
         "ENVIRONMENT": "production",
+        "MINI_APP_URL": "https://dnd-studio-mini-app.dmytro-horban01.workers.dev",
         "BOT_INFO": "{\"id\":7969873880,\"is_bot\":true,\"first_name\":\"Гільдія Авантюристів\",\"username\":\"dnd_studio_bot\",\"can_join_groups\":true,\"can_read_all_group_messages\":false,\"supports_inline_queries\":false,\"can_connect_to_business\":false,\"has_main_web_app\":false}"
       },
       "d1_databases": [

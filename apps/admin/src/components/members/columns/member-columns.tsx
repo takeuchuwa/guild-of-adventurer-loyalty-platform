@@ -1,8 +1,10 @@
 "use client"
 
-import type {CustomColumnDef} from "@/types/table"
-import type {Member} from "@/components/members/types/member"
-import {Link} from "react-router-dom";
+import type { CustomColumnDef } from "@/types/table"
+import type { Member } from "@/components/members/types/member"
+import { Link } from "react-router-dom";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
 
 export const memberColumns: CustomColumnDef<Member>[] = [
     {
@@ -13,7 +15,7 @@ export const memberColumns: CustomColumnDef<Member>[] = [
             const last = row.lastName ?? ""
             return `${first} ${last}`.trim()
         },
-        cell: ({row}) => {
+        cell: ({ row }) => {
             const member = row.original
             return (
                 <div>
@@ -34,6 +36,25 @@ export const memberColumns: CustomColumnDef<Member>[] = [
         id: "phone",
         header: "Телефон",
         accessorKey: "phone",
+        cell: ({ row }) => {
+            const phone = row.original.phone
+            if (!phone) return null
+
+            return (
+                <div
+                    className="cursor-pointer hover:text-primary flex items-center gap-2"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        navigator.clipboard.writeText(phone)
+                        toast.success("Номер телефону скопійовано")
+                    }}
+                    title="Скопіювати"
+                >
+                    {phone}
+                    <Copy className="h-3 w-3 text-muted-foreground opacity-50 transition-opacity hover:opacity-100" />
+                </div>
+            )
+        },
         enableSorting: false,
         size: 15,
         minSize: 15,

@@ -1,19 +1,16 @@
 import { Hono } from "hono"
 import { webhookCallback, Bot } from "grammy"
 import { texts } from "./texts"
-import type { Env, BotContext } from "./types"
-import { setupReferralHandlers } from "./features/referral"
-import { showLevel } from "./features/profile"
-import { showPointsHistory } from "./features/history"
-import { setupHelpHandlers } from "./features/help"
-import { setupLoyaltyHandlers } from "./features/loyalty"
+import type { Env } from "./types"
+import { setupRegistrationHandlers } from "./features/registration"
 
 const app = new Hono<{ Bindings: Env }>()
 
 function createBot(env: Env) {
     console.log("env.BOT_TOKEN", env.BOT_TOKEN)
     console.log("env.BOT_INFO", env.BOT_INFO)
-    const bot = new Bot(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) })
+    const clientOpts = env.BOT_ENV === "test" || env.BOT_ENV === "dev" ? { environment: "test" as const } : undefined
+    const bot = new Bot(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO), client: clientOpts })
 
     // Inject env + db per update
     bot.use(async (ctx, next) => {
@@ -21,50 +18,13 @@ function createBot(env: Env) {
         await next()
     })
 
-    // Set up bot commands for the menu
+    // Set up bot commands for the menu (cleaned up)
     bot.api.setMyCommands([
         { command: "start", description: "🚀 Почати роботу з ботом" },
-        { command: "level", description: "📊 Перевірити мій рівень та бали" },
-        { command: "history", description: "📜 Переглянути історію балів" },
-        { command: "ref", description: "🔗 Реферальна програма" },
-        { command: "loyalty", description: "🏅 Деталі програми лояльності" },
-        { command: "help", description: "❓ Допомога та інструкції" },
     ])
 
-    // Feature: referral (/start payload, contact registration, /ref)
-    setupReferralHandlers(bot, env)
-
-    // Feature: help
-    setupHelpHandlers(bot)
-
-    // Feature: loyalty details
-    setupLoyaltyHandlers(bot, env)
-
-    bot.command("level", async (ctx) => {
-        await showLevel(ctx as BotContext)
-    })
-
-    bot.hears(texts.my_level_button, async (ctx) => {
-        await showLevel(ctx as BotContext)
-    })
-
-    bot.command("history", async (ctx) => {
-        await showPointsHistory(ctx as BotContext, 1)
-    })
-
-    bot.hears(texts.points_history_button, async (ctx) => {
-        await showPointsHistory(ctx as BotContext, 1)
-    })
-
-    // Pagination callbacks for history
-    bot.callbackQuery(/^hist:(\d+)$/, async (ctx) => {
-        const m = ctx.match as RegExpExecArray
-        const page = Number.parseInt(m[1], 10) || 1
-        await showPointsHistory(ctx as unknown as BotContext, page)
-    })
-    bot.callbackQuery("noop", async (ctx) => {
-        await ctx.answerCallbackQuery()
-    })
+    // Feature: registration and start
+    setupRegistrationHandlers(bot, env)
 
     bot.on("message", (ctx) => {
         console.log("TG message:", JSON.stringify(ctx.message, null, 2))

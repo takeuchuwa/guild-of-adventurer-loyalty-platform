@@ -1,7 +1,7 @@
 import type { Level, LevelFormData } from "../types/level-types"
 import type { SortingState } from "@tanstack/react-table"
 
-const API_BASE_URL = import.meta.env.VITE_BE_HOST || "http://localhost:8787"
+const API_BASE_URL = import.meta.env.VITE_BE_HOST || "http://192.168.50.108:8787"
 
 export interface CursorParams {
     pageSize: number

@@ -39,9 +39,11 @@ interface ActivityFormProps {
     onCancel: () => void
     isLoading?: boolean
     mode: "create" | "edit"
+    showCreateAndAdd?: boolean
 }
 
-export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = false, mode }: ActivityFormProps) {
+export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = false, mode, showCreateAndAdd }: ActivityFormProps) {
+    const [submitAction, setSubmitAction] = useState<"standard" | "createAndAdd">("standard")
     const [gameDialogOpen, setGameDialogOpen] = useState(false)
     const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
     const [roomDialogOpen, setRoomDialogOpen] = useState(false)
@@ -236,7 +238,7 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
         }
 
         try {
-            await onSubmit(finalFormData)
+            await (onSubmit as any)(finalFormData, submitAction === "createAndAdd")
         } catch (error) {
             console.error("Form submission error:", error)
         }
@@ -488,10 +490,27 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
                 >
                     Скасувати
                 </Button>
-                <Button type="submit" className="cursor-pointer" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {mode === "create" ? "Створити" : "Зберегти"}
-                </Button>
+                {showCreateAndAdd ? (
+                    <Button
+                        type="submit"
+                        className="cursor-pointer"
+                        disabled={isLoading}
+                        onClick={() => setSubmitAction("createAndAdd")}
+                    >
+                        {isLoading && submitAction === "createAndAdd" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Створити та додати в кошик
+                    </Button>
+                ) : (
+                    <Button
+                        type="submit"
+                        className="cursor-pointer"
+                        disabled={isLoading}
+                        onClick={() => setSubmitAction("standard")}
+                    >
+                        {isLoading && submitAction === "standard" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {mode === "create" ? "Створити" : "Зберегти"}
+                    </Button>
+                )}
             </div>
 
             <GameSelectionDialog
@@ -507,6 +526,7 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
                 onOpenChange={setCategoryDialogOpen}
                 onConfirm={handleCategorySelection}
                 initialCategoryIds={selectedCategories.map((c) => c.categoryId)}
+                kind="ACTIVITY"
             />
 
             <RoomSelectionDialog open={roomDialogOpen} onOpenChange={setRoomDialogOpen} onConfirm={handleRoomSelection} />

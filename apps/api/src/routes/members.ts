@@ -7,13 +7,18 @@ import {
     levelsTiers,
     memberPrizesClaimed,
     members,
+    memberSettings,
     pointsLedger,
     promotions,
     activities,
     products,
     prizes as prizesTable,
+    levelPromotions,
+    promotionAssignments,
+    memberPromotionUsages,
+    games
 } from "@loyalty/db/schema"
-import { and, asc, eq, sql, lte, isNull, desc, lt } from "drizzle-orm"
+import { and, asc, eq, sql, lte, isNull, desc, lt, gte, or, inArray } from "drizzle-orm"
 import { alias } from "drizzle-orm/sqlite-core"
 import { buildPagination, buildSearch, parsePagination, parseSort } from "@/utils/query-helpers"
 import type { Env } from "@/types/env"
@@ -21,10 +26,31 @@ import z from "zod"
 import { checkAndProcessLevelUp } from "@/utils/level-up"
 import { v7 as uuidv7 } from 'uuid';
 import { generateCursor } from 'drizzle-cursor';
+import CryptoJS from "crypto-js";
+import { sendBatchNotifications } from "@/utils/notify";
+import { generateMemberQrPayload } from "@/utils/qr";
+
+const NAME_REGEX = /^[\p{L}\s\-']+$/u
+const NICKNAME_REGEX = /^[\p{L}\p{N}_\-]+$/u
+const MIN_BIRTH_YEAR = 1924
+const MAX_BIRTH_YEAR = new Date().getFullYear() - 16
 
 const MemberUpdateBody = z.object({
-    firstName: z.string().trim().min(1, "Ім'я обов'язкове").max(255).nullable(),
-    lastName: z.string().trim().min(1, "Прізвище обов'язкове").max(255).nullable(),
+    firstName: z.string().trim().min(1, "Ім'я обов'язкове").max(255)
+        .regex(NAME_REGEX, "Ім'я може містити лише літери, пробіли, дефіси та апострофи")
+        .nullable(),
+    lastName: z.string().trim().min(1, "Прізвище обов'язкове").max(255)
+        .regex(NAME_REGEX, "Прізвище може містити лише літери, пробіли, дефіси та апострофи")
+        .nullable(),
+    nickname: z.string().trim().min(2, "Нікнейм має бути не менше 2 символів").max(32)
+        .regex(NICKNAME_REGEX, "Нікнейм може містити лише літери, цифри, дефіси та підкреслення")
+        .refine(val => !/^\d/.test(val), { message: "Нікнейм не може починатися з цифри" })
+        .optional().nullable(),
+    birthDate: z.string().optional().nullable().refine((val) => {
+        if (!val) return true
+        const year = new Date(val).getFullYear()
+        return !isNaN(year) && year >= MIN_BIRTH_YEAR && year <= MAX_BIRTH_YEAR
+    }, { message: `Мінімальний вік — 16 років. Дата народження має бути між ${MIN_BIRTH_YEAR} та ${MAX_BIRTH_YEAR} роком` }),
 })
 
 const PointsAdjustmentBody = z.object({
@@ -33,6 +59,522 @@ const PointsAdjustmentBody = z.object({
 })
 
 export const membersRoute = new Hono<Env>()
+
+import { telegramAuth } from "@/middleware/telegramAuth"
+import { fetchPromoTargetNames, filterValidPromosForMember } from "@/utils/promotions"
+
+membersRoute.get("/@self", telegramAuth, async (c) => {
+    try {
+        const tgUser = c.get("tgUser")
+        const db = getDb(c.env)
+
+        const member = await db.select({
+            memberId: members.memberId,
+            firstName: members.firstName,
+            lastName: members.lastName,
+            nickname: members.nickname,
+            phone: members.phone,
+            pointsBalance: members.pointsBalance,
+            levelId: members.levelId,
+            birthDate: members.birthDate,
+            referredBy: members.referredBy,
+            joinedAt: members.joinedAt,
+            statistics: members.statistics,
+        })
+            .from(members)
+            .where(eq(members.telegramUserId, String(tgUser.id)))
+            .get()
+
+        if (!member) {
+            return c.json({ ok: false, error: "NOT_FOUND", message: "Member not found" }, 404)
+        }
+
+        const targetLevel = alias(levelsTiers, "target_level")
+        const nowSeconds = Math.floor(Date.now() / 1000)
+
+        const [unclaimedLevelsData, activeLevelPromosRaw, activeMemberPromosRaw] = await db.batch([
+            db.select({
+                levelId: targetLevel.levelId,
+                levelName: targetLevel.name,
+                prizes: sql<string>`group_concat(${prizesTable.name}, ', ')`
+            })
+                .from(members)
+                .innerJoin(levelsTiers, eq(members.levelId, levelsTiers.levelId))
+                .innerJoin(targetLevel, lte(targetLevel.sortOrder, levelsTiers.sortOrder))
+                .innerJoin(prizesTable, eq(prizesTable.levelId, targetLevel.levelId))
+                .leftJoin(memberPrizesClaimed, and(
+                    eq(memberPrizesClaimed.memberId, members.memberId),
+                    eq(memberPrizesClaimed.levelId, targetLevel.levelId)
+                ))
+                .where(and(
+                    eq(members.memberId, member.memberId),
+                    isNull(memberPrizesClaimed.claimId)
+                ))
+                .groupBy(targetLevel.levelId)
+                .orderBy(asc(targetLevel.sortOrder)),
+
+            db.select({ promo: promotions }).from(levelPromotions)
+                .innerJoin(promotions, eq(promotions.promoId, levelPromotions.promoId))
+                .where(and(eq(levelPromotions.levelId, member.levelId), eq(promotions.active, true), or(eq(promotions.startDate, -1), lte(promotions.startDate, nowSeconds)), or(eq(promotions.endDate, -1), gte(promotions.endDate, nowSeconds)), or(isNull(promotions.usageRemaining), gte(promotions.usageRemaining, 1)))),
+
+            db.select({ promo: promotions }).from(promotionAssignments)
+                .innerJoin(promotions, eq(promotions.promoId, promotionAssignments.promoId))
+                .where(and(eq(promotionAssignments.memberId, member.memberId), eq(promotionAssignments.status, "AVAILABLE"), eq(promotions.active, true), or(eq(promotions.startDate, -1), lte(promotions.startDate, nowSeconds)), or(eq(promotions.endDate, -1), gte(promotions.endDate, nowSeconds)), or(isNull(promotions.usageRemaining), gte(promotions.usageRemaining, 1))))
+        ])
+
+        const unclaimedPrizes = unclaimedLevelsData.map((d: any) => ({
+            levelId: d.levelId,
+            levelName: d.levelName,
+            prizesString: d.prizes || ""
+        }))
+
+        // Promo logic
+        const rawLvlPromos = activeLevelPromosRaw.map((r: any) => r.promo);
+        const rawMemberPromos = activeMemberPromosRaw.map((r: any) => r.promo);
+        const allPromosRaw = [...rawLvlPromos, ...rawMemberPromos];
+
+        let usagesMap: Record<string, number[]> = {};
+        if (allPromosRaw.length > 0) {
+            const pIds = allPromosRaw.map(p => p.promoId);
+            const usages = await db.select({ promoId: memberPromotionUsages.promoId, usedAt: memberPromotionUsages.usedAt })
+                .from(memberPromotionUsages)
+                .where(and(eq(memberPromotionUsages.memberId, member.memberId), inArray(memberPromotionUsages.promoId, pIds)))
+
+            for (const u of usages) {
+                if (!usagesMap[u.promoId]) usagesMap[u.promoId] = [];
+                usagesMap[u.promoId].push(u.usedAt);
+            }
+        }
+
+        const validLevelPromos = filterValidPromosForMember(rawLvlPromos, member, usagesMap)
+        const validMemberPromos = filterValidPromosForMember(rawMemberPromos, member, usagesMap)
+        const allPromos = [...validLevelPromos, ...validMemberPromos]
+
+        let promoMap = new Map();
+        if (allPromos.length > 0) {
+            promoMap = await fetchPromoTargetNames(db, allPromos);
+        }
+
+        const resultPromotions = allPromos.map(p => {
+            let config = typeof p.config === 'string' ? JSON.parse(p.config) : (p.config || {});
+
+            const isPersonal = validMemberPromos.some((vp: any) => vp.promoId === p.promoId);
+
+            return {
+                promoId: p.promoId,
+                name: p.name,
+                description: p.description,
+                promoCode: p.promoCode,
+                startDate: p.startDate,
+                endDate: p.endDate,
+                config,
+                isPersonal
+            };
+        });
+
+        const targetsMap = Object.fromEntries(promoMap);
+
+        const qrSecret = c.env.QR_SECRET_KEY;
+        const qrCodeString = generateMemberQrPayload(member.memberId, qrSecret);
+
+        return c.json({ ok: true, data: { ...member, qrcode: qrCodeString, photoUrl: tgUser?.photoUrl ?? tgUser?.photo_url ?? null, unclaimedPrizes, promotions: resultPromotions, targetsMap } }, 200)
+    } catch (err: any) {
+        console.error("[GET /members/@self] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+membersRoute.get("/@self/history", telegramAuth, async (c) => {
+    try {
+        const tgUser = c.get("tgUser")
+        const db = getDb(c.env)
+
+        const member = await db.select({
+            memberId: members.memberId,
+        })
+            .from(members)
+            .where(eq(members.telegramUserId, String(tgUser.id)))
+            .get()
+
+        if (!member) {
+            return c.json({ ok: false, error: "NOT_FOUND", message: "Member not found" }, 404)
+        }
+
+        const url = new URL(c.req.url)
+        const { cursor, pageSize } = parsePagination(url)
+
+        const cursorConfig = generateCursor({
+            cursors: [
+                {
+                    order: 'DESC',
+                    key: 'occurredAt',
+                    schema: pointsLedger.occurredAt
+                }
+            ],
+            primaryCursor: {
+                order: 'DESC',
+                key: 'entryId',
+                schema: pointsLedger.entryId
+            }
+        });
+
+        let validCursor = cursor;
+        if (cursor) {
+            try {
+                const decodedJson = Buffer.from(cursor, 'base64').toString('utf-8');
+                const cursorObj = JSON.parse(decodedJson);
+                if (!('occurredAt' in cursorObj) || !('entryId' in cursorObj)) {
+                    validCursor = null;
+                }
+            } catch (e) {
+                validCursor = null;
+            }
+        }
+
+        const cursorWhereExpr = validCursor ? cursorConfig.where(validCursor) : undefined;
+
+        const dataWhereConditions: any[] = [eq(pointsLedger.memberId, member.memberId)]
+        if (cursorWhereExpr) {
+            dataWhereConditions.push(cursorWhereExpr)
+        }
+        const dataWhereExpr = and(...dataWhereConditions)
+
+        const query = db.select({
+            entryId: pointsLedger.entryId,
+            occurredAt: pointsLedger.occurredAt,
+            delta: pointsLedger.delta,
+            balanceAfter: pointsLedger.balanceAfter,
+            adminNote: pointsLedger.adminNote,
+            activityName: activities.name,
+            gameId: activities.gameId,
+            gameName: games.name,
+            productName: products.name,
+            promoName: promotions.name,
+        })
+            .from(pointsLedger)
+            .leftJoin(promotions, eq(pointsLedger.promoId, promotions.promoId))
+            .leftJoin(activities, eq(pointsLedger.activityId, activities.activityId))
+            .leftJoin(games, eq(activities.gameId, games.gameId))
+            .leftJoin(products, eq(pointsLedger.productId, products.productId))
+            .where(dataWhereExpr)
+
+        query.orderBy(...cursorConfig.orderBy)
+
+        const actualPageSize = pageSize || 20
+        const dataQuery = query.limit(actualPageSize + 1)
+
+        const itemsRaw = await dataQuery.all();
+
+        const hasNextPage = itemsRaw.length > actualPageSize
+        const items = hasNextPage ? itemsRaw.slice(0, actualPageSize) : itemsRaw
+        const nextCursor = hasNextPage ? cursorConfig.serialize(items[items.length - 1]) : null
+
+        const formattedItems = items.map(item => {
+            let activity = null;
+            if (item.activityName) {
+                activity = {
+                    name: item.activityName,
+                    hasGame: !!item.gameId
+                };
+            }
+            let game = null;
+            if (item.gameName) {
+                game = {
+                    name: item.gameName
+                };
+            }
+
+            return {
+                entryId: item.entryId,
+                delta: item.delta,
+                balanceAfter: item.balanceAfter,
+                occurredAt: item.occurredAt,
+                activity,
+                game,
+                product: item.productName ? { name: item.productName } : null,
+                promo: item.promoName ? { name: item.promoName } : null,
+                adminNote: item.adminNote
+            };
+        });
+
+        const pagination = buildPagination({ pageSize: actualPageSize, hasNextPage, nextCursor })
+
+        return c.json({ ok: true, data: formattedItems, pagination })
+    } catch (err: any) {
+        console.error("[GET /members/@self/history] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+const SelfUpdateBody = z.object({
+    firstName: z.string().trim().min(1, "Ім'я обов'язкове").max(255)
+        .regex(NAME_REGEX, "Ім'я може містити лише літери, пробіли, дефіси та апострофи"),
+    lastName: z.string().trim().max(255)
+        .regex(NAME_REGEX, "Прізвище може містити лише літери, пробіли, дефіси та апострофи")
+        .nullable().optional(),
+    nickname: z.string().trim().min(2, "Нікнейм має бути не менше 2 символів").max(32)
+        .regex(NICKNAME_REGEX, "Нікнейм може містити лише літери, цифри, дефіси та підкреслення")
+        .refine(s => !/^\d/.test(s), "Псевдонім не може починатися з цифри")
+        .nullable().optional(),
+    birthDate: z.number().nullable().optional()
+        .refine((val) => {
+            if (val === null || val === undefined) return true
+            const year = new Date(val * 1000).getFullYear()
+            return !isNaN(year) && year >= MIN_BIRTH_YEAR && year <= MAX_BIRTH_YEAR
+        }, { message: `Мінімальний вік — 16 років. Дата народження має бути між ${MIN_BIRTH_YEAR} та ${MAX_BIRTH_YEAR} роком` })
+})
+
+
+const SettingsUpdateBody = z.array(z.object({
+    name: z.string(),
+    value: z.string()
+}))
+
+membersRoute.put("/@self", telegramAuth, async (c) => {
+    try {
+        const tgUser = c.get("tgUser")
+        const db = getDb(c.env)
+        const body = await c.req.json()
+        const parsed = SelfUpdateBody.parse(body)
+
+        const member = await db.select().from(members).where(eq(members.telegramUserId, String(tgUser.id))).get()
+        if (!member) return c.json({ ok: false, error: "NOT_FOUND" }, 404)
+
+        const currentYear = new Date().getFullYear();
+        if (parsed.birthDate !== undefined && parsed.birthDate !== member.birthDate) {
+            // Allow change if the current birthdate is invalid (out of valid range)
+            const currentBirthYear = member.birthDate ? new Date(member.birthDate * 1000).getFullYear() : null
+            const currentBirthDateInvalid = !currentBirthYear || currentBirthYear < MIN_BIRTH_YEAR || currentBirthYear > MAX_BIRTH_YEAR
+
+            if (!currentBirthDateInvalid && member.birthDateChangedAt) {
+                const changedYear = new Date(member.birthDateChangedAt * 1000).getFullYear();
+                if (changedYear === currentYear) {
+                    return c.json({ ok: false, error: "BIRTHDATE_LOCKED", message: "Дату народження можна змінити лише один раз на рік" }, 400)
+                }
+            }
+        }
+
+        const now = Math.floor(Date.now() / 1000)
+        const updates: any = {
+            firstName: parsed.firstName,
+            lastName: parsed.lastName,
+            nickname: parsed.nickname,
+            updatedAt: now,
+        }
+
+        if (parsed.birthDate !== undefined && parsed.birthDate !== member.birthDate) {
+            updates.birthDate = parsed.birthDate
+            updates.birthDateChangedAt = now
+        }
+
+        await db.update(members).set(updates).where(eq(members.memberId, member.memberId)).run()
+        const updated = await db.select().from(members).where(eq(members.memberId, member.memberId)).get()
+
+        return c.json({ ok: true, data: updated })
+    } catch (err: any) {
+        if (err instanceof z.ZodError) {
+            return c.json({ ok: false, error: "VALIDATION_ERROR", details: err.issues }, 400)
+        }
+        console.error("[PUT /members/@self] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+membersRoute.get("/@self/settings", telegramAuth, async (c) => {
+    try {
+        const tgUser = c.get("tgUser")
+        const db = getDb(c.env)
+
+        const member = await db.select({ memberId: members.memberId }).from(members).where(eq(members.telegramUserId, String(tgUser.id))).get()
+        if (!member) return c.json({ ok: false, error: "NOT_FOUND" }, 404)
+
+        const settings = await db.select().from(memberSettings).where(eq(memberSettings.memberId, member.memberId)).all()
+        return c.json({ ok: true, data: settings })
+    } catch (err: any) {
+        console.error("[GET /members/@self/settings] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+membersRoute.put("/@self/settings", telegramAuth, async (c) => {
+    try {
+        const tgUser = c.get("tgUser")
+        const db = getDb(c.env)
+        const body = await c.req.json()
+        const parsed = SettingsUpdateBody.parse(body)
+
+        const member = await db.select({ memberId: members.memberId }).from(members).where(eq(members.telegramUserId, String(tgUser.id))).get()
+        if (!member) return c.json({ ok: false, error: "NOT_FOUND" }, 404)
+
+        const now = Math.floor(Date.now() / 1000)
+        const existingSettings = await db.select().from(memberSettings).where(eq(memberSettings.memberId, member.memberId)).all()
+
+        for (const setting of parsed) {
+            const exists = existingSettings.find(s => s.name === setting.name)
+            if (exists) {
+                await db.update(memberSettings).set({ value: setting.value, updatedAt: now }).where(eq(memberSettings.id, exists.id)).run()
+            } else {
+                await db.insert(memberSettings).values({
+                    id: uuidv7(),
+                    memberId: member.memberId,
+                    name: setting.name,
+                    value: setting.value,
+                    updatedAt: now
+                }).run()
+            }
+        }
+
+        const updatedSettings = await db.select().from(memberSettings).where(eq(memberSettings.memberId, member.memberId)).all()
+        return c.json({ ok: true, data: updatedSettings })
+    } catch (err: any) {
+        if (err instanceof z.ZodError) {
+            return c.json({ ok: false, error: "VALIDATION_ERROR", details: err.issues }, 400)
+        }
+        console.error("[PUT /members/@self/settings] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+membersRoute.get("/leaderboard", telegramAuth, async (c) => {
+    try {
+        const url = new URL(c.req.url)
+        const { cursor, pageSize } = parsePagination(url)
+
+        const tgUser = c.get("tgUser")
+        const db = getDb(c.env)
+
+        const cursorConfig = generateCursor({
+            cursors: [{ order: 'DESC', key: 'pointsBalance', schema: members.pointsBalance }],
+            primaryCursor: { order: 'DESC', key: 'memberId', schema: members.memberId }
+        })
+
+        let validCursor = cursor;
+        if (cursor) {
+            try {
+                const decodedJson = Buffer.from(cursor, 'base64').toString('utf-8');
+                const cursorObj = JSON.parse(decodedJson);
+                if (!('pointsBalance' in cursorObj) || !('memberId' in cursorObj)) {
+                    validCursor = null;
+                }
+            } catch (e) {
+                validCursor = null;
+            }
+        }
+
+        const cursorWhereExpr = validCursor ? cursorConfig.where(validCursor) : undefined;
+
+        const dataWhereExpr = and(
+            eq(members.active, true),
+            cursorWhereExpr
+        );
+
+        const query = db.select({
+            memberId: members.memberId,
+            telegramUserId: members.telegramUserId,
+            firstName: members.firstName,
+            lastName: members.lastName,
+            nickname: members.nickname,
+            pointsBalance: members.pointsBalance,
+            levelId: levelsTiers.levelId,
+            levelName: levelsTiers.name,
+            leaderboardVisibility: memberSettings.value,
+        })
+            .from(members)
+            .innerJoin(levelsTiers, eq(members.levelId, levelsTiers.levelId))
+            .leftJoin(memberSettings, and(
+                eq(memberSettings.memberId, members.memberId),
+                eq(memberSettings.name, "leaderboard_visibility")
+            ))
+            .where(dataWhereExpr)
+
+        query.orderBy(...cursorConfig.orderBy)
+        query.limit(pageSize + 1)
+
+        const itemsRaw = await query.all()
+        const hasNextPage = itemsRaw.length > pageSize
+        const items = hasNextPage ? itemsRaw.slice(0, pageSize) : itemsRaw
+        const nextCursor = hasNextPage ? cursorConfig.serialize(items[items.length - 1]) : null
+
+        const mappedItems = items.map(item => {
+            const isVisible = item.leaderboardVisibility === "true";
+            let displayName = "Анонімний шукач пригод";
+
+            if (isVisible) {
+                displayName = item.nickname || `${item.firstName} ${item.lastName || ""}`.trim();
+            }
+
+            return {
+                memberId: item.memberId,
+                displayName,
+                pointsBalance: item.pointsBalance,
+                levelId: item.levelId,
+                levelName: item.levelName,
+                isAnonymous: !isVisible,
+                isCurrentUser: item.telegramUserId === String(tgUser.id)
+            };
+        });
+
+        const pagination = buildPagination({ pageSize, hasNextPage, nextCursor })
+
+        return c.json({ ok: true, data: mappedItems, pagination })
+    } catch (err: any) {
+        console.error("[GET /leaderboard] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+membersRoute.post("/verify", async (c) => {
+    try {
+        const body = await c.req.json()
+        const { type, payload } = body
+
+        if (!type || !payload) {
+            return c.json({ ok: false, error: "BAD_REQUEST", message: "Відсутній тип або payload" }, 400)
+        }
+
+        if (type !== "member") {
+            return c.json({ ok: false, error: "BAD_REQUEST", message: "Невірний тип QR коду" }, 400)
+        }
+
+        const qrSecret = c.env.QR_SECRET_KEY || "dev_secret_key";
+        let decryptedString = "";
+        try {
+            const bytes = CryptoJS.AES.decrypt(payload, qrSecret);
+            decryptedString = bytes.toString(CryptoJS.enc.Utf8);
+        } catch (e) {
+            return c.json({ ok: false, error: "INVALID_QR", message: "Неможливо розшифрувати QR код" }, 400)
+        }
+
+        if (!decryptedString) {
+            return c.json({ ok: false, error: "INVALID_QR", message: "Неможливо розшифрувати QR код" }, 400)
+        }
+
+        let parsedPayload;
+        try {
+            parsedPayload = JSON.parse(decryptedString);
+        } catch (e) {
+            return c.json({ ok: false, error: "INVALID_QR", message: "Невірний формат даних" }, 400)
+        }
+
+        const extractedMemberId = parsedPayload.memberId;
+        if (!extractedMemberId) {
+            return c.json({ ok: false, error: "INVALID_QR", message: "Відсутній memberId в QR коді" }, 400)
+        }
+
+        const db = getDb(c.env)
+        const member = await db.select().from(members).where(eq(members.memberId, extractedMemberId)).get()
+
+        if (!member) {
+            return c.json({ ok: false, error: "NOT_FOUND", message: "Учасника не знайдено" }, 404)
+        }
+
+        return c.json({ ok: true, data: member }, 200)
+
+    } catch (err: any) {
+        console.error("[POST /members/verify] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
 
 membersRoute.get("/unclaimed-prizes", async (c) => {
     try {
@@ -120,6 +662,7 @@ membersRoute.get("/unclaimed-prizes", async (c) => {
             firstName: members.firstName,
             lastName: members.lastName,
             phone: members.phone,
+            birthDate: members.birthDate,
             levelId: targetLevel.levelId,
             levelName: targetLevel.name,
             levelNameSortOrder: targetLevel.sortOrder,
@@ -239,6 +782,7 @@ membersRoute.get("/", async (c) => {
                 firstName: members.firstName,
                 lastName: members.lastName,
                 phone: members.phone,
+                birthDate: members.birthDate,
                 telegramUserId: members.telegramUserId,
                 joinedAt: members.joinedAt,
                 active: members.active,
@@ -444,32 +988,9 @@ membersRoute.post("/:id/adjust-points", async (c) => {
 
         if (levelUpResult.notifications.length > 0) {
             console.log("[admin-adjust] scheduling notifications")
-            console.log(levelUpResult.notifications);
             try {
-                const headers: any = { "content-type": "application/json" }
-                const token = (c.env as any).INTERNAL_TOKEN || "dummy_token"
-                headers["authorization"] = `Bearer ${token}`
-
-                const tasks: Promise<any>[] = []
-
-                for (const item of levelUpResult.notifications) {
-                    const body = JSON.stringify(item.body)
-                    console.log(`[admin-adjust] Sending ${item.kind} notification:`, body)
-
-                    const p = c.env.BOT.fetch("https://internal/bot/notify", { method: "POST", headers, body })
-                        .then(async (res) => {
-                            console.log(`[admin-adjust] ${item.kind} notification response:`, res.status)
-                            return res.json()
-                        })
-                        .catch((e) => {
-                            console.error(`[admin-adjust] ${item.kind} notification error:`, e)
-                        })
-                    tasks.push(p)
-                }
-
-                // Fire-and-forget
                 // @ts-ignore Cloudflare runtime
-                c.executionCtx?.waitUntil(Promise.all(tasks))
+                c.executionCtx?.waitUntil(sendBatchNotifications(db, c.env, levelUpResult.notifications as any))
             } catch (e) {
                 console.warn("[admin-adjust] notification scheduling failed", e)
             }
@@ -562,6 +1083,7 @@ membersRoute.get("/:id/level-info", async (c) => {
                     memberId: member.memberId,
                     firstName: member.firstName,
                     lastName: member.lastName,
+                    birthDate: member.birthDate,
                     pointsBalance: member.pointsBalance,
                     levelId: member.levelId,
                 },

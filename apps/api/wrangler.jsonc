@@ -17,7 +17,8 @@
   "env": {
     "staging": {
       "vars": {
-        "ENVIRONMENT": "staging"
+        "ENVIRONMENT": "staging",
+        "QR_SECRET_KEY": "dev_secret_key"
       },
       "services": [
         {
@@ -36,13 +37,14 @@
       "kv_namespaces": [
         {
           "binding": "KV_POS_CART",
-          "id": "<YOUR_STAGING_KV_ID>"
+          "id": "2170146be6834dd89a0b8013734f8bb4"
         }
       ]
     },
     "production": {
       "vars": {
-        "ENVIRONMENT": "production"
+        "ENVIRONMENT": "production",
+        "QR_SECRET_KEY": "production_secret_key"
       },
       "services": [
         {
@@ -61,7 +63,7 @@
       "kv_namespaces": [
         {
           "binding": "KV_POS_CART",
-          "id": "<YOUR_PRODUCTION_KV_ID>"
+          "id": "934cdd5d032943319b98bad05c32541c"
         }
       ]
     }
@@ -77,8 +79,10 @@
   "kv_namespaces": [
     {
       "binding": "KV_POS_CART",
-      "id": "<YOUR_PRODUCTION_KV_ID>",
-      "preview_id": "<YOUR_PREVIEW_KV_ID>"
+      "id": "2170146be6834dd89a0b8013734f8bb4"
     }
-  ]
+  ],
+  "vars": {
+    "QR_SECRET_KEY": "dev_secret_key"
+  }
 }

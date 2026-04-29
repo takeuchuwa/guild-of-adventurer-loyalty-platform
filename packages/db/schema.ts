@@ -3,6 +3,7 @@ import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from
 // Loyalty trigger constants and types
 export const loyaltyTriggers = {
     level_change: "level_change",
+    activity_time_slot: "activity_time_slot",
 } as const
 
 export type LoyaltyTriggerKey = keyof typeof loyaltyTriggers
@@ -14,17 +15,31 @@ export const members = sqliteTable("members", {
     memberId: text("member_id").primaryKey(),
     firstName: text("first_name").notNull(),
     lastName: text("last_name"),
+    nickname: text("nickname"),
     phone: text("phone"),
     telegramUserId: text("telegram_user_id"),
     joinedAt: integer("joined_at").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     pointsBalance: integer("points_balance").notNull().default(0),
+    birthDate: integer("birth_date"),
+    birthDateChangedAt: integer("birth_date_changed_at"),
+    statistics: text("statistics", { mode: "json" }),
     levelId: text("level_id")
         .notNull()
         .references(() => levelsTiers.levelId),
     referredBy: text("referred_by").references((): any => members.memberId, { onDelete: "set null" }),
     updatedAt: integer("updated_at").notNull(),
 })
+
+export const memberSettings = sqliteTable("member_settings", {
+    id: text("id").primaryKey(), // uuidv7
+    memberId: text("member_id").notNull().references(() => members.memberId, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    value: text("value").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+}, (t) => ({
+    memberNameIdx: uniqueIndex("ux_member_settings_member_name").on(t.memberId, t.name)
+}))
 
 export const levelsTiers = sqliteTable(
     "levels_tiers",
@@ -365,4 +380,25 @@ export const levelPromotions = sqliteTable(
         pk: primaryKey({ columns: [t.levelId, t.promoId] }),
         levelIdx: index("ix_level_promos_level").on(t.levelId),
     })
+)
+
+/* ============================= */
+/* MEMBER PROMOTION USAGES       */
+/* ============================= */
+export const memberPromotionUsages = sqliteTable(
+    "member_promotion_usages",
+    {
+        usageId: text("usage_id").primaryKey(), // UUID v7
+        memberId: text("member_id")
+            .notNull()
+            .references(() => members.memberId, { onDelete: "cascade" }),
+        promoId: text("promo_id")
+            .notNull()
+            .references(() => promotions.promoId, { onDelete: "cascade" }),
+        usedAt: integer("used_at").notNull(),
+    },
+    (t) => ({
+        memberIdx: index("ix_member_promo_usage_member").on(t.memberId),
+        promoIdx: index("ix_member_promo_usage_promo").on(t.promoId),
+    }),
 )

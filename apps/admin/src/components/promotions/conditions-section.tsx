@@ -67,6 +67,12 @@ export function ConditionsSection() {
             case "member_is_new":
                 newConditions.memberConditions.member_is_new = 30
                 break
+            case "max_usage_per_member":
+                newConditions.memberConditions.max_usage_per_member = { limit: 1, period: "global" }
+                break
+            case "member_is_birthday":
+                newConditions.memberConditions.member_is_birthday = 0
+                break
         }
 
         setValue("config.conditions", newConditions)
@@ -258,6 +264,50 @@ function ConditionRow({ type, option, value, onUpdate, onRemove }: ConditionRowP
                                 onChange={(e) => onUpdate(Number(e.target.value))}
                                 className="w-32"
                             />
+                        </div>
+                    )}
+
+                    {type === "max_usage_per_member" && (
+                        <div className="flex flex-col gap-2">
+                            <Label className="text-sm text-muted-foreground">Кількість використань (не більше ніж):</Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    value={value?.limit || 1}
+                                    onChange={(e) => onUpdate({ ...(value || {}), limit: Number(e.target.value) })}
+                                    className="w-24"
+                                />
+                                <span className="text-sm text-muted-foreground">за період</span>
+                                <select
+                                    className="flex h-9 w-[180px] items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={value?.period || "global"}
+                                    onChange={(e) => onUpdate({ ...(value || {}), period: e.target.value })}
+                                >
+                                    <option value="global">За весь час</option>
+                                    <option value="year">За рік</option>
+                                    <option value="month">За Місяць</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
+                    {type === "member_is_birthday" && (
+                        <div className="flex flex-col gap-2">
+                            <Label className="text-sm text-foreground">
+                                Діє протягом +/- днів від дня народження учасника
+                            </Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    max="365"
+                                    value={value || 0}
+                                    onChange={(e) => onUpdate(Number(e.target.value))}
+                                    className="w-24"
+                                />
+                                <span className="text-sm text-muted-foreground">днів (0 = лише в день народження)</span>
+                            </div>
                         </div>
                     )}
                 </div>

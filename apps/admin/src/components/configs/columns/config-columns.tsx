@@ -1,7 +1,7 @@
-import type {CustomColumnDef} from "@/types/table"
-import type {LoyaltyConfig} from "@/components/configs/api/configs-api"
-import {Badge} from "@/components/ui/badge.tsx"
-import {format} from "date-fns"
+import type { CustomColumnDef } from "@/types/table"
+import type { LoyaltyConfig } from "@/components/configs/api/configs-api"
+import { Badge } from "@/components/ui/badge.tsx"
+import { format } from "date-fns"
 
 function fmt(ts?: number | null) {
     if (!ts) return "—"
@@ -12,15 +12,23 @@ function fmt(ts?: number | null) {
     }
 }
 
+const triggerLabelMap: Record<string, string> = {
+    "level_change": "Зміна рівня учасника",
+    "activity_time_slot": "Часові слоти активностей",
+}
+
 export const configColumns: CustomColumnDef<LoyaltyConfig>[] = [
     {
         id: "triggerKey",
         header: "Тригер",
         accessorKey: "triggerKey",
-        size: 15,
-        minSize: 15,
+        size: 20,
+        minSize: 20,
         enableSorting: true,
-        cell: ({row}) => <span className="font-medium">{row.original.triggerKey}</span>,
+        cell: ({ row }) => {
+            const label = triggerLabelMap[row.original.triggerKey] || row.original.triggerKey;
+            return <span className="font-medium">{label}</span>
+        },
     },
     {
         id: "name",
@@ -36,7 +44,7 @@ export const configColumns: CustomColumnDef<LoyaltyConfig>[] = [
         enableSorting: true,
         size: 10,
         minSize: 10,
-        cell: ({row}) => (row.original.active ? <Badge variant="default">Так</Badge> :
+        cell: ({ row }) => (row.original.active ? <Badge variant="default">Так</Badge> :
             <Badge variant="secondary">Ні</Badge>),
     },
     {
@@ -44,6 +52,6 @@ export const configColumns: CustomColumnDef<LoyaltyConfig>[] = [
         header: "Оновлено",
         accessorKey: "updatedAt",
         enableSorting: true,
-        cell: ({row}) => fmt(row.original.updatedAt),
+        cell: ({ row }) => fmt(row.original.updatedAt),
     },
 ]

@@ -19,10 +19,15 @@ const LevelChangeConfig = z.object({
   notifyReferred: z.boolean().default(true),
 })
 
+const ActivityTimeSlotConfig = z.object({
+  startHour: z.string().regex(/^([01]\d|2[0-3]):?([0-5]\d)$/, "Invalid time format (HH:mm)"),
+  endHour: z.string().regex(/^([01]\d|2[0-3]):?([0-5]\d)$/, "Invalid time format (HH:mm)"),
+})
+
 const BaseConfigBody = z.object({
   name: z.string().min(1),
   active: z.boolean().default(true),
-  triggerKey: z.enum(["level_change"] as const),
+  triggerKey: z.enum(["level_change", "activity_time_slot"] as const),
 })
 
 const CreateBody = BaseConfigBody.and(
@@ -30,8 +35,8 @@ const CreateBody = BaseConfigBody.and(
     config: z.union([
       z.object({ triggerKey: z.literal("level_change") }).strip().transform(() => null),
       LevelChangeConfig,
+      ActivityTimeSlotConfig,
     ]).transform((val, ctx) => {
-      // When triggerKey is level_change, config must be LevelChangeConfig. We depend on request structure providing config.
       return val
     }),
   })
@@ -41,10 +46,11 @@ const UpdateBody = z.object({
   name: z.string().min(1).optional(),
   active: z.boolean().optional(),
   // triggerKey is immutable via update for safety
-  config: LevelChangeConfig.optional(),
+  config: z.union([LevelChangeConfig, ActivityTimeSlotConfig]).optional(),
 })
 
 export type LevelChangeConfigType = z.infer<typeof LevelChangeConfig>
+export type ActivityTimeSlotConfigType = z.infer<typeof ActivityTimeSlotConfig>
 
 export const configsRoute = new Hono<Env>()
 
@@ -171,12 +177,17 @@ configsRoute.post("/", async (c) => {
     const now = Math.floor(Date.now() / 1000)
     const id = uuidv7();
 
-    // Only supported trigger: level_change
-    if (parsed.triggerKey !== "level_change") {
+    // Only supported triggers: level_change, activity_time_slot
+    if (!["level_change", "activity_time_slot"].includes(parsed.triggerKey)) {
       return c.json({ ok: false, error: "UNSUPPORTED_TRIGGER" }, 400)
     }
 
-    const cfg = LevelChangeConfig.parse((body as any).config)
+    let cfg: any
+    if (parsed.triggerKey === "level_change") {
+      cfg = LevelChangeConfig.parse((body as any).config)
+    } else if (parsed.triggerKey === "activity_time_slot") {
+      cfg = ActivityTimeSlotConfig.parse((body as any).config)
+    }
 
     await db
       .insert(loyaltyConfigs)

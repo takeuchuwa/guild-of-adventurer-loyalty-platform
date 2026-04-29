@@ -1,5 +1,5 @@
 import { inArray, eq, or, and, isNull, lte, gte } from "drizzle-orm"
-import { activities, products, promotions, promotionAssignments, levelPromotions, entityCategories, games, members } from "@loyalty/db/schema"
+import { activities, products, promotions, promotionAssignments, levelPromotions, entityCategories, games, members, memberPromotionUsages } from "@loyalty/db/schema"
 import type { CartState, CartItem } from "./types"
 
 /**
@@ -24,7 +24,25 @@ export async function calculateCartState(cart: CartState, db: any): Promise<Cart
 
     const eligiblePromos = await fetchEligiblePromotions(cart, db);
 
-    applyPromotionsToCart(cart, eligiblePromos, itemCategoriesMap, fullMember);
+    let memberUsagesMap = new Map<string, number[]>();
+    if (fullMember && eligiblePromos.length > 0) {
+        const promoIds = eligiblePromos.map(p => p.promoId);
+        const usages = await db.select({ promoId: memberPromotionUsages.promoId, usedAt: memberPromotionUsages.usedAt })
+            .from(memberPromotionUsages)
+            .where(
+                and(
+                    eq(memberPromotionUsages.memberId, fullMember.memberId),
+                    inArray(memberPromotionUsages.promoId, promoIds)
+                )
+            );
+        for (const u of usages) {
+            let list = memberUsagesMap.get(u.promoId) || [];
+            list.push(u.usedAt);
+            memberUsagesMap.set(u.promoId, list);
+        }
+    }
+
+    applyPromotionsToCart(cart, eligiblePromos, itemCategoriesMap, fullMember, memberUsagesMap);
 
     aggregateFinalTotals(cart);
 
@@ -250,7 +268,7 @@ function evaluateLogic(cartValues: string[], ruleValues: string[], logic: string
 /**
  * Step C: Iterates sorted promotions and applies them to eligible cart items.
  */
-function applyPromotionsToCart(cart: CartState, eligiblePromos: any[], itemCategoriesMap: Map<string, string[]>, fullMember: any) {
+function applyPromotionsToCart(cart: CartState, eligiblePromos: any[], itemCategoriesMap: Map<string, string[]>, fullMember: any, memberUsagesMap: Map<string, number[]>) {
     const newlyAppliedPromos: { id: string, name: string, bonusPoints?: number }[] = [];
     let nonCombinableApplied = false;
 
@@ -288,6 +306,54 @@ function applyPromotionsToCart(cart: CartState, eligiblePromos: any[], itemCateg
             const nowSeconds = Math.floor(Date.now() / 1000);
             const daysSinceJoin = (nowSeconds - fullMember.joinedAt) / (60 * 60 * 24);
             if (daysSinceJoin > daysLimit) continue;
+        }
+
+        if (config.conditions?.memberConditions?.member_is_birthday !== undefined) {
+            if (!cart.member?.memberId || !fullMember || !fullMember.birthDate) {
+                continue;
+            }
+            const windowDays = config.conditions.memberConditions.member_is_birthday;
+
+            const now = new Date();
+            const bday = new Date(fullMember.birthDate * 1000);
+
+            // Create a version of the user's birthday in the current year
+            const currentYearBday = new Date(now.getFullYear(), bday.getMonth(), bday.getDate());
+
+            const diffTime = Math.abs(now.getTime() - currentYearBday.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > windowDays) {
+                continue;
+            }
+        }
+
+        if (config.conditions?.memberConditions?.max_usage_per_member !== undefined) {
+            if (!cart.member?.memberId || !fullMember) {
+                continue;
+            }
+            const limits = config.conditions.memberConditions.max_usage_per_member;
+            const maxUsage = limits.limit || 1;
+            const period = limits.period || "global";
+
+            const allUsages = memberUsagesMap.get(promo.promoId) || [];
+
+            const nowSeconds = Math.floor(Date.now() / 1000);
+            const SECONDS_IN_MONTH = 30 * 24 * 60 * 60;
+            const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
+
+            let currentUsage = 0;
+            if (period === "global") {
+                currentUsage = allUsages.length;
+            } else if (period === "year") {
+                currentUsage = allUsages.filter(u => nowSeconds - u <= SECONDS_IN_YEAR).length;
+            } else if (period === "month") {
+                currentUsage = allUsages.filter(u => nowSeconds - u <= SECONDS_IN_MONTH).length;
+            }
+
+            if (currentUsage >= maxUsage) {
+                continue;
+            }
         }
 
         if (config.conditions?.itemConditions) {

@@ -43,6 +43,41 @@
       "when": 1772660338575,
       "tag": "0005_handy_quentin_quire",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1772915963559,
+      "tag": "0006_real_stepford_cuckoos",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1772918064193,
+      "tag": "0007_eager_pandemic",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1774214413514,
+      "tag": "0008_supreme_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1774456179478,
+      "tag": "0009_petite_agent_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1777053967696,
+      "tag": "0010_oval_layla_miller",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import type { Room } from "../types/room"
 import type { RoomFormData } from "../types/validations/room-validation"
 
-const API_BASE_URL = import.meta.env.VITE_BE_HOST || "http://localhost:8787"
+const API_BASE_URL = import.meta.env.VITE_BE_HOST || "http://192.168.50.108:8787"
 
 export interface CursorParams {
     pageSize: number

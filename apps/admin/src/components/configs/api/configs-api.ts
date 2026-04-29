@@ -10,6 +10,11 @@ export type LevelChangeConfig = {
   notifyReferred: boolean
 }
 
+export type ActivityTimeSlotConfig = {
+  startHour: string
+  endHour: string
+}
+
 export type LoyaltyConfig = {
   configId: string
   triggerKey: LoyaltyTriggerKey

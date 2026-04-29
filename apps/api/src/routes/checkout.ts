@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { getDb } from "@loyalty/db/client"
-import { activities, members, pointsLedger, products, promotions } from "@loyalty/db/schema"
+import { activities, members, pointsLedger, products, promotions, memberPromotionUsages, entityCategories, categories } from "@loyalty/db/schema"
 import { eq, inArray, and, gt } from "drizzle-orm"
 import type { Env } from "@/types/env"
 import z from "zod"
@@ -8,6 +8,7 @@ import { checkAndProcessLevelUp } from "@/utils/level-up"
 import { v7 as uuidv7 } from 'uuid';
 import { calculateCartState } from "@/cart/calculate";
 import type { CartState } from "@/cart/types";
+import { sendBatchNotifications } from "@/utils/notify";
 
 const CheckoutBodySchema = z.object({
     expectedTotal: z.number().min(0, "Expected total cannot be negative"),
@@ -63,7 +64,7 @@ checkoutRoute.post("/", async (c) => {
         }
 
         let batchOps: any[] = []
-        let pendingNotifies: Array<{ kind: string; body: any }> = []
+        let pendingNotifies: Array<{ memberId?: string; kind: string; body: any }> = []
 
         // Step 3: Optimistic Locking for Promotions
         const appliedPromoIds = (calculatedCart.appliedPromos || []).map(p => p.id)
@@ -107,6 +108,25 @@ checkoutRoute.post("/", async (c) => {
                     }
 
                     successfullyUpdatedPromos.push(promoId)
+                }
+
+                // If promo has max usage per member, we need to track it
+                let config: any = {};
+                try {
+                    config = typeof promo.config === 'string' ? JSON.parse(promo.config) : promo.config;
+                } catch { }
+
+                if (config?.conditions?.memberConditions?.max_usage_per_member !== undefined && calculatedCart.member?.memberId) {
+                    const now = Math.floor(Date.now() / 1000);
+                    batchOps.push(
+                        db.insert(memberPromotionUsages)
+                            .values({
+                                usageId: uuidv7(),
+                                memberId: calculatedCart.member.memberId,
+                                promoId: promoId,
+                                usedAt: now
+                            })
+                    );
                 }
             }
         }
@@ -180,6 +200,47 @@ checkoutRoute.post("/", async (c) => {
                 }
             }
 
+            // Process Member Statistics
+            const statsUpdates: Record<string, number> = {};
+            for (const item of calculatedCart.items) {
+                if (item.quantity > 0) {
+                    if (!statsUpdates[item.entityId]) statsUpdates[item.entityId] = 0;
+                    statsUpdates[item.entityId] += item.quantity;
+                }
+            }
+
+            const entityIds = Object.keys(statsUpdates);
+            if (entityIds.length > 0) {
+                const fetchedCategories = await db.select({
+                    entityId: entityCategories.entityId,
+                    categoryName: categories.name
+                })
+                .from(entityCategories)
+                .innerJoin(categories, eq(entityCategories.categoryId, categories.categoryId))
+                .where(inArray(entityCategories.entityId, entityIds))
+                .all();
+
+                let memberStatsJson: Record<string, number> = (member.statistics as Record<string, number>) || {};
+                
+                let hasStatsChanges = false;
+                for (const fc of fetchedCategories) {
+                    const addedQuantity = statsUpdates[fc.entityId] || 0;
+                    if (addedQuantity > 0) {
+                        if (!memberStatsJson[fc.categoryName]) memberStatsJson[fc.categoryName] = 0;
+                        memberStatsJson[fc.categoryName] += addedQuantity;
+                        hasStatsChanges = true;
+                    }
+                }
+
+                if (hasStatsChanges) {
+                    batchOps.push(
+                        db.update(members)
+                        .set({ statistics: memberStatsJson })
+                        .where(eq(members.memberId, member.memberId))
+                    );
+                }
+            }
+
             if (ledgerEntries.length > 0) {
                 batchOps.push(db.insert(pointsLedger).values(ledgerEntries))
 
@@ -196,6 +257,7 @@ checkoutRoute.post("/", async (c) => {
                 const totalCheckoutPoints = ledgerEntries.reduce((sum, e) => sum + e.delta, 0)
                 if (totalCheckoutPoints > 0 && member.telegramUserId) {
                     pendingNotifies.push({
+                        memberId: member.memberId,
                         kind: "checkout_points",
                         body: {
                             kind: "checkout_points",
@@ -213,17 +275,8 @@ checkoutRoute.post("/", async (c) => {
                 await db.batch(batchOps as any)
 
                 try {
-                    const headers: any = { "content-type": "application/json" }
-                    const token = (c.env as any).INTERNAL_TOKEN || "dummy_token"
-                    headers["authorization"] = `Bearer ${token}`
-
-                    const tasks = pendingNotifies.map(item => {
-                        const body = JSON.stringify(item.body)
-                        return c.env.BOT.fetch("https://internal/bot/notify", { method: "POST", headers, body }).catch(e => console.error("Notify error", e))
-                    })
-
                     // @ts-ignore Cloudflare runtime
-                    c.executionCtx?.waitUntil(Promise.all(tasks))
+                    c.executionCtx?.waitUntil(sendBatchNotifications(db, c.env, pendingNotifies))
                 } catch (e) {
                     console.warn("[checkout] notification scheduling failed", e)
                 }

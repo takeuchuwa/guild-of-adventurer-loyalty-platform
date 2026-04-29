@@ -130,3 +130,16 @@ export async function searchActivities(query: string): Promise<Activity[]> {
         return []
     }
 }
+
+export async function verifyMemberQR(payloadObj: { type: string, payload: string }): Promise<Member> {
+    try {
+        const response = await axiosInstance.post("/members/verify", payloadObj)
+        if (!response.data.ok) {
+             throw new Error(response.data.message || "Очікувався QR учасника.")
+        }
+        return response.data.data
+    } catch (error: any) {
+        console.error("Error verifying member QR:", error)
+        throw new Error(error.response?.data?.message || "Помилка при перевірці QR коду")
+    }
+}
