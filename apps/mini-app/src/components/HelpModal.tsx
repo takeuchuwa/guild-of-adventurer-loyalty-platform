@@ -97,7 +97,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           {/* Cards List (Content) */}
           <div className="px-6 pb-6 space-y-3">
             {helpItems.map((item, i) => (
-              <div key={i} className="glass-card bg-black/20 outline outline-1 outline-white/5 p-5 rounded-xl flex items-start gap-4 hover:bg-white/5 transition-all duration-300">
+              <div key={i} className="glass-card bg-black/20 outline outline-white/5 p-5 rounded-xl flex items-start gap-4 hover:bg-white/5 transition-all duration-300">
                 <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
                   <item.icon className="w-6 h-6 text-guild-gold" />
                 </div>

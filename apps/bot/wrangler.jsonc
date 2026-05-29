@@ -19,12 +19,18 @@
           "database_name": "dnd-studio-db-staging",
           "database_id": "fd0d4d78-70c7-4031-b287-ad5364367542"
         }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "BUCKET",
+          "bucket_name": "dnd-studio-assets-staging"
+        }
       ]
     },
     "production": {
       "vars": {
         "ENVIRONMENT": "production",
-        "MINI_APP_URL": "https://dnd-studio-mini-app.dmytro-horban01.workers.dev",
+        "MINI_APP_URL": "https://dnd-studio-mini-app-prod.dmytro-horban01.workers.dev",
         "BOT_INFO": "{\"id\":7969873880,\"is_bot\":true,\"first_name\":\"Гільдія Авантюристів\",\"username\":\"dnd_studio_bot\",\"can_join_groups\":true,\"can_read_all_group_messages\":false,\"supports_inline_queries\":false,\"can_connect_to_business\":false,\"has_main_web_app\":false}"
       },
       "d1_databases": [
@@ -32,6 +38,12 @@
           "binding": "DB",
           "database_name": "dnd-studio-db",
           "database_id": "7a808ae3-6e78-43c5-940d-761eca0b3ccd"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "BUCKET",
+          "bucket_name": "dnd-studio-assets"
         }
       ]
     }
@@ -43,5 +55,17 @@
       "database_id": "local",
       "migrations_dir": "drizzle/migrations"
     }
-  ]
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "dnd-studio-assets"
+    }
+  ],
+  "secrets": {
+    "required": [
+      "BOT_TOKEN",
+      "QR_SECRET_KEY"
+    ]
+  }
 }

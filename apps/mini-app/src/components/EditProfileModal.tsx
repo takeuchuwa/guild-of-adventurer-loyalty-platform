@@ -90,7 +90,7 @@ export function EditProfileModal({ isOpen, onClose, member, onSuccess }: EditPro
     if (!isOpen) return;
 
     const scrollY = window.scrollY;
-    
+
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
@@ -109,16 +109,16 @@ export function EditProfileModal({ isOpen, onClose, member, onSuccess }: EditPro
       if (scrollRef.current) {
         const containerRect = scrollRef.current.getBoundingClientRect()
         const targetRect = target.getBoundingClientRect()
-        
+
         const relativeTop = targetRect.top - containerRect.top + scrollRef.current.scrollTop
         const centerOffset = (containerRect.height / 2) - (targetRect.height / 2)
-        
+
         scrollRef.current.scrollTo({
           top: relativeTop - centerOffset,
           behavior: 'smooth'
         })
       } else {
-         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 350)
   }
@@ -295,18 +295,18 @@ export function EditProfileModal({ isOpen, onClose, member, onSuccess }: EditPro
                     style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
                   />
                   <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none group-focus-within:border-guild-gold/30 transition-colors"></div>
-                  
+
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={(e) => e.stopPropagation()}
                         className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors"
                       >
                         <Calendar className="w-5 h-5 text-guild-text-muted/50 group-focus-within:text-guild-gold/50 transition-colors" />
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-[100] bg-[#172e27]/95 backdrop-blur-3xl border-[#c8a679]/20 rounded-[1.5rem] shadow-2xl" align="end" sideOffset={12}>
+                    <PopoverContent className="w-auto p-0 z-100 bg-surface-container-high/95 backdrop-blur-3xl border-guild-gold/20 rounded-[1.5rem] shadow-2xl" align="end" sideOffset={12}>
                       <ShadcnCalendar
                         mode="single"
                         selected={getBirthDateAsDate()}

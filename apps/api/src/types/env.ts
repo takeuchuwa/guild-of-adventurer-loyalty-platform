@@ -6,6 +6,7 @@ export type Env = {
         BOT: Fetcher
         KV_POS_CART: KVNamespace
         QR_SECRET_KEY: string
+        BUCKET?: R2Bucket
     }
     Variables: {
         tgUser: any

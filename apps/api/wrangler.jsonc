@@ -17,8 +17,7 @@
   "env": {
     "staging": {
       "vars": {
-        "ENVIRONMENT": "staging",
-        "QR_SECRET_KEY": "dev_secret_key"
+        "ENVIRONMENT": "staging"
       },
       "services": [
         {
@@ -39,12 +38,17 @@
           "binding": "KV_POS_CART",
           "id": "2170146be6834dd89a0b8013734f8bb4"
         }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "BUCKET",
+          "bucket_name": "dnd-studio-assets-staging"
+        }
       ]
     },
     "production": {
       "vars": {
-        "ENVIRONMENT": "production",
-        "QR_SECRET_KEY": "production_secret_key"
+        "ENVIRONMENT": "production"
       },
       "services": [
         {
@@ -65,6 +69,12 @@
           "binding": "KV_POS_CART",
           "id": "934cdd5d032943319b98bad05c32541c"
         }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "BUCKET",
+          "bucket_name": "dnd-studio-assets"
+        }
       ]
     }
   },
@@ -82,7 +92,16 @@
       "id": "2170146be6834dd89a0b8013734f8bb4"
     }
   ],
-  "vars": {
-    "QR_SECRET_KEY": "dev_secret_key"
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "dnd-studio-assets"
+    }
+  ],
+  "secrets": {
+    "required": [
+      "BOT_TOKEN",
+      "QR_SECRET_KEY"
+    ]
   }
 }

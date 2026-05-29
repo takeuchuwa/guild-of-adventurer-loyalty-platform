@@ -18,7 +18,7 @@ import {
     memberPromotionUsages,
     games
 } from "@loyalty/db/schema"
-import { and, asc, eq, sql, lte, isNull, desc, lt, gte, or, inArray } from "drizzle-orm"
+import { and, asc, eq, sql, lte, isNull, isNotNull, desc, lt, gte, or, inArray } from "drizzle-orm"
 import { alias } from "drizzle-orm/sqlite-core"
 import { buildPagination, buildSearch, parsePagination, parseSort } from "@/utils/query-helpers"
 import type { Env } from "@/types/env"
@@ -33,7 +33,7 @@ import { generateMemberQrPayload } from "@/utils/qr";
 const NAME_REGEX = /^[\p{L}\s\-']+$/u
 const NICKNAME_REGEX = /^[\p{L}\p{N}_\-]+$/u
 const MIN_BIRTH_YEAR = 1924
-const MAX_BIRTH_YEAR = new Date().getFullYear() - 16
+const getMaxBirthYear = () => new Date().getFullYear() - 16
 
 const MemberUpdateBody = z.object({
     firstName: z.string().trim().min(1, "Ім'я обов'язкове").max(255)
@@ -46,11 +46,16 @@ const MemberUpdateBody = z.object({
         .regex(NICKNAME_REGEX, "Нікнейм може містити лише літери, цифри, дефіси та підкреслення")
         .refine(val => !/^\d/.test(val), { message: "Нікнейм не може починатися з цифри" })
         .optional().nullable(),
-    birthDate: z.string().optional().nullable().refine((val) => {
-        if (!val) return true
+    birthDate: z.string().optional().nullable().superRefine((val, ctx) => {
+        if (!val) return
         const year = new Date(val).getFullYear()
-        return !isNaN(year) && year >= MIN_BIRTH_YEAR && year <= MAX_BIRTH_YEAR
-    }, { message: `Мінімальний вік — 16 років. Дата народження має бути між ${MIN_BIRTH_YEAR} та ${MAX_BIRTH_YEAR} роком` }),
+        if (isNaN(year) || year < MIN_BIRTH_YEAR || year > getMaxBirthYear()) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `Мінімальний вік — 16 років. Дата народження має бути між ${MIN_BIRTH_YEAR} та ${getMaxBirthYear()} роком`
+            })
+        }
+    }),
 })
 
 const PointsAdjustmentBody = z.object({
@@ -316,12 +321,16 @@ const SelfUpdateBody = z.object({
         .regex(NICKNAME_REGEX, "Нікнейм може містити лише літери, цифри, дефіси та підкреслення")
         .refine(s => !/^\d/.test(s), "Псевдонім не може починатися з цифри")
         .nullable().optional(),
-    birthDate: z.number().nullable().optional()
-        .refine((val) => {
-            if (val === null || val === undefined) return true
-            const year = new Date(val * 1000).getFullYear()
-            return !isNaN(year) && year >= MIN_BIRTH_YEAR && year <= MAX_BIRTH_YEAR
-        }, { message: `Мінімальний вік — 16 років. Дата народження має бути між ${MIN_BIRTH_YEAR} та ${MAX_BIRTH_YEAR} роком` })
+    birthDate: z.number().nullable().optional().superRefine((val, ctx) => {
+        if (val === null || val === undefined) return
+        const year = new Date(val * 1000).getFullYear()
+        if (isNaN(year) || year < MIN_BIRTH_YEAR || year > getMaxBirthYear()) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `Мінімальний вік — 16 років. Дата народження має бути між ${MIN_BIRTH_YEAR} та ${getMaxBirthYear()} роком`
+            })
+        }
+    })
 })
 
 
@@ -344,7 +353,7 @@ membersRoute.put("/@self", telegramAuth, async (c) => {
         if (parsed.birthDate !== undefined && parsed.birthDate !== member.birthDate) {
             // Allow change if the current birthdate is invalid (out of valid range)
             const currentBirthYear = member.birthDate ? new Date(member.birthDate * 1000).getFullYear() : null
-            const currentBirthDateInvalid = !currentBirthYear || currentBirthYear < MIN_BIRTH_YEAR || currentBirthYear > MAX_BIRTH_YEAR
+            const currentBirthDateInvalid = !currentBirthYear || currentBirthYear < MIN_BIRTH_YEAR || currentBirthYear > getMaxBirthYear()
 
             if (!currentBirthDateInvalid && member.birthDateChangedAt) {
                 const changedYear = new Date(member.birthDateChangedAt * 1000).getFullYear();
@@ -868,6 +877,76 @@ membersRoute.get("/loyalty/:memberId", async (c) => {
     }
 })
 
+membersRoute.get("/broadcast-recipients", async (c) => {
+    try {
+        const token = c.req.header("authorization")?.replace("Bearer ", "")
+        const expected = c.env.INTERNAL_TOKEN || "dummy_token"
+        if (token !== expected) {
+            return c.json({ ok: false, error: "UNAUTHORIZED" }, 401)
+        }
+
+        const db = getDb(c.env)
+        const recipients = await db.select({
+            memberId: members.memberId,
+            telegramUserId: members.telegramUserId,
+            firstName: members.firstName,
+            lastName: members.lastName,
+            nickname: members.nickname,
+        })
+            .from(members)
+            .where(and(eq(members.active, true), isNotNull(members.telegramUserId)))
+            .all()
+
+        return c.json({ ok: true, data: recipients })
+    } catch (err: any) {
+        console.error("[GET /members/broadcast-recipients] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+const SendBroadcastBody = z.object({
+    telegramUserId: z.string().min(1),
+    text: z.string().min(1),
+    photoUrls: z.array(z.string().min(1)).optional(),
+})
+
+membersRoute.post("/send-broadcast", async (c) => {
+    try {
+        const token = c.req.header("authorization")?.replace("Bearer ", "")
+        const expected = c.env.INTERNAL_TOKEN || "dummy_token"
+        if (token !== expected) {
+            return c.json({ ok: false, error: "UNAUTHORIZED" }, 401)
+        }
+
+        const body = await c.req.json()
+        const parsed = SendBroadcastBody.parse(body)
+
+        // Forward to Bot worker
+        const headers: any = { "content-type": "application/json" }
+        headers["authorization"] = `Bearer ${expected}`
+
+        const res = await c.env.BOT.fetch("https://internal/bot/send-message", {
+            method: "POST",
+            headers,
+            body: JSON.stringify(parsed)
+        })
+
+        if (!res.ok) {
+            const errText = await res.text()
+            return c.json({ ok: false, error: "BOT_ERROR", message: errText }, res.status as any)
+        }
+
+        const resJson = await res.json() as any
+        return c.json(resJson)
+    } catch (err: any) {
+        if (err instanceof z.ZodError) {
+            return c.json({ ok: false, error: "VALIDATION_ERROR", details: err.issues }, 400)
+        }
+        console.error("[POST /members/send-broadcast] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
 membersRoute.get("/:id", async (c) => {
     try {
         const id = c.req.param("id")
@@ -1259,3 +1338,6 @@ membersRoute.get("/:id/points-ledger", async (c) => {
         return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
     }
 })
+
+
+

@@ -14,7 +14,7 @@
         "ENVIRONMENT": "staging"
       }
     },
-    "production": {
+    "prod": {
       "vars": {
         "ENVIRONMENT": "production"
       }

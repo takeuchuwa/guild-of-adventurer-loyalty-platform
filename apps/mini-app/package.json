@@ -11,7 +11,7 @@
     "build:staging": "vite build --mode staging",
     "build:prod": "vite build --mode production",
     "deploy:staging": "pnpm build:staging && wrangler deploy --env=staging",
-    "deploy:prod": "pnpm build:prod && wrangler deploy --env=production"
+    "deploy:prod": "pnpm build:prod && wrangler deploy --env=prod"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",

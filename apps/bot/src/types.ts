@@ -8,6 +8,7 @@ export interface Env {
   QR_SECRET_KEY: string
   INTERNAL_TOKEN?: string
   BOT_ENV?: string
+  BUCKET?: R2Bucket
 }
 
 export type BotContext = Context & { env: Env }

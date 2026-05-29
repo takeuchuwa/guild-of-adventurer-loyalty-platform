@@ -11,7 +11,7 @@ export interface NotificationPayload {
 
 export async function sendBatchNotifications(
     db: DrizzleD1Database<any>,
-    env: Env,
+    env: Env["Bindings"],
     notifications: NotificationPayload[]
 ): Promise<void> {
     if (notifications.length === 0) return
@@ -47,7 +47,7 @@ export async function sendBatchNotifications(
     const tasks = filteredNotifies.map(item => {
         const body = JSON.stringify(item.body)
         return env.BOT.fetch("https://internal/bot/notify", { method: "POST", headers, body })
-            .catch(e => console.error("Notify error", e))
+            .catch((e: any) => console.error("Notify error", e))
     })
 
     try {

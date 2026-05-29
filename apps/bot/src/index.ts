@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { webhookCallback, Bot } from "grammy"
+import { webhookCallback, Bot, InputFile } from "grammy"
 import { texts } from "./texts"
 import type { Env } from "./types"
 import { setupRegistrationHandlers } from "./features/registration"
@@ -85,6 +85,95 @@ app.post("/bot/notify", async (c) => {
     } catch (e: any) {
         console.error("[bot notify] error", e)
         return c.json({ ok: true })
+    }
+})
+
+// Internal send-message endpoint (from API or script)
+app.post("/bot/send-message", async (c) => {
+    try {
+        const token = c.req.header("authorization")?.replace("Bearer ", "")
+        const expected = c.env.INTERNAL_TOKEN || "dummy_token"
+        if (token !== expected) {
+            return c.json({ ok: false, error: "UNAUTHORIZED" }, 401)
+        }
+
+        const body = await c.req.json()
+        const tgId: string | undefined = body?.telegramUserId
+        const text: string | undefined = body?.text
+        const photoUrls: string[] | undefined = body?.photoUrls
+
+        if (!tgId) {
+            return c.json({ ok: false, error: "MISSING_TELEGRAM_USER_ID" }, 400)
+        }
+        if (!text) {
+            return c.json({ ok: false, error: "MISSING_TEXT" }, 400)
+        }
+
+        const bot = createBot(c.env)
+
+        const warnings: string[] = []
+        let photosSent = 0
+
+        // Handle photo attachments
+        if (photoUrls && photoUrls.length > 0) {
+            const urls = Array.isArray(photoUrls) ? photoUrls : [photoUrls]
+            const mediaList: { type: "photo"; media: string | InputFile }[] = []
+
+            for (const item of urls.slice(0, 10)) {
+                if (item.startsWith("http://") || item.startsWith("https://")) {
+                    mediaList.push({ type: "photo" as const, media: item })
+                } else if (c.env.BUCKET) {
+                    try {
+                        const object = await c.env.BUCKET.get(item)
+                        if (object) {
+                            const buf = await object.arrayBuffer()
+                            const ext = item.split('.').pop() || "png"
+                            mediaList.push({
+                                type: "photo" as const,
+                                media: new InputFile(new Uint8Array(buf), `photo.${ext}`)
+                            })
+                        } else {
+                            const msg = `R2 object not found for key: ${item}`
+                            console.warn(msg)
+                            warnings.push(msg)
+                        }
+                    } catch (e: any) {
+                        const msg = `Failed to fetch ${item} from R2 bucket: ${e.message}`
+                        console.error(msg, e)
+                        warnings.push(msg)
+                    }
+                } else {
+                    const msg = `R2 bucket not bound, cannot fetch path: ${item}`
+                    console.warn(msg)
+                    warnings.push(msg)
+                }
+            }
+
+            photosSent = mediaList.length
+
+            if (mediaList.length === 1) {
+                await bot.api.sendPhoto(tgId, mediaList[0].media)
+            } else if (mediaList.length > 1) {
+                await bot.api.sendMediaGroup(tgId, mediaList)
+            }
+        }
+
+        // Convert markdown to safe Telegram HTML
+        const htmlText = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+            .replace(/^\*\s+/gm, "• ")
+            .replace(/`(.*?)`/g, "<code>$1</code>")
+
+        // Send the formatted release notes text
+        await bot.api.sendMessage(tgId, htmlText, { parse_mode: "HTML" })
+
+        return c.json({ ok: true, photosSent, warnings })
+    } catch (e: any) {
+        console.error("[bot send-message] error", e)
+        return c.json({ ok: false, error: "BOT_SEND_ERROR", message: e.message }, 500)
     }
 })
 

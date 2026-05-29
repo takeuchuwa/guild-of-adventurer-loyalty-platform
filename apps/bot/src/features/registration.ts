@@ -1,4 +1,4 @@
-import { Bot } from "grammy"
+import { Bot, InputFile } from "grammy"
 import CryptoJS from "crypto-js"
 import { getDb } from "@loyalty/db/client"
 import { levelsTiers, members } from "@loyalty/db/schema"
@@ -52,14 +52,14 @@ function generateMemberQrPayload(memberId: string, qrSecret: string): string {
 async function sendQrCode(ctx: BotContext, memberId: string, env: Env) {
     if (!env.QR_SECRET_KEY) return;
     const payload = generateMemberQrPayload(memberId, env.QR_SECRET_KEY);
-    
+
     const encoded = encodeURIComponent(payload);
     const size = 512;
     const margin = 24;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=${margin}&data=${encoded}`;
-    
+
     const caption = "Ваш персональний QR-код. Покажіть його при розрахунку або скануванні.";
-    
+
     try {
         const msg = await ctx.replyWithPhoto(qrUrl, { caption });
         await ctx.api.pinChatMessage(ctx.chat!.id, msg.message_id, { disable_notification: true });
@@ -175,7 +175,30 @@ export function setupRegistrationHandlers(bot: Bot, env: Env) {
             setReferralForUser(tgId, payload)
             console.log("[start] captured referral for", tgId, "=>", payload)
         }
-        await ctx.reply(texts.welcome, { reply_markup: keyboards.share_contact })
+
+        // Send welcome image if present in R2, otherwise send plain text
+        let welcomeSent = false
+        if (env.BUCKET) {
+            try {
+                let object = await env.BUCKET.get("welcome.png")
+                if (!object) {
+                    object = await env.BUCKET.get("welcome.jpg")
+                }
+                if (object) {
+                    const buf = await object.arrayBuffer()
+                    await ctx.replyWithPhoto(new InputFile(new Uint8Array(buf), "welcome.png"), {
+                        caption: texts.welcome,
+                        reply_markup: keyboards.share_contact
+                    })
+                    welcomeSent = true
+                }
+            } catch (e) {
+                console.error("Failed to send welcome image from R2", e)
+            }
+        }
+        if (!welcomeSent) {
+            await ctx.reply(texts.welcome, { reply_markup: keyboards.share_contact })
+        }
     })
 
     // Handle contact share
