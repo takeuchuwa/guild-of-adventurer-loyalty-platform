@@ -28,6 +28,7 @@ activitiesRoute.get("/", async (c) => {
 
         const sortParam = url.searchParams.get("sort")
         const categoryId = url.searchParams.get("categoryId")?.trim() || null
+        const gameId = url.searchParams.get("gameId")?.trim() || null
 
         const db = getDb(c.env)
 
@@ -55,18 +56,29 @@ activitiesRoute.get("/", async (c) => {
             }
         }
 
-        const countWhereExpr = baseWhereConditions.length > 0 ? and(...baseWhereConditions) : undefined
+        if (gameId) {
+            baseWhereConditions.push(eq(activities.gameId, gameId))
+        }
 
         // 🔗 Optional category filter — only if truly provided and valid
-        let filteredIds: string[] | null = null
         if (categoryId) {
             const rels = await db
                 .select({ entityId: entityCategories.entityId })
                 .from(entityCategories)
                 .where(and(eq(entityCategories.entityType, "activity"), eq(entityCategories.categoryId, categoryId)))
                 .all()
-            filteredIds = rels.map((r) => r.entityId)
+            const filteredIds = rels.map((r) => r.entityId)
+            if (filteredIds.length === 0) {
+                return c.json({
+                    ok: true,
+                    data: [],
+                    pagination: buildPagination({ pageSize, hasNextPage: false, nextCursor: null, total: 0 }),
+                })
+            }
+            baseWhereConditions.push(inArray(activities.activityId, filteredIds))
         }
+
+        const countWhereExpr = baseWhereConditions.length > 0 ? and(...baseWhereConditions) : undefined
 
         // 1. Extract Sorting Details
         const sortField = sortParam?.split(',')[0] || 'activityId';
@@ -138,9 +150,7 @@ activitiesRoute.get("/", async (c) => {
             .leftJoin(systems, eq(activities.systemId, systems.systemId))
             .leftJoin(rooms, eq(activities.roomId, rooms.roomId))
 
-        if (filteredIds && filteredIds.length > 0) {
-            query.where(inArray(activities.activityId, filteredIds))
-        } else if (dataWhereExpr) {
+        if (dataWhereExpr) {
             query.where(dataWhereExpr as any)
         }
 
@@ -153,9 +163,7 @@ activitiesRoute.get("/", async (c) => {
 
         if (includeCount) {
             const totalQuery = db.select({ count: sql<number>`count(*)` }).from(activities)
-            if (filteredIds && filteredIds.length > 0) {
-                totalQuery.where(inArray(activities.activityId, filteredIds))
-            } else if (countWhereExpr) {
+            if (countWhereExpr) {
                 totalQuery.where(countWhereExpr as any)
             }
 

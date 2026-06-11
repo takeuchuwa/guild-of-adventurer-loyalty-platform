@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { DataTable, type DataTableAction } from "@/components/table/data-table"
+import { DataTable, type DataTableAction, type DataTableFilter } from "@/components/table/data-table"
 import { usePagination } from "@/hooks/use-pagination"
 import { useSorting } from "@/hooks/use-sorting"
 import type { CustomColumnDef } from "@/types/table"
@@ -17,10 +17,14 @@ interface MembersTableProps {
   title?: string
   emptyStateMessage?: string
   actions?: DataTableAction<Member>[]
+  filters?: DataTableFilter[]
+  filterParams?: Record<string, any>
   searchPlaceholder?: string
   onLoadMembersRef?: React.MutableRefObject<(() => Promise<void>) | null>
   onSelectionChange?: (selected: Map<string, Member>) => void
   initialSelection?: string[]
+  pageSize?: number
+  storageKey?: string
 }
 
 export function MemberTable({
@@ -29,10 +33,14 @@ export function MemberTable({
   title,
   emptyStateMessage = "Не знайдено учасників за вашим запитом",
   actions = [],
+  filters = [],
+  filterParams = {},
   searchPlaceholder,
   onLoadMembersRef,
   onSelectionChange,
   initialSelection,
+  pageSize = 10,
+  storageKey,
 }: MembersTableProps) {
   const [members, setMembers] = useState<Member[]>([])
   const [totalElements, setTotalElements] = useState(0)
@@ -48,7 +56,7 @@ export function MemberTable({
 
   const allSelectedMembers = useRef<Map<string, Member>>(new Map())
 
-  const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination()
+  const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
   const { sorting, onSortingChange } = useSorting("", "")
   const { currentSearch, searchProps } = useSearch({
     searchPlaceholder,
@@ -67,6 +75,7 @@ export function MemberTable({
         },
         sorting,
         currentSearch: currentSearch || undefined,
+        filterParams,
       })
       setMembers(fetchedMembers)
       updatePaginationContext(page.hasNextPage, page.nextCursor, page.total)
@@ -77,7 +86,7 @@ export function MemberTable({
     } finally {
       setIsLoading(false)
     }
-  }, [pagination, sorting, currentSearch, getCursor, updatePaginationContext])
+  }, [pagination, sorting, currentSearch, getCursor, updatePaginationContext, filterParams])
 
   useEffect(() => {
     loadMembers()
@@ -136,6 +145,7 @@ export function MemberTable({
       selectionMode={selectionMode}
       emptyStateMessage={emptyStateMessage}
       actions={actions}
+      filters={filters}
       rowId="memberId"
       {...searchProps}
       onSimpleSearch={(query) => {

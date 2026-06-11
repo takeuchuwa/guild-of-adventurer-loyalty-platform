@@ -13,14 +13,14 @@ export default function GamesCreatePage() {
         setIsLoading(true)
         try {
             await createGame(data)
-            toast.success("Систему успішно створено")
+            toast.success("Ігрову систему успішно створено")
             navigate("/games")
         } catch (error: any) {
             console.error("Error creating game:", error)
-            if (error.message === "Гра з такою назвою вже існує") {
+            if (error.message === "Гра з такою назвою вже існує" || error.message === "Ігрова система з такою назвою вже існує") {
                 toast.error(error.message)
             } else {
-                toast.error("Помилка при створенні гри")
+                toast.error("Помилка при створенні ігрової системи")
             }
         } finally {
             setIsLoading(false)
@@ -34,14 +34,14 @@ export default function GamesCreatePage() {
     return (
         <Layout
             breadcrumbs={[
-                { label: "Системи", path: "/games" },
-                { label: "Створити систему", path: "/games/create" },
+                { label: "Ігрові системи", path: "/games" },
+                { label: "Нова ігрова система", path: "/games/create" },
             ]}
         >
             <div className="container mx-auto py-10 max-w-2xl">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Створити систему</h1>
-                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нової системи</p>
+                    <h1 className="text-3xl font-bold">Створити ігрову систему</h1>
+                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нової ігрової системи</p>
                 </div>
 
                 <div className="bg-card border rounded-lg p-6">

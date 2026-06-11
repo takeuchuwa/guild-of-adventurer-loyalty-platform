@@ -131,6 +131,7 @@ export function MemberSelectionDialog({
                                 onSelectionChange={handleMemberSelection}
                                 searchPlaceholder="Пошук учасників..."
                                 initialSelection={initialMemberIds}
+                                pageSize={5}
                             />
                         </div>
                     )}

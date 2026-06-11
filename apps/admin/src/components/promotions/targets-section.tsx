@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useFormContext } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -13,7 +13,7 @@ import type { Product } from "@/components/products/types/product"
 import type { Activity } from "@/components/activities/types/activity"
 import { Layers, Package, CalendarDays, Gamepad2, X } from "lucide-react"
 
-export function TargetsSection() {
+export function TargetsSection({ targetsMap }: { targetsMap?: Record<string, string> }) {
     const { watch, setValue } = useFormContext()
 
     const targetType: string = watch("config.targets.type") || "cart"
@@ -26,6 +26,58 @@ export function TargetsSection() {
     const [categoryDisplayMap, setCategoryDisplayMap] = useState<Map<string, Category>>(new Map())
     const [productDisplayMap, setProductDisplayMap] = useState<Map<string, Product>>(new Map())
     const [activityDisplayMap, setActivityDisplayMap] = useState<Map<string, Activity>>(new Map())
+
+    useEffect(() => {
+        if (!targetsMap) return
+
+        const newCatMap = new Map<string, Category>()
+        targetCategories.forEach((id) => {
+            if (targetsMap[id]) {
+                newCatMap.set(id, { categoryId: id, name: targetsMap[id] } as any)
+            }
+        })
+        if (newCatMap.size > 0) {
+            setCategoryDisplayMap(prev => {
+                const merged = new Map(prev)
+                newCatMap.forEach((v, k) => {
+                    if (!merged.has(k)) merged.set(k, v)
+                })
+                return merged
+            })
+        }
+
+        const newProdMap = new Map<string, Product>()
+        targetProducts.forEach((id) => {
+            if (targetsMap[id]) {
+                newProdMap.set(id, { productId: id, name: targetsMap[id] } as any)
+            }
+        })
+        if (newProdMap.size > 0) {
+            setProductDisplayMap(prev => {
+                const merged = new Map(prev)
+                newProdMap.forEach((v, k) => {
+                    if (!merged.has(k)) merged.set(k, v)
+                })
+                return merged
+            })
+        }
+
+        const newActMap = new Map<string, Activity>()
+        targetActivities.forEach((id) => {
+            if (targetsMap[id]) {
+                newActMap.set(id, { activityId: id, name: targetsMap[id] } as any)
+            }
+        })
+        if (newActMap.size > 0) {
+            setActivityDisplayMap(prev => {
+                const merged = new Map(prev)
+                newActMap.forEach((v, k) => {
+                    if (!merged.has(k)) merged.set(k, v)
+                })
+                return merged
+            })
+        }
+    }, [targetsMap])
 
     // Dialog open states
     const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
@@ -114,9 +166,9 @@ export function TargetsSection() {
 
     return (
         <div>
-            <h4 className="font-semibold mb-2">Цілі промоакції</h4>
+            <h4 className="font-semibold mb-2">До чого застосувати?</h4>
             <p className="text-sm text-muted-foreground mb-4">
-                Визначте, до яких елементів кошика застосовується ця промоакція. Якщо елемент підпадає під глобальні виключення, він ігнорується незалежно від цілі.
+                Оберіть, на що саме буде поширюватися промоакція. Елементи з розділу «Виключення» завжди ігноруються.
             </p>
 
             <div className="space-y-4">
@@ -127,26 +179,35 @@ export function TargetsSection() {
                     className="space-y-3"
                 >
                     {/* Option 1: Whole cart */}
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="cart" id="target-cart" className="cursor-pointer" />
-                        <Label htmlFor="target-cart" className="font-normal cursor-pointer">
-                            Весь кошик
-                        </Label>
+                    <div className="flex items-start space-x-2">
+                        <RadioGroupItem value="cart" id="target-cart" className="cursor-pointer mt-0.5" />
+                        <div>
+                            <Label htmlFor="target-cart" className="font-normal cursor-pointer">
+                                Весь кошик
+                            </Label>
+                            <p className="text-xs text-muted-foreground">Знижка на все замовлення цілком</p>
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="entity" id="target-entity" className="cursor-pointer" />
-                        <Label htmlFor="target-entity" className="font-normal cursor-pointer">
-                            Тип
-                        </Label>
+                    <div className="flex items-start space-x-2">
+                        <RadioGroupItem value="entity" id="target-entity" className="cursor-pointer mt-0.5" />
+                        <div>
+                            <Label htmlFor="target-entity" className="font-normal cursor-pointer">
+                                Усі товари або всі сесії певного типу
+                            </Label>
+                            <p className="text-xs text-muted-foreground">Обрати категорію: товари, сесії або ігри</p>
+                        </div>
                     </div>
 
                     {/* Option 2: Specific items (category / product / activity pickers) */}
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="items" id="target-items" className="cursor-pointer" />
-                        <Label htmlFor="target-items" className="font-normal cursor-pointer">
-                            Конкретні елементи
-                        </Label>
+                    <div className="flex items-start space-x-2">
+                        <RadioGroupItem value="items" id="target-items" className="cursor-pointer mt-0.5" />
+                        <div>
+                            <Label htmlFor="target-items" className="font-normal cursor-pointer">
+                                Конкретні товари / сесії
+                            </Label>
+                            <p className="text-xs text-muted-foreground">Обрати вручну з каталогу, категорії або сесії</p>
+                        </div>
                     </div>
                 </RadioGroup>
 
@@ -282,7 +343,7 @@ export function TargetsSection() {
                 {targetType === "entity" && (
                     <div className="pl-6 border-l-2 border-muted">
                         <p className="text-xs text-muted-foreground mb-3">
-                            Промоакція застосовується до всіх елементів обраного типу
+                            Промоакція поширюється на всі елементи обраного типу, не потребуючи додаткових налаштувань
                         </p>
                         <RadioGroup
                             value={entitySubType}
@@ -300,14 +361,14 @@ export function TargetsSection() {
                                 <RadioGroupItem value="sessions" id="entity-sessions" className="cursor-pointer" />
                                 <Label htmlFor="entity-sessions" className="font-normal cursor-pointer flex items-center gap-2">
                                     <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                                    Сесії (активності без системи)
+                                    Сесії (активності не по рольовим системам, квести, майстер класи і т.п.)
                                 </Label>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="games" id="entity-games" className="cursor-pointer" />
                                 <Label htmlFor="entity-games" className="font-normal cursor-pointer flex items-center gap-2">
                                     <Gamepad2 className="h-4 w-4 text-muted-foreground" />
-                                    Ігри (активності по системах)
+                                    Ігри (активності проведені по рольовим системам, ваншоти, кампанії і т.п.)
                                 </Label>
                             </div>
                         </RadioGroup>

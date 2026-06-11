@@ -1,6 +1,10 @@
 import { axiosInstance } from "@/lib/api-utils"
 
-export type LoyaltyTriggerKey = "level_change"
+export type LoyaltyTriggerKey =
+  | "level_change"
+  | "activity_time_slot"
+  | "main_system_instruction"
+  | `entity_system_instruction:${string}`
 
 export type LevelChangeConfig = {
   targetLevel: string
@@ -13,6 +17,17 @@ export type LevelChangeConfig = {
 export type ActivityTimeSlotConfig = {
   startHour: string
   endHour: string
+}
+
+export type MainSystemInstructionConfig = {
+  systemPrompt: string
+}
+
+export type EntitySystemInstructionConfig = {
+  entity: "promotion" | "activity" | "game" | "system" | "benefit" | "prize"
+  systemPrompt: string
+  length: number
+  outputTokens?: number | null
 }
 
 export type LoyaltyConfig = {
@@ -30,11 +45,11 @@ export type LoyaltyConfigCreate = {
   name: string
   active: boolean
   triggerKey: LoyaltyTriggerKey
-  config: LevelChangeConfig
+  config: LevelChangeConfig | ActivityTimeSlotConfig | MainSystemInstructionConfig | EntitySystemInstructionConfig
 }
 
 export type LoyaltyConfigUpdate = Partial<Pick<LoyaltyConfigCreate, "name" | "active">> & {
-  config?: LevelChangeConfig
+  config?: LevelChangeConfig | ActivityTimeSlotConfig | MainSystemInstructionConfig | EntitySystemInstructionConfig
 }
 
 export async function fetchConfigs(params: { pageSize?: number; cursor?: string | null; includeCount?: boolean; q?: string; triggerKey?: LoyaltyTriggerKey; sort?: string } = {}) {

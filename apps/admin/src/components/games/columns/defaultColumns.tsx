@@ -6,15 +6,17 @@ import { Link } from "react-router-dom"
 export const defaultColumns: CustomColumnDef<Game>[] = [
     {
         id: "name",
-        header: "Назва гри",
+        header: "Назва ігрової системи",
         accessorKey: "name",
         size: 20,
         cell: ({ row }) => (
-            <div className="font-semibold">{row.original.name}</div>
+            <Link to={`/games/${row.original.gameId}`} className="font-semibold hover:underline">
+                {row.original.name}
+            </Link>
         ),
     },{
         id: "systems",
-        header: "Системи",
+        header: "Варіанти правил",
         accessorKey: "systems",
         size: 30,
         cell: ({ row }) => {

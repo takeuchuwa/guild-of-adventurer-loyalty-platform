@@ -64,14 +64,14 @@ export default function GamesEditPage() {
         setIsLoading(true)
         try {
             await updateGame(id, data)
-            toast.success("Систему успішно оновлено")
+            toast.success("Ігрову систему успішно оновлено")
             navigate("/games")
         } catch (error: any) {
             console.error("Error updating game:", error)
-            if (error.message === "Гра з такою назвою вже існує") {
+            if (error.message === "Гра з такою назвою вже існує" || error.message === "Ігрова система з такою назвою вже існує") {
                 toast.error(error.message)
             } else {
-                toast.error("Помилка при оновленні гри")
+                toast.error("Помилка при оновленні ігрової системи")
             }
         } finally {
             setIsLoading(false)
@@ -106,19 +106,19 @@ export default function GamesEditPage() {
         try {
             if (systemDialogMode === "create") {
                 await createGameSystem(id, data)
-                toast.success("Систему успішно створено")
+                toast.success("Варіант правил успішно створено")
             } else if (selectedSystem?.systemId) {
                 await updateGameSystem(id, selectedSystem.systemId, data)
-                toast.success("Систему успішно оновлено")
+                toast.success("Варіант правил успішно оновлено")
             }
             setSystemDialogOpen(false)
             if (loadSystemsRef.current) await loadSystemsRef.current()
         } catch (error: any) {
             console.error("Error saving system:", error)
-            if (error.message === "Система з такою назвою вже існує") {
+            if (error.message === "Система з такою назвою вже існує" || error.message === "Варіант правил з такою назвою вже існує") {
                 toast.error(error.message)
             } else {
-                toast.error(systemDialogMode === "create" ? "Помилка при створенні системи" : "Помилка при оновленні системи")
+                toast.error(systemDialogMode === "create" ? "Помилка при створенні варіанта правил" : "Помилка при оновленні варіанта правил")
             }
         } finally {
             setIsSystemLoading(false)
@@ -130,15 +130,15 @@ export default function GamesEditPage() {
 
         try {
             await deleteGameSystem(id, systemToDelete.systemId)
-            toast.success("Систему успішно видалено")
+            toast.success("Варіант правил успішно видалено")
             setDeleteDialogOpen(false)
             if (loadSystemsRef.current) await loadSystemsRef.current()
         } catch (error: any) {
             console.error("Error deleting system:", error)
-            if (error.message === "Не можна видалити систему, яка використовується") {
+            if (error.message === "Не можна видалити систему, яка використовується" || error.message === "Не можна видалити варіант правил, який використовується") {
                 toast.error(error.message)
             } else {
-                toast.error("Помилка при видаленні системи")
+                toast.error("Помилка при видаленні варіанта правил")
             }
         }
     }
@@ -178,8 +178,8 @@ export default function GamesEditPage() {
         return (
             <Layout
                 breadcrumbs={[
-                    { label: "Системи", path: "/games" },
-                    { label: "Редагувати Систему", path: `/games/${id}` },
+                    { label: "Ігрові системи", path: "/games" },
+                    { label: "Редагування", path: `/games/${id}` },
                 ]}
             >
                 <div className="container mx-auto py-10 max-w-2xl">
@@ -198,14 +198,14 @@ export default function GamesEditPage() {
     return (
         <Layout
             breadcrumbs={[
-                { label: "Системи", path: "/games" },
-                { label: "Редагувати систему", path: `/games/${id}` },
+                { label: "Ігрові системи", path: "/games" },
+                { label: game.name, path: `/games/${id}` },
             ]}
         >
             <div className="container mx-auto py-10 max-w-4xl">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагувати систему</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть інформацію про систему</p>
+                    <h1 className="text-3xl font-bold">{game.name}</h1>
+                    <p className="text-muted-foreground mt-2">Оновіть назву та опис ігрової системи</p>
                 </div>
 
                 <div className="bg-card border rounded-lg p-6 mb-8">
@@ -221,12 +221,12 @@ export default function GamesEditPage() {
                 <div className="bg-card border rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h2 className="text-2xl font-bold">Редакції/Правила гри</h2>
-                            <p className="text-muted-foreground mt-1">Керуйте редакціями або правилами, пов'язаними з цією грою</p>
+                            <h2 className="text-2xl font-bold">Варіанти правил</h2>
+                            <p className="text-muted-foreground mt-1">Редакції, системи або правила цієї гри</p>
                         </div>
                         <Button className="cursor-pointer" onClick={handleCreateSystem}>
                             <Plus className="h-4 w-4 mr-2" />
-                            Додати редакцію(правила)
+                            Додати варіант
                         </Button>
                     </div>
 
@@ -236,7 +236,7 @@ export default function GamesEditPage() {
                 <Dialog open={systemDialogOpen} onOpenChange={setSystemDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>{systemDialogMode === "create" ? "Створити редакцію/правила" : "Редагувати редакцію/правила"}</DialogTitle>
+                            <DialogTitle>{systemDialogMode === "create" ? "Додати варіант правил" : "Редагувати варіант правил"}</DialogTitle>
                         </DialogHeader>
                         <SystemForm
                             mode={systemDialogMode}
@@ -252,8 +252,8 @@ export default function GamesEditPage() {
                     open={deleteDialogOpen}
                     onOpenChange={setDeleteDialogOpen}
                     onConfirm={handleConfirmDelete}
-                    title="Видалити систему"
-                    description={`Ви впевнені, що хочете видалити систему "${systemToDelete?.name}"?`}
+                    title="Видалити варіант правил"
+                    description={`Ви впевнені, що хочете видалити варіант правил "${systemToDelete?.name}"? Ця дія незворотна.`}
                 />
             </div>
         </Layout>

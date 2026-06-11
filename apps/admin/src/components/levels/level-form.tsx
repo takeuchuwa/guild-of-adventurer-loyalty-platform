@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import type { Level, LevelFormData } from "./types/level-types"
 import { X, Plus } from "lucide-react"
 import { useState } from "react"
+import { AiTextarea } from "@/components/ui/ai-textarea"
 
 const levelFormSchema = z.object({
     levelId: z.string().min(1, "ID рівня обов'язковий"),
@@ -127,7 +128,7 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
                                         setBenefits(newBenefits)
                                     }}
                                 />
-                                <Input
+                                <AiTextarea
                                     placeholder="Опис переваги"
                                     value={benefit.description}
                                     onChange={(e) => {
@@ -135,6 +136,9 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
                                         newBenefits[index].description = e.target.value
                                         setBenefits(newBenefits)
                                     }}
+                                    rows={2}
+                                    entityType="benefit"
+                                    entityName={benefit.name}
                                 />
                             </div>
                             <Button
@@ -174,7 +178,7 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
                                         setPrizes(newPrizes)
                                     }}
                                 />
-                                <Input
+                                <AiTextarea
                                     placeholder="Опис призу"
                                     value={prize.description}
                                     onChange={(e) => {
@@ -182,6 +186,9 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
                                         newPrizes[index].description = e.target.value
                                         setPrizes(newPrizes)
                                     }}
+                                    rows={2}
+                                    entityType="prize"
+                                    entityName={prize.name}
                                 />
                             </div>
                             <Button

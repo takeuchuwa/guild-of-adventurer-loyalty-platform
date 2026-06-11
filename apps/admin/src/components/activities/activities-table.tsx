@@ -27,13 +27,14 @@ interface ActivitiesTableProps {
     filterParams?: Record<string, any>
     initialSelection?: string[]
     pageSize?: number
+    storageKey?: string
 }
 
 export function ActivityTable({
     columns,
     selectionMode = "single",
     title,
-    emptyStateMessage = "Не знайдено учасників за вашим запитом",
+    emptyStateMessage = "Не знайдено активностей за вашим запитом",
     actions = [],
     filters = [],
     searchProperties,
@@ -42,6 +43,7 @@ export function ActivityTable({
     filterParams = EMPTY_FILTER_PARAMS,
     initialSelection,
     pageSize = 10,
+    storageKey,
 }: ActivitiesTableProps) {
     const [activities, setActivities] = useState<Activity[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -57,7 +59,7 @@ export function ActivityTable({
 
     const allSelectedActivities = useRef<Map<string, Activity>>(new Map())
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize)
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
     const { sorting, onSortingChange } = useSorting("startDate", "desc")
     const { currentSearch, searchProps } = useSearch(searchProperties)
 

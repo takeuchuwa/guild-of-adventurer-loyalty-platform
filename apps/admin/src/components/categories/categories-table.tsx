@@ -26,13 +26,14 @@ interface CategoriesTableProps {
     kind?: "PRODUCT" | "ACTIVITY"
     initialSelection?: string[]
     pageSize?: number
+    storageKey?: string
 }
 
 export function CategoryTable({
     columns,
     selectionMode = "single",
     title,
-    emptyStateMessage = "Не знайдено учасників за вашим запитом",
+    emptyStateMessage = "Не знайдено категорій за вашим запитом",
     actions = [],
     searchProperties,
     onLoadCategoriesRef,
@@ -40,6 +41,7 @@ export function CategoryTable({
     kind,
     initialSelection,
     pageSize = 10,
+    storageKey,
 }: CategoriesTableProps) {
     const [categories, setCategories] = useState<Category[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -55,7 +57,7 @@ export function CategoryTable({
 
     const allSelectedCategories = useRef<Map<string, Category>>(new Map())
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize)
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
     const { sorting, onSortingChange } = useSorting("kind", "asc")
     const { currentSearch, searchProps } = useSearch(searchProperties)
 

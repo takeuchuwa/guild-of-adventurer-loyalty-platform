@@ -7,6 +7,7 @@ export type Env = {
         KV_POS_CART: KVNamespace
         QR_SECRET_KEY: string
         BUCKET?: R2Bucket
+        GEMINI_API_KEY: string
     }
     Variables: {
         tgUser: any

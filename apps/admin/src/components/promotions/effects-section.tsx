@@ -61,9 +61,12 @@ export function EffectsSection() {
 
     return (
         <div>
-            <h4 className="font-semibold mb-2">Нагороди клієнта</h4>
-            <p className="text-sm text-muted-foreground mb-4">
-                Визначте нагороди, які отримає клієнт при застосуванні промоакції
+            <p className="text-sm text-muted-foreground mb-2">
+                Оберіть, що отримає клієнт при застосуванні промоакції
+            </p>
+            <p className="text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-3 py-1.5 mb-4 flex items-center gap-1.5">
+                <span>💡</span>
+                <span>Можна обрати декілька ефектів одночасно — наприклад, знижку і бонусні бали</span>
             </p>
 
             {effectsError && (
@@ -74,264 +77,207 @@ export function EffectsSection() {
 
             <div className="space-y-6">
                 {/* Group 1: Price Adjustments */}
-                <div className="border rounded-lg p-4 bg-muted/20">
-                    <h4 className="font-semibold mb-3">Знижка на ціну</h4>
-                    <RadioGroup
-                        value={priceType}
-                        onValueChange={(value) => {
-                            if (value === "none") {
-                                setValue("config.effects.price", undefined)
-                            } else if (value === "percentage") {
-                                setValue("config.effects.price", {
-                                    type: "percentage",
-                                    value: 10,
-                                })
-                            } else if (value === "fixed") {
-                                setValue("config.effects.price", {
-                                    type: "fixed",
-                                    value: 0,
-                                })
-                            } else if (value === "override") {
-                                setValue("config.effects.price", {
-                                    type: "override",
-                                    value: 0,
-                                })
-                            }
-                        }}
-                        className="space-y-3"
-                    >
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="none" id="price-none" className="cursor-pointer" />
-                            <Label htmlFor="price-none" className="font-normal cursor-pointer">
-                                Без знижки
-                            </Label>
-                        </div>
+                <div className={`border rounded-lg transition-colors ${priceType !== "none" ? "bg-green-50/30 border-green-200 border-l-4 border-l-green-400 shadow-sm" : "bg-muted/20"}`}>
+                    <div className="p-4 flex items-center space-x-3">
+                        <Checkbox
+                            id="enable-price"
+                            checked={priceType !== "none"}
+                            onCheckedChange={(checked) => {
+                                if (checked) {
+                                    setValue("config.effects.price", { type: "percentage", value: 10 })
+                                } else {
+                                    setValue("config.effects.price", undefined)
+                                }
+                            }}
+                            className="cursor-pointer h-5 w-5"
+                        />
+                        <Label htmlFor="enable-price" className="font-semibold cursor-pointer text-base">
+                            Знижка на ціну
+                        </Label>
+                    </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="percentage" id="price-percentage" className="cursor-pointer" />
-                                <Label htmlFor="price-percentage" className="font-normal cursor-pointer">
-                                    Відсоток знижки
-                                </Label>
-                            </div>
-                            {priceType === "percentage" && (
-                                <div className="ml-6 flex items-center gap-2">
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={priceEffect?.value || 0}
-                                        onChange={(e) =>
-                                            setValue("config.effects.price.value", Number(e.target.value))
-                                        }
-                                        className="w-24"
-                                    />
-                                    <span className="text-sm">% знижки</span>
+                    {priceType !== "none" && (
+                        <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50">
+                            <RadioGroup
+                                value={priceType}
+                                onValueChange={(value) => {
+                                    if (value === "percentage") {
+                                        setValue("config.effects.price", { type: "percentage", value: 10 })
+                                    } else if (value === "fixed") {
+                                        setValue("config.effects.price", { type: "fixed", value: 0 })
+                                    } else if (value === "override") {
+                                        setValue("config.effects.price", { type: "override", value: 0 })
+                                    }
+                                }}
+                                className="space-y-4 mt-2"
+                            >
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="percentage" id="price-percentage" className="cursor-pointer" />
+                                        <Label htmlFor="price-percentage" className="font-medium cursor-pointer">
+                                            Відсоток знижки
+                                        </Label>
+                                    </div>
+                                    {priceType === "percentage" && (
+                                        <div className="ml-6 flex items-center gap-2 mt-2">
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={priceEffect?.value || 0}
+                                                onChange={(e) =>
+                                                    setValue("config.effects.price.value", Number(e.target.value))
+                                                }
+                                                className="w-24 bg-white"
+                                            />
+                                            <span className="text-sm text-muted-foreground">% знижки</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="fixed" id="price-fixed" className="cursor-pointer" />
-                                <Label htmlFor="price-fixed" className="font-normal cursor-pointer">
-                                    Фіксована сума
-                                </Label>
-                            </div>
-                            {priceType === "fixed" && (
-                                <div className="ml-6 flex items-center gap-2">
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={priceEffect?.value || 0}
-                                        onChange={(e) =>
-                                            setValue("config.effects.price.value", Number(e.target.value))
-                                        }
-                                        className="w-32"
-                                    />
-                                    <span className="text-sm">грн знижки на кошик</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="fixed" id="price-fixed" className="cursor-pointer" />
+                                        <Label htmlFor="price-fixed" className="font-medium cursor-pointer">
+                                            Фіксована сума
+                                        </Label>
+                                    </div>
+                                    {priceType === "fixed" && (
+                                        <div className="ml-6 flex items-center gap-2 mt-2">
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                value={priceEffect?.value || 0}
+                                                onChange={(e) =>
+                                                    setValue("config.effects.price.value", Number(e.target.value))
+                                                }
+                                                className="w-32 bg-white"
+                                            />
+                                            <span className="text-sm text-muted-foreground">грн знижки на кошик</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="override" id="price-override" className="cursor-pointer" />
-                                <Label htmlFor="price-override" className="font-normal cursor-pointer">
-                                    Фіксована ціна
-                                </Label>
-                            </div>
-                            {priceType === "override" && (
-                                <div className="ml-6 flex items-center gap-2">
-                                    <span className="text-sm">Встановити ціну підходящих товарів на</span>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={priceEffect?.value || 0}
-                                        onChange={(e) =>
-                                            setValue("config.effects.price.value", Number(e.target.value))
-                                        }
-                                        className="w-32"
-                                    />
-                                    <span className="text-sm">грн</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="override" id="price-override" className="cursor-pointer" />
+                                        <Label htmlFor="price-override" className="font-medium cursor-pointer">
+                                            Фіксована ціна
+                                        </Label>
+                                    </div>
+                                    {priceType === "override" && (
+                                        <div className="ml-6 flex items-center gap-2 mt-2">
+                                            <span className="text-sm text-muted-foreground">Встановити ціну підходящих товарів на</span>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                value={priceEffect?.value || 0}
+                                                onChange={(e) =>
+                                                    setValue("config.effects.price.value", Number(e.target.value))
+                                                }
+                                                className="w-32 bg-white"
+                                            />
+                                            <span className="text-sm text-muted-foreground">грн</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </RadioGroup>
                         </div>
-                    </RadioGroup>
+                    )}
                 </div>
 
                 {/* Group 2: Loyalty Rewards */}
-                <div className="border rounded-lg p-4 bg-muted/20">
-                    <h4 className="font-semibold mb-3">Бали і лояльність</h4>
-                    <RadioGroup
-                        value={pointsType}
-                        onValueChange={(value) => {
-                            if (value === "none") {
-                                setValue("config.effects.points", undefined)
-                            } else if (value === "multiplier") {
-                                setValue("config.effects.points", {
-                                    type: "multiplier",
-                                    value: 2,
-                                })
-                            } else if (value === "bonus") {
-                                setValue("config.effects.points", {
-                                    type: "bonus",
-                                    value: 0,
-                                })
-                            }
-                        }}
-                        className="space-y-3"
-                    >
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="none" id="points-none" className="cursor-pointer" />
-                            <Label htmlFor="points-none" className="font-normal cursor-pointer">
-                                Без додаткових балів
-                            </Label>
-                        </div>
+                <div className={`border rounded-lg transition-colors ${pointsType !== "none" ? "bg-blue-50/30 border-blue-200 border-l-4 border-l-blue-400 shadow-sm" : "bg-muted/20"}`}>
+                    <div className="p-4 flex items-center space-x-3">
+                        <Checkbox
+                            id="enable-points"
+                            checked={pointsType !== "none"}
+                            onCheckedChange={(checked) => {
+                                if (checked) {
+                                    setValue("config.effects.points", { type: "multiplier", value: 2 })
+                                } else {
+                                    setValue("config.effects.points", undefined)
+                                }
+                            }}
+                            className="cursor-pointer h-5 w-5"
+                        />
+                        <Label htmlFor="enable-points" className="font-semibold cursor-pointer text-base">
+                            Бонус балами
+                        </Label>
+                    </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="multiplier" id="points-multiplier" className="cursor-pointer" />
-                                <Label htmlFor="points-multiplier" className="font-normal cursor-pointer">
-                                    Множник балів
-                                </Label>
-                            </div>
-                            {pointsType === "multiplier" && (
-                                <div className="ml-6 flex items-center gap-2">
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        step="0.1"
-                                        value={pointsEffect?.value || 1}
-                                        onChange={(e) =>
-                                            setValue("config.effects.points.value", Number(e.target.value))
-                                        }
-                                        className="w-24"
-                                    />
-                                    <span className="text-sm">× множник балів</span>
+                    {pointsType !== "none" && (
+                        <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50">
+                            <RadioGroup
+                                value={pointsType}
+                                onValueChange={(value) => {
+                                    if (value === "multiplier") {
+                                        setValue("config.effects.points", { type: "multiplier", value: 2 })
+                                    } else if (value === "bonus") {
+                                        setValue("config.effects.points", { type: "bonus", value: 0 })
+                                    }
+                                }}
+                                className="space-y-4 mt-2"
+                            >
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="multiplier" id="points-multiplier" className="cursor-pointer" />
+                                        <Label htmlFor="points-multiplier" className="font-medium cursor-pointer">
+                                            Множник балів
+                                        </Label>
+                                    </div>
+                                    {pointsType === "multiplier" && (
+                                        <div className="ml-6 flex items-center gap-2 mt-2">
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                step="0.1"
+                                                value={pointsEffect?.value || 1}
+                                                onChange={(e) =>
+                                                    setValue("config.effects.points.value", Number(e.target.value))
+                                                }
+                                                className="w-24 bg-white"
+                                            />
+                                            <span className="text-sm text-muted-foreground">рази більше балів</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="bonus" id="points-bonus" className="cursor-pointer" />
-                                <Label htmlFor="points-bonus" className="font-normal cursor-pointer">
-                                    Бонусні бали
-                                </Label>
-                            </div>
-                            {pointsType === "bonus" && (
-                                <div className="ml-6 flex items-center gap-2">
-                                    <span className="text-sm">+</span>
-                                    <Input
-                                        type="number"
-                                        min="0"
-                                        value={pointsEffect?.value || 0}
-                                        onChange={(e) =>
-                                            setValue("config.effects.points.value", Number(e.target.value))
-                                        }
-                                        className="w-24"
-                                    />
-                                    <span className="text-sm">балів</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="bonus" id="points-bonus" className="cursor-pointer" />
+                                        <Label htmlFor="points-bonus" className="font-medium cursor-pointer">
+                                            Бонусні бали
+                                        </Label>
+                                    </div>
+                                    {pointsType === "bonus" && (
+                                        <div className="ml-6 flex items-center gap-2 mt-2">
+                                            <span className="text-sm text-muted-foreground">+</span>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                value={pointsEffect?.value || 0}
+                                                onChange={(e) =>
+                                                    setValue("config.effects.points.value", Number(e.target.value))
+                                                }
+                                                className="w-24 bg-white"
+                                            />
+                                            <span className="text-sm text-muted-foreground">балів</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </RadioGroup>
                         </div>
-                    </RadioGroup>
+                    )}
                 </div>
 
-                {/* Group 3: Free Item */}
-                <div className="border rounded-lg p-4 bg-muted/10 opacity-70">
-                    <div className="flex items-center gap-2 mb-3">
-                        <h4 className="font-semibold">Безкоштовний бонус</h4>
-                        <span className="text-[10px] uppercase font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-                            В розробці
-                        </span>
-                    </div>
-                    <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="free-item"
-                                checked={freeItemEnabled}
-                                onCheckedChange={handleFreeItemCheckChange}
-                                disabled
-                                className="cursor-not-allowed"
-                            />
-                            <Label htmlFor="free-item" className="cursor-not-allowed text-muted-foreground">
-                                Додати безкоштовний бонус
-                            </Label>
-                        </div>
-
-                        {/* Show selected item badge OR pick buttons */}
-                        {hasFreeItem && inventoryEffect?.itemId && (
-                            <div className="ml-6">
-                                <Label className="text-sm text-muted-foreground mb-2 block">Обраний бонус</Label>
-                                <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 text-primary rounded-lg text-sm">
-                                    {inventoryEffect.type === "product" ? (
-                                        <Package className="h-4 w-4 shrink-0" />
-                                    ) : (
-                                        <CalendarDays className="h-4 w-4 shrink-0" />
-                                    )}
-                                    <span className="font-medium">
-                                        {inventoryEffect.type === "product" ? "Товар" : "Сесія"}:
-                                    </span>
-                                    <span>{inventoryEffect.itemName || inventoryEffect.itemId}</span>
-                                    <button
-                                        type="button"
-                                        onClick={handleRemoveFreeItem}
-                                        className="ml-auto hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer"
-                                    >
-                                        <X className="h-3.5 w-3.5" />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Show buttons when checkbox is on but no item is picked yet */}
-                        {freeItemEnabled && !inventoryEffect?.itemId && (
-                            <div className="ml-6 flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setProductDialogOpen(true)}
-                                    className="cursor-pointer"
-                                >
-                                    <Package className="mr-2 h-4 w-4" />
-                                    Обрати товар
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setActivityDialogOpen(true)}
-                                    className="cursor-pointer"
-                                >
-                                    <CalendarDays className="mr-2 h-4 w-4" />
-                                    Обрати сесію
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                {/* Group 3: Free Item — teaser only, feature not yet implemented */}
+                <div className="border border-dashed rounded-lg px-4 py-3 bg-muted/5 flex items-center gap-2 text-muted-foreground">
+                    <span>🎁</span>
+                    <span className="text-sm">Безкоштовний бонус</span>
+                    <span className="text-[10px] uppercase font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded ml-auto">
+                        Скоро
+                    </span>
                 </div>
             </div>
 

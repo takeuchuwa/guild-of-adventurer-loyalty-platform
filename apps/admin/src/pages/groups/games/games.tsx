@@ -50,26 +50,27 @@ export default function GamesPage() {
 
         try {
             await deleteGame(gameToDelete.gameId)
-            toast.success("Систему успішно видалено")
+            toast.success("Ігрову систему успішно видалено")
             if (loadGamesRef.current) {
                 await loadGamesRef.current()
             }
         } catch (error: any) {
             console.error("Error deleting game:", error)
-            toast.error(error.message || "Помилка при видаленні гри")
+            toast.error(error.message || "Помилка при видаленні ігрової системи")
         } finally {
             setGameToDelete(null)
         }
     }
 
     return (
-        <Layout breadcrumbs={[{ label: "Системи", path: "/games" }]}>
+        <Layout breadcrumbs={[{ label: "Ігрові системи", path: "/games" }]}>
             <div className="container mx-auto py-10">
                 <GameTable
                     columns={defaultColumns}
                     searchProperties={searchProperties}
-                    title="Системи"
+                    title="Ігрові системи"
                     onLoadGamesRef={loadGamesRef}
+                    storageKey="games"
                     actions={[
                         {
                             label: "Додати",
@@ -97,8 +98,8 @@ export default function GamesPage() {
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={confirmDelete}
-                title="Видалити систему"
-                description="Ця дія незворотна. Гра буде видалена назавжди."
+                title="Видалити ігрову систему"
+                description="Ця дія незворотна. Ігрову систему буде видалено назавжди."
                 itemName={gameToDelete?.name}
             />
         </Layout>

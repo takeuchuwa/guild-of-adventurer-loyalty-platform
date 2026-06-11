@@ -78,6 +78,13 @@
       "when": 1777053967696,
       "tag": "0010_oval_layla_miller",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1780345055992,
+      "tag": "0011_gigantic_toro",
+      "breakpoints": true
     }
   ]
 }

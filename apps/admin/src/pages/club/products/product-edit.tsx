@@ -18,7 +18,7 @@ export default function ProductEditPage() {
     useEffect(() => {
         const fetchProduct = async () => {
             if (!id) {
-                toast.error("ID продукту не знайдено")
+                toast.error("ID товару не знайдено")
                 navigate("/products")
                 return
             }
@@ -29,7 +29,7 @@ export default function ProductEditPage() {
                 setProduct(data)
             } catch (error) {
                 console.error("Error fetching product:", error)
-                toast.error("Помилка при завантаженні продукту")
+                toast.error("Помилка при завантаженні товару")
                 navigate("/products")
             } finally {
                 setIsFetching(false)
@@ -45,11 +45,11 @@ export default function ProductEditPage() {
         setIsLoading(true)
         try {
             await updateProduct(id, data)
-            toast.success("Продукт успішно оновлено")
+            toast.success("Товар успішно оновлено")
             navigate("/products")
         } catch (error) {
             console.error("Error updating product:", error)
-            const errorMessage = error instanceof Error ? error.message : "Помилка при оновленні продукту"
+            const errorMessage = error instanceof Error ? error.message : "Помилка при оновленні товару"
             toast.error(errorMessage)
         } finally {
             setIsLoading(false)
@@ -64,8 +64,8 @@ export default function ProductEditPage() {
         return (
             <Layout
                 breadcrumbs={[
-                    { label: "Продукти", path: "/products" },
-                    { label: "Редагувати продукт", path: `/products/${id}` },
+                    { label: "Товари", path: "/products" },
+                    { label: "Редагувати товар", path: `/products/${id}` },
                 ]}
             >
                 <div className="container mx-auto py-10 max-w-2xl">
@@ -84,14 +84,14 @@ export default function ProductEditPage() {
     return (
         <Layout
             breadcrumbs={[
-                { label: "Продукти", path: "/products" },
-                { label: "Редагувати продукт", path: `/products/${id}` },
+                { label: "Товари", path: "/products" },
+                { label: "Редагувати товар", path: `/products/${id}` },
             ]}
         >
             <div className="container mx-auto py-10 max-w-2xl">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагувати продукт</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть інформацію про продукт</p>
+                    <h1 className="text-3xl font-bold">Редагувати товар</h1>
+                    <p className="text-muted-foreground mt-2">Оновіть інформацію про товар</p>
                 </div>
 
                 <div className="bg-card border rounded-lg p-6">

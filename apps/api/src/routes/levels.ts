@@ -293,6 +293,11 @@ levelsRoute.get("/:id", async (c) => {
                     active: promotions.active,
                     mode: promotions.mode,
                     priority: promotions.priority,
+                    config: promotions.config,
+                    code: promotions.code,
+                    startDate: promotions.startDate,
+                    endDate: promotions.endDate,
+                    usageRemaining: promotions.usageRemaining,
                 }
             })
             .from(levelsTiers)

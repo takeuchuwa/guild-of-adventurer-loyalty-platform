@@ -19,11 +19,13 @@ interface PromotionsTableProps {
     emptyStateMessage?: string
     actions?: DataTableAction<Promotion>[]
     filters?: DataTableFilter[]
+    filterParams?: Record<string, any>
     searchProperties?: UseSearchOptions
     onLoadPromotionsRef?: React.MutableRefObject<(() => Promise<void>) | null>
     onSelectionChange?: (selected: Map<string, Promotion>) => void
-    filterParams?: Record<string, any>
     staticData?: Promotion[]
+    pageSize?: number
+    storageKey?: string
 }
 
 export function PromotionsTable({
@@ -32,17 +34,21 @@ export function PromotionsTable({
     title,
     emptyStateMessage = "Не знайдено промоакцій за вашим запитом",
     actions = [],
+    filters = [],
+    filterParams = {},
     searchProperties,
     onLoadPromotionsRef,
     onSelectionChange,
     staticData,
+    pageSize = 10,
+    storageKey,
 }: PromotionsTableProps) {
     const [promotions, setPromotions] = useState<Promotion[]>([])
     const [totalElements, setTotalElements] = useState(0)
     const [isLoading, setIsLoading] = useState(false)
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination()
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
     const { sorting, onSortingChange } = useSorting("createdAt", "desc")
     const { currentSearch, searchProps } = useSearch(searchProperties)
 
@@ -63,6 +69,7 @@ export function PromotionsTable({
                 },
                 sorting,
                 currentSearch: currentSearch || undefined,
+                filterParams,
             })
             setPromotions(fetchedPromotions)
             updatePaginationContext(page.hasNextPage, page.nextCursor, page.total)
@@ -73,7 +80,7 @@ export function PromotionsTable({
         } finally {
             setIsLoading(false)
         }
-    }, [pagination, sorting, currentSearch, staticData, getCursor, updatePaginationContext])
+    }, [pagination, sorting, currentSearch, staticData, getCursor, updatePaginationContext, filterParams])
 
     useEffect(() => {
         loadPromotions()
@@ -122,6 +129,7 @@ export function PromotionsTable({
             selectionMode={selectionMode}
             emptyStateMessage={emptyStateMessage}
             actions={actions}
+            filters={filters}
             rowId="promoId"
             {...searchProps}
             onSimpleSearch={(query) => {

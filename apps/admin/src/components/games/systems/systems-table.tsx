@@ -58,7 +58,7 @@ export function SystemsTable({ gameId, columns, actions = [], onLoadSystemsRef }
             data={systems}
             isLoading={isLoading}
             selectionMode="single"
-            emptyStateMessage="Системи не знайдено"
+            emptyStateMessage="Варіанти правил не знайдені"
             actions={actions}
             rowId="systemId"
         />

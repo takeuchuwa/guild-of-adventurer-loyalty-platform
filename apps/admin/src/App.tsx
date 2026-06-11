@@ -1,5 +1,4 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
-import SettingsPage from "@/pages/settings.tsx"
 import { Toaster } from "@/components/ui/sonner.tsx"
 import GamesPage from "@/pages/groups/games/games.tsx"
 import MembersPage from "@/pages/loyalty/members/members.tsx"
@@ -9,7 +8,6 @@ import ActivitiesPage from "@/pages/club/activities/activities.tsx"
 import CheckoutPage from "@/pages/checkout.tsx"
 import LevelsPage from "@/pages/loyalty/levels/levels.tsx"
 import CategoriesPage from "@/pages/groups/categories/categories.tsx"
-import MembersAddPage from "@/pages/loyalty/members/members-add.tsx"
 import CategoryCreatePage from "@/pages/groups/categories/category-create.tsx"
 import CategoryEditPage from "@/pages/groups/categories/category-edit.tsx"
 import GamesCreatePage from "@/pages/groups/games/games-create.tsx"
@@ -42,7 +40,6 @@ function App() {
                 <Route path="/rooms/create" element={<RoomCreatePage />} />
                 <Route path="/rooms/:id" element={<RoomEditPage />} />
                 <Route path="/members" element={<MembersPage />} />
-                <Route path="/members/create" element={<MembersAddPage />} />
                 <Route path="/members/:id" element={<MemberEditPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/products/create" element={<ProductCreatePage />} />
@@ -62,7 +59,6 @@ function App() {
                 <Route path="/promotions" element={<PromotionsPage />} />
                 <Route path="/promotions/create" element={<PromotionCreatePage />} />
                 <Route path="/promotions/:id" element={<PromotionEditPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
             </Routes>
             <Toaster />

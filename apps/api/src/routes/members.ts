@@ -722,15 +722,19 @@ membersRoute.get("/", async (c) => {
         const { cursor, pageSize, includeCount } = parsePagination(url)
         const q = url.searchParams.get("q")
         const sortParam = url.searchParams.get("sort") // e.g., 'pointsBalance.desc'
+        const levelId = url.searchParams.get("levelId")
 
         const db = getDb(c.env)
 
         // 1. Build Base Filter Conditions (Search, etc.)
-        const baseWhereConditions = []
+        const baseWhereConditions = [eq(members.active, true)]
         if (q) {
-            baseWhereConditions.push(buildSearch(q, [members.phone]))
+            baseWhereConditions.push(buildSearch(q, [members.phone]) as any)
         }
-        const countWhereExpr = baseWhereConditions.length > 0 ? and(...baseWhereConditions) : undefined
+        if (levelId) {
+            baseWhereConditions.push(eq(members.levelId, levelId))
+        }
+        const countWhereExpr = and(...baseWhereConditions)
 
         // 2. Extract Sorting Details
         // We assume sortParam looks something like "pointsBalance.desc"
@@ -1335,6 +1339,27 @@ membersRoute.get("/:id/points-ledger", async (c) => {
         return c.json({ ok: true, data: items, pagination })
     } catch (err: any) {
         console.error("[GET /members/:id/points-ledger] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+membersRoute.delete("/:id", async (c) => {
+    try {
+        const id = c.req.param("id")
+        const db = getDb(c.env)
+        const existing = await db.select().from(members).where(eq(members.memberId, id)).get()
+
+        if (!existing) {
+            return c.json({ ok: false, error: "NOT_FOUND", message: "Учасника не знайдено" }, 404)
+        }
+
+        // Soft delete: set active = false
+        const now = Math.floor(Date.now() / 1000)
+        await db.update(members).set({ active: false, updatedAt: now }).where(eq(members.memberId, id)).run()
+
+        return c.json({ ok: true, message: "Авантюриста деактивовано" })
+    } catch (err: any) {
+        console.error("[DELETE /members/:id] error", err)
         return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
     }
 })

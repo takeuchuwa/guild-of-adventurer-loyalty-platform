@@ -6,6 +6,7 @@ export interface Product {
     sku: string | null;
     price: number;
     overridePoints: number | null;
+    inventory: number;
     categories: Category[];
     createdAt: number;
     updatedAt: number;

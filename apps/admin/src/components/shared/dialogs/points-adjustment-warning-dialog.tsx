@@ -31,19 +31,18 @@ export function PointsAdjustmentWarningDialog({ open, onOpenChange, onConfirm }:
                 </DialogHeader>
                 <DialogDescription className="space-y-3 text-base">
                     <p>
-                        Зміна балів учасника напряму може вплинути на його рівень і має використовуватися лише у виняткових
-                        випадках.
+                        Ручна зміна балів може вплинути на рівень авантюриста. Використовуйте лише у виняткових випадках.
                     </p>
-                    <p className="font-semibold text-foreground">Використовуйте цю функцію тільки для:</p>
+                    <p className="font-semibold text-foreground">Прийнятні причини для коригування:</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                        <li>Виправлення помилок у системі</li>
-                        <li>Невідновлюваних ситуацій</li>
+                        <li>Виправлення помилок системи</li>
+                        <li>Невідновнювані ситуації</li>
                         <li>Коригування балансу за рішенням адміністрації</li>
                     </ul>
-                    <p className="text-destructive font-medium">Всі зміни балів записуються в історію з вашою приміткою.</p>
+                    <p className="text-destructive font-medium">Всі зміни записуються в історію з вашим поясненням.</p>
                 </DialogDescription>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="cursor-pointer">
                         Скасувати
                     </Button>
                     <Button
@@ -52,6 +51,7 @@ export function PointsAdjustmentWarningDialog({ open, onOpenChange, onConfirm }:
                             onConfirm()
                             onOpenChange(false)
                         }}
+                        className="cursor-pointer"
                     >
                         Я розумію, продовжити
                     </Button>

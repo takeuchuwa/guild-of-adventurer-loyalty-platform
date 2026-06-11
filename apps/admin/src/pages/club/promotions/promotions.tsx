@@ -7,10 +7,11 @@ import type { UseSearchOptions } from "@/hooks/use-search.tsx"
 import type { Promotion } from "@/components/promotions/types/promotion.ts"
 import { promotionsColumns } from "@/components/promotions/columns/columns.tsx"
 import { useNavigate } from "react-router-dom"
-import { useState, useRef } from "react"
+import { useState, useRef, useMemo } from "react"
 import { DeleteConfirmationDialog } from "@/components/shared/dialogs/delete-confirmation-dialog"
 import { deletePromotion } from "@/components/promotions/api/promotions.ts"
 import { toast } from "sonner"
+import { PromoFilter } from "@/components/shared/filters/promo-filter"
 
 export default function PromotionsPage() {
     const searchProperties: UseSearchOptions = {
@@ -22,6 +23,37 @@ export default function PromotionsPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [promotionToDelete, setPromotionToDelete] = useState<Promotion | null>(null)
     const loadPromotionsRef = useRef<(() => Promise<void>) | null>(null)
+
+    // Filter states
+    const [active, setActive] = useState<boolean | undefined>(undefined)
+    const [date, setDate] = useState<Date | undefined>(undefined)
+
+    const filterParams = useMemo(() => {
+        const params: Record<string, any> = {}
+        if (active !== undefined) {
+            params.active = String(active)
+        }
+        if (date) {
+            params.date = Math.floor(date.getTime() / 1000)
+        }
+        return params
+    }, [active, date])
+
+    const filters = useMemo(
+        () => [
+            {
+                component: (
+                    <PromoFilter
+                        active={active}
+                        date={date}
+                        onActiveChange={setActive}
+                        onDateChange={setDate}
+                    />
+                ),
+            },
+        ],
+        [active, date]
+    )
 
     // Handlers for table actions
     const handleCreatePromotion = () => {
@@ -68,6 +100,9 @@ export default function PromotionsPage() {
                     searchProperties={searchProperties}
                     title="Промоакції"
                     onLoadPromotionsRef={loadPromotionsRef}
+                    storageKey="promotions"
+                    filters={filters}
+                    filterParams={filterParams}
                     actions={[
                         {
                             label: "Додати",
@@ -96,7 +131,7 @@ export default function PromotionsPage() {
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={confirmDelete}
                 title="Видалити промоакцію"
-                description="Ви впевнені, що хочете видалити цю промоакцію? Цю дію не можна скасувати."
+                description="Ця дія незворотна. Промоакцію буде видалено назавжди."
                 itemName={promotionToDelete?.name}
             />
         </Layout>

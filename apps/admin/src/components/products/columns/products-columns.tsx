@@ -5,6 +5,7 @@ import {PackageIcon} from "lucide-react";
 import type {Category} from "@/components/categories/types/category-types.tsx";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
+import {Badge} from "@/components/ui/badge.tsx";
 
 export const productsColumns: CustomColumnDef<Product>[] = [
     {
@@ -13,7 +14,9 @@ export const productsColumns: CustomColumnDef<Product>[] = [
         accessorKey: "name",
         cell: ({row}) => {
             return (
-                <div className="font-semibold">{row.original.name}</div>
+                <Link to={`/products/${row.original.productId}`} className="font-semibold hover:underline">
+                    {row.original.name}
+                </Link>
             )
         },
         size: 20,
@@ -48,6 +51,38 @@ export const productsColumns: CustomColumnDef<Product>[] = [
         accessorKey: "sku",
         size: 15,
         minSize: 15
+    },
+    {
+        id: "inventory",
+        header: "Склад",
+        accessorKey: "inventory",
+        size: 15,
+        minSize: 10,
+        cell: ({row}) => {
+            const inventory = row.original.inventory ?? -1
+
+            if (inventory === -1) {
+                return (
+                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-medium">
+                        Необмежено
+                    </Badge>
+                )
+            }
+
+            if (inventory === 0) {
+                return (
+                    <Badge variant="destructive" className="font-medium">
+                        Немає
+                    </Badge>
+                )
+            }
+
+            return (
+                <span className="font-semibold text-sm">
+                    {inventory} шт.
+                </span>
+            )
+        }
     },
     {
         id: "overridePoints",

@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `inventory` integer DEFAULT -1 NOT NULL;

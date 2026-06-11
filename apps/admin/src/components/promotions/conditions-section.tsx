@@ -139,16 +139,48 @@ export function ConditionsSection() {
 
     return (
         <div>
-            <h4 className="font-semibold mb-2">Всі повинні бути виконані</h4>
+            <h4 className="font-semibold mb-2">Умови застосування</h4>
             <p className="text-sm text-muted-foreground mb-4">
-                Визначте умови, що мають бути виконані для застосування промоакції
+                Промоакція спрацює лише якщо <strong>всі</strong> вказані умови виконані одночасно
             </p>
 
             <div className="space-y-3 mb-4">
                 {activeConditions.length === 0 && (
-                    <div className="text-sm text-muted-foreground text-center py-8 border-2 border-dashed rounded-lg">
-                        Умови не додані. Натисніть "+ Додати умову" щоб почати
+                    <div className="py-3 space-y-3">
+                        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 flex items-center gap-1.5">
+                            <span>⚠️</span>
+                            <span>Якщо ви не оберете жодної умови, промоакція застосовуватиметься завжди для обраної аудиторії. Якщо ви хочете вимкнути її, зніміть прапорець «Активна» в блоці основної інформації вище.</span>
+                        </p>
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-2">Швидкий старт:</p>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => addCondition("cart_total")}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-full bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
+                            >
+                                <span>🛒</span>
+                                <span>Від суми замовлення</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => addCondition("member_is_birthday")}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-full bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
+                            >
+                                <span>🎂</span>
+                                <span>До дня народження</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => addCondition("member_is_new")}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-full bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
+                            >
+                                <span>⭐</span>
+                                <span>Для нових учасників</span>
+                            </button>
+                        </div>
                     </div>
+                </div>
                 )}
 
                 {activeConditions.map((type) => {
@@ -386,7 +418,7 @@ function ContainsItemCondition({ type, value, onUpdate }: ContainsItemConditionP
         <div className="space-y-4 w-full">
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <Label className="text-sm text-muted-foreground mb-2 block">Режим</Label>
+                    <Label className="text-sm text-muted-foreground mb-2 block">Кошик має...</Label>
                     <RadioGroup
                         value={value.mode}
                         onValueChange={(mode) => updateField("mode", mode)}
@@ -395,20 +427,20 @@ function ContainsItemCondition({ type, value, onUpdate }: ContainsItemConditionP
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="include" id={`${type}-include`} className="cursor-pointer" />
                             <Label htmlFor={`${type}-include`} className="font-normal cursor-pointer">
-                                Включити
+                                Містити
                             </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="exclude" id={`${type}-exclude`} className="cursor-pointer" />
                             <Label htmlFor={`${type}-exclude`} className="font-normal cursor-pointer">
-                                Виключити
+                                Не містити
                             </Label>
                         </div>
                     </RadioGroup>
                 </div>
 
                 <div>
-                    <Label className="text-sm text-muted-foreground mb-2 block">Логіка</Label>
+                    <Label className="text-sm text-muted-foreground mb-2 block">Достатньо...</Label>
                     <RadioGroup
                         value={value.logic}
                         onValueChange={(logic) => updateField("logic", logic)}
@@ -417,13 +449,13 @@ function ContainsItemCondition({ type, value, onUpdate }: ContainsItemConditionP
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="any" id={`${type}-any`} className="cursor-pointer" />
                             <Label htmlFor={`${type}-any`} className="font-normal cursor-pointer">
-                                Один з обраних
+                                Хоча б одного
                             </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="all" id={`${type}-all`} className="cursor-pointer" />
                             <Label htmlFor={`${type}-all`} className="font-normal cursor-pointer">
-                                Всі вибрані
+                                Всіх обраних
                             </Label>
                         </div>
                     </RadioGroup>
@@ -431,7 +463,7 @@ function ContainsItemCondition({ type, value, onUpdate }: ContainsItemConditionP
             </div>
 
             <div>
-                <Label className="text-sm text-muted-foreground mb-2 block">Елементи</Label>
+                <Label className="text-sm text-muted-foreground mb-2 block">Обрані елементи</Label>
 
                 <div className="flex flex-col gap-3">
                     <Button

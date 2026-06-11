@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { useForm, FormProvider } from "react-hook-form"
+import { useForm, FormProvider, useFormContext } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
@@ -11,13 +11,21 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { MetadataPanel } from "./metadata-panel"
 import { AssignmentsPanel, type PromotionAssignment } from "./assignments-panel"
 import { ConditionsSection } from "./conditions-section"
 import { EffectsSection } from "./effects-section"
 import { GlobalFilterSection } from "./global-filter-section"
 import { TargetsSection } from "./targets-section"
-import { Loader2 } from "lucide-react"
+import { Loader2, HelpCircle, GripVertical } from "lucide-react"
+import { fetchLevels } from "@/components/levels/api/level-api"
+import { getPromoResumeText, pluralUk } from "./utils/promo-helper"
 
 // Define the promotion form schema
 const promotionSchema = z.object({
@@ -61,6 +69,11 @@ const promotionSchema = z.object({
             }).optional(),
             memberConditions: z.object({
                 member_is_new: z.number().optional(),
+                member_is_birthday: z.number().optional(),
+                max_usage_per_member: z.object({
+                    limit: z.number().int().min(1),
+                    period: z.string(),
+                }).optional(),
             }).optional(),
         }).partial().optional(),
         effects: z.object({
@@ -155,6 +168,7 @@ type PromotionFormData = z.infer<typeof promotionSchema>
 
 interface PromotionsFormProps {
     initialData?: Partial<PromotionFormData>
+    targetsMap?: Record<string, string>
     onSubmit: (data: PromotionFormData) => Promise<void>
     onCancel: () => void
     isLoading?: boolean
@@ -162,10 +176,26 @@ interface PromotionsFormProps {
     existingAssignments?: PromotionAssignment[]
 }
 
-export function PromotionsForm({ initialData, onSubmit, onCancel, isLoading, mode, existingAssignments }: PromotionsFormProps) {
+export function PromotionsForm({ initialData, targetsMap, onSubmit, onCancel, isLoading, mode, existingAssignments }: PromotionsFormProps) {
     const [sidebarWidth, setSidebarWidth] = useState(650)
     const [isResizing, setIsResizing] = useState(false)
     const sidebarRef = useRef<HTMLDivElement>(null)
+    const [activeAccordionItem, setActiveAccordionItem] = useState<string>("effects")
+    const [levels, setLevels] = useState<{ levelId: string; name: string }[]>([])
+
+    useEffect(() => {
+        async function loadLevels() {
+            try {
+                const data = await fetchLevels({
+                    pagination: { pageIndex: 0, pageSize: 100 }
+                })
+                setLevels(data.levels || [])
+            } catch (err) {
+                console.error("Failed to fetch levels in form", err)
+            }
+        }
+        loadLevels()
+    }, [])
 
     const methods = useForm<PromotionFormData>({
         resolver: zodResolver(promotionSchema),
@@ -173,7 +203,7 @@ export function PromotionsForm({ initialData, onSubmit, onCancel, isLoading, mod
             name: initialData?.name || "",
             description: initialData?.description || "",
             active: initialData?.active ?? true,
-            combinable: initialData?.combinable ?? false,
+            combinable: initialData?.combinable ?? true,
             mode: initialData?.mode || "AUTO",
             code: initialData?.code || "",
             isPermanent: initialData?.startDate === -1 && initialData?.endDate === -1 ? true : false,
@@ -214,6 +244,14 @@ export function PromotionsForm({ initialData, onSubmit, onCancel, isLoading, mod
         }
     }
 
+    const handleFormError = (errors: any) => {
+        console.log("Form validation errors:", errors)
+        if (errors?.config?.effects) setActiveAccordionItem("effects")
+        else if (errors?.config?.conditions) setActiveAccordionItem("conditions")
+        else if (errors?.config?.targets) setActiveAccordionItem("targets")
+        else if (errors?.config?.filter) setActiveAccordionItem("filters")
+    }
+
     // Resize handle logic
     const startResizing = () => {
         setIsResizing(true)
@@ -250,24 +288,25 @@ export function PromotionsForm({ initialData, onSubmit, onCancel, isLoading, mod
     return (
         <FormProvider {...methods}>
             {/* Form takes full viewport height and uses flex column */}
-            <form onSubmit={methods.handleSubmit(handleSubmit)} className="flex flex-col overflow-hidden">
+            <form onSubmit={methods.handleSubmit(handleSubmit, handleFormError)} className="flex flex-col overflow-hidden">
                 {/* Main content area - calculated height: 100vh - header (64px) - footer (72px) = h-[calc(100vh-136px)] */}
                 {/* CRITICAL: overflow-hidden prevents this container from expanding beyond its height */}
                 <div className="flex overflow-hidden h-[calc(100vh-136px)]">
                     {/* Left Pane - h-full ensures it takes full height of parent, overflow-y-auto enables scrolling */}
                     <div className="flex-1 h-full w-full overflow-y-auto p-6 flex items-start justify-center">
                         <div className="space-y-6 w-full max-w-4xl">
-                            <MetadataPanel />
+                            <MetadataPanel levels={levels} />
                             <AssignmentsPanel existingAssignments={existingAssignments} />
                         </div>
                     </div>
 
                     {/* Resize Handle */}
                     <div
-                        className="w-1 bg-border hover:bg-blue-500 active:bg-blue-600 cursor-col-resize transition-colors shrink-0"
+                        className="w-2 bg-border hover:bg-blue-400 active:bg-blue-600 cursor-col-resize transition-colors shrink-0 flex items-center justify-center group"
                         onMouseDown={startResizing}
-                        style={{ cursor: isResizing ? "col-resize" : "col-resize" }}
-                    />
+                    >
+                        <GripVertical className="h-4 w-4 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors" />
+                    </div>
 
                     {/* Right Pane - h-full ensures it takes full height of parent */}
                     <div
@@ -278,60 +317,104 @@ export function PromotionsForm({ initialData, onSubmit, onCancel, isLoading, mod
                         {/* Inner content - flex-1 and overflow-y-auto enables scrolling */}
                         <div className="flex-1 overflow-y-auto p-6">
                             <div className="border rounded-lg bg-white shadow-sm p-4">
-                                <h3 className="text-lg font-semibold mb-4">Логіка промоакції</h3>
-                                <Accordion type="multiple" defaultValue={["conditions", "effects", "targets", "filters"]} className="w-full">
-                                    <AccordionItem value="conditions">
-                                        <AccordionTrigger className="text-sm font-medium cursor-pointer">
-                                            <div className="flex items-center gap-2">
-                                                <span>1. Умови (IF)</span>
-                                                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-normal">Опціонально</span>
-                                            </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent>
-                                            <div className="pt-2">
-                                                <ConditionsSection />
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold">Логіка промоакції</h3>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button type="button" className="text-muted-foreground hover:text-foreground transition-colors">
+                                                    <HelpCircle className="h-5 w-5" />
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="left" className="max-w-xs text-sm">
+                                                <p className="font-semibold mb-1">Як налаштувати промоакцію:</p>
+                                                <ol className="list-decimal pl-4 space-y-1">
+                                                    <li><strong>Що отримає клієнт?</strong> — обов'язково оберіть знижку або бонус</li>
+                                                    <li><strong>Коли застосувати?</strong> — за бажанням додайте додаткові умови, якщо умов немає промоакція буде застосовуватись завжди до цільової аудиторії</li>
+                                                    <li><strong>До чого?</strong> — до всього кошика або конкретних товарів</li>
+                                                    <li><strong>Виключення</strong> — що НЕ підпадає під акцію</li>
+                                                </ol>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
 
-                                    <AccordionItem value="effects">
-                                        <AccordionTrigger className="text-sm font-medium cursor-pointer">
+                                <LivePromoSummary levels={levels} />
+
+                                <FormStepper
+                                    activeItem={activeAccordionItem}
+                                    onToggle={(id) => {
+                                        setActiveAccordionItem(activeAccordionItem === id ? "" : id)
+                                        // Scroll to it
+                                        setTimeout(() => {
+                                            document.getElementById(`accordion-trigger-${id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+                                        }, 100)
+                                    }}
+                                />
+
+                                <Accordion
+                                    type="single"
+                                    collapsible
+                                    value={activeAccordionItem}
+                                    onValueChange={(val) => setActiveAccordionItem(val ?? "")}
+                                    className="w-full space-y-2"
+                                >
+                                    <AccordionItem value="effects" className="border rounded-lg px-4 bg-white shadow-sm data-[state=open]:shadow-md transition-all">
+                                        <AccordionTrigger id="accordion-trigger-effects" className="text-sm font-medium cursor-pointer hover:no-underline py-4">
                                             <div className="flex items-center gap-2">
-                                                <span>2. Ефекти (THEN)</span>
+                                                <span>1. Що отримає клієнт?</span>
                                                 <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-normal">Обов'язково</span>
+                                                <SectionBadge section="effects" />
                                             </div>
                                         </AccordionTrigger>
                                         <AccordionContent>
-                                            <div className="pt-2">
+                                            <div className="pt-2 pb-4">
                                                 <EffectsSection />
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
 
-                                    <AccordionItem value="targets">
-                                        <AccordionTrigger className="text-sm font-medium cursor-pointer">
+                                    <AccordionItem value="conditions" className="border rounded-lg px-4 bg-white shadow-sm data-[state=open]:shadow-md transition-all">
+                                        <AccordionTrigger id="accordion-trigger-conditions" className="text-sm font-medium cursor-pointer hover:no-underline py-4">
                                             <div className="flex items-center gap-2">
-                                                <span>3. Цілі застосування</span>
+                                                <span>2. Коли застосувати?</span>
                                                 <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-normal">Опціонально</span>
+                                                <SectionBadge section="conditions" />
                                             </div>
                                         </AccordionTrigger>
                                         <AccordionContent>
-                                            <div className="pt-2">
-                                                <TargetsSection />
+                                            <div className="pt-2 pb-4">
+                                                <ConditionsSection />
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
 
-                                    <AccordionItem value="filters">
-                                        <AccordionTrigger className="text-sm font-medium cursor-pointer">
+                                    <AccordionItem value="targets" className="border rounded-lg px-4 bg-white shadow-sm data-[state=open]:shadow-md transition-all">
+                                        <AccordionTrigger id="accordion-trigger-targets" className="text-sm font-medium cursor-pointer hover:no-underline py-4">
                                             <div className="flex items-center gap-2">
-                                                <span>4. Глобальні виключення</span>
+                                                <span>3. До чого застосувати?</span>
                                                 <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-normal">Опціонально</span>
+                                                <SectionBadge section="targets" />
                                             </div>
                                         </AccordionTrigger>
                                         <AccordionContent>
-                                            <div className="pt-2">
-                                                <GlobalFilterSection />
+                                            <div className="pt-2 pb-4">
+                                                <TargetsSection targetsMap={targetsMap} />
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+
+                                    <AccordionItem value="filters" className="border rounded-lg px-4 bg-white shadow-sm data-[state=open]:shadow-md transition-all">
+                                        <AccordionTrigger id="accordion-trigger-filters" className="text-sm font-medium cursor-pointer hover:no-underline py-4">
+                                            <div className="flex items-center gap-2">
+                                                <span>4. Що виключити?</span>
+                                                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-normal">Опціонально</span>
+                                                <SectionBadge section="filters" />
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="pt-2 pb-4">
+                                                <GlobalFilterSection targetsMap={targetsMap} />
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
@@ -361,5 +444,110 @@ export function PromotionsForm({ initialData, onSubmit, onCancel, isLoading, mod
                 </div>
             </form>
         </FormProvider>
+    )
+}
+
+function LivePromoSummary({ levels }: { levels: { levelId: string; name: string }[] }) {
+    const { watch } = useFormContext()
+    const config = watch("config")
+    const levelAssignments = watch("levelAssignments") || []
+    const memberIds = watch("assignments.memberIds") || []
+
+    const summaryText = getPromoResumeText(config, levels, levelAssignments, memberIds)
+
+    return (
+        <div className="mb-4 p-3 bg-blue-50/50 border border-blue-200/60 rounded-lg flex gap-3 items-start">
+            <span className="text-xl leading-none pt-0.5">✨</span>
+            <div>
+                <h4 className="text-xs font-semibold text-blue-900/80 mb-0.5 uppercase tracking-wider">Промо-резюме</h4>
+                <p className="text-sm text-blue-900 font-medium">
+                    {summaryText || "Оберіть нагороду вище, щоб побачити превю"}
+                </p>
+            </div>
+        </div>
+    )
+}
+
+function SectionBadge({ section }: { section: "conditions" | "effects" | "targets" | "filters" }) {
+    const { watch } = useFormContext()
+    const config = watch("config")
+
+    if (section === "conditions") {
+        let condCount = 0
+        if (config?.conditions?.cartConditions) condCount += Object.keys(config.conditions.cartConditions).length
+        if (config?.conditions?.itemConditions) condCount += Object.keys(config.conditions.itemConditions).length
+        if (config?.conditions?.memberConditions) condCount += Object.keys(config.conditions.memberConditions).length
+        if (condCount > 0) return <span className="text-[11px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium ml-1 flex items-center gap-1"><span>✨</span>{condCount} {pluralUk(condCount, "умова", "умови", "умов")}</span>
+    }
+
+    if (section === "effects") {
+        const effects = config?.effects
+        const parts = []
+        if (effects?.price?.type === "percentage") parts.push(`-${effects.price.value}%`)
+        if (effects?.price?.type === "fixed") parts.push(`-${effects.price.value}₴`)
+        if (effects?.price?.type === "override") parts.push(`${effects.price.value}₴`)
+        if (effects?.points?.type === "multiplier") parts.push(`×${effects.points.value}`)
+        if (effects?.points?.type === "bonus") parts.push(`+${effects.points.value}б`)
+        if (parts.length > 0) return <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium ml-1">{parts.join(", ")}</span>
+    }
+
+    if (section === "targets") {
+        const targets = config?.targets
+        if (targets?.type === "cart") return <span className="text-[11px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-medium ml-1">Весь кошик</span>
+        if (targets?.type === "items") {
+            const itemCount = (targets?.categories?.length || 0) + (targets?.products?.length || 0) + (targets?.activities?.length || 0)
+            const label = itemCount > 0 ? `Конкретні (${itemCount})` : "Конкретні елементи"
+            return <span className="text-[11px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-medium ml-1">{label}</span>
+        }
+        if (targets?.type === "entity") {
+            const subTypeLabels: Record<string, string> = {
+                products: "Всі товари",
+                sessions: "Всі сесії",
+                games: "Всі ігри",
+            }
+            const label = subTypeLabels[targets?.entitySubType as string] ?? "За типом"
+            return <span className="text-[11px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-medium ml-1">{label}</span>
+        }
+    }
+
+    if (section === "filters") {
+        const filters = config?.filter
+        let count = (filters?.excludeCategories?.length || 0) + (filters?.excludeProducts?.length || 0) + (filters?.excludeActivities?.length || 0)
+        if (count > 0) return <span className="text-[11px] px-2 py-0.5 rounded bg-orange-100 text-orange-800 font-medium ml-1">{count} {pluralUk(count, "виключення", "виключення", "виключень")}</span>
+    }
+
+    return null
+}
+
+function FormStepper({ activeItem, onToggle }: { activeItem: string, onToggle: (id: string) => void }) {
+    const steps = [
+        { id: "effects", label: "Нагороди" },
+        { id: "conditions", label: "Умови" },
+        { id: "targets", label: "Ціль" },
+        { id: "filters", label: "Виключення" },
+    ]
+
+    return (
+        <div className="flex items-center justify-between mb-4 bg-muted/30 p-1.5 rounded-lg border gap-1 overflow-x-auto">
+            {steps.map((step, i) => {
+                const isActive = activeItem === step.id
+                return (
+                    <button
+                        key={step.id}
+                        type="button"
+                        onClick={() => onToggle(step.id)}
+                        className={`flex-1 text-sm font-medium py-1.5 px-3 rounded-md transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${isActive
+                            ? "bg-white text-primary shadow-sm ring-1 ring-border"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            }`}
+                    >
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                            {i + 1}
+                        </span>
+                        {step.label}
+                    </button>
+                )
+            })}
+        </div>
     )
 }

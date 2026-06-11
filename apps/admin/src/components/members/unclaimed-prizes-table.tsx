@@ -21,7 +21,7 @@ export function UnclaimedPrizesTable() {
     const [isLoading, setIsLoading] = useState(false)
     const [claimingState, setClaimingState] = useState<Record<string, boolean>>({})
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination()
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(10, "unclaimed-prizes")
     const { sorting, onSortingChange } = useSorting("", "")
     const { currentSearch, searchProps } = useSearch({
         searchPlaceholder: "Пошук за номером...",
@@ -140,7 +140,7 @@ export function UnclaimedPrizesTable() {
             rowCount={context.total ?? -1}
             isLoading={isLoading}
             selectionMode="none"
-            emptyStateMessage="Немає не отриманих призів"
+            emptyStateMessage="Усі призи отримано"
             rowId="id"
             {...searchProps}
             onSimpleSearch={(query) => {

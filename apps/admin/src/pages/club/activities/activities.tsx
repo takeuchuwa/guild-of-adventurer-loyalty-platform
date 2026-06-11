@@ -13,6 +13,8 @@ import { deleteActivity } from "@/components/activities/api/activity-api.ts"
 import { toast } from "sonner"
 import { DateFilter } from "@/components/activities/filters/date-filter"
 import type { DataTableFilter } from "@/components/table/data-table"
+import { CategoryFilter } from "@/components/shared/filters/category-filter"
+import { GameFilter } from "@/components/shared/filters/game-filter"
 
 export default function ActivitiesPage() {
     const searchProperties: UseSearchOptions = {
@@ -32,8 +34,12 @@ export default function ActivitiesPage() {
     })
     const [endDate, setEndDate] = useState<Date | undefined>(undefined)
 
+    // Filter states
+    const [categoryId, setCategoryId] = useState<string | undefined>(undefined)
+    const [gameId, setGameId] = useState<string | undefined>(undefined)
+
     const filterParams = useMemo(() => {
-        const params: { startDate?: number; endDate?: number } = {}
+        const params: { startDate?: number; endDate?: number; categoryId?: string; gameId?: string } = {}
 
         if (startDate) {
             const start = new Date(startDate)
@@ -47,8 +53,16 @@ export default function ActivitiesPage() {
             params.endDate = Math.floor(end.getTime() / 1000)
         }
 
+        if (categoryId) {
+            params.categoryId = categoryId
+        }
+
+        if (gameId) {
+            params.gameId = gameId
+        }
+
         return params
-    }, [startDate, endDate])
+    }, [startDate, endDate, categoryId, gameId])
 
     const filters: DataTableFilter[] = useMemo(
         () => [
@@ -62,8 +76,25 @@ export default function ActivitiesPage() {
                     />
                 ),
             },
+            {
+                component: (
+                    <CategoryFilter
+                        kind="ACTIVITY"
+                        selectedCategoryId={categoryId}
+                        onChange={setCategoryId}
+                    />
+                ),
+            },
+            {
+                component: (
+                    <GameFilter
+                        selectedGameId={gameId}
+                        onChange={setGameId}
+                    />
+                ),
+            },
         ],
-        [startDate, endDate],
+        [startDate, endDate, categoryId, gameId],
     )
 
     // Handlers for table actions
@@ -113,6 +144,7 @@ export default function ActivitiesPage() {
                     onLoadActivitiesRef={loadActivitiesRef}
                     filters={filters}
                     filterParams={filterParams}
+                    storageKey="activities"
                     actions={[
                         {
                             label: "Додати",
@@ -141,7 +173,7 @@ export default function ActivitiesPage() {
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={confirmDelete}
                 title="Видалити активність"
-                description="Ви впевнені, що хочете видалити цю активність? Цю дію не можна скасувати."
+                description="Ця дія незворотна. Активність буде видалена назавжди."
                 itemName={activityToDelete?.name}
             />
         </Layout>

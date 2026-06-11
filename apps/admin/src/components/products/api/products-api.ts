@@ -14,6 +14,7 @@ export interface FetchProductsOptions {
     pagination: CursorParams
     sorting: SortingState
     currentSearch?: string
+    filterParams?: Record<string, any>
 }
 
 export interface ApiPagination {
@@ -34,6 +35,7 @@ export interface CreateProductRequest {
     price: number
     overridePoints?: number | null
     categoryIds: string[]
+    inventory?: number
 }
 
 export interface UpdateProductRequest {
@@ -41,12 +43,15 @@ export interface UpdateProductRequest {
     sku: string
     price: number
     overridePoints?: number | null
+    categoryIds: string[]
+    inventory?: number
 }
 
 export async function fetchProducts({
     pagination,
     sorting,
     currentSearch,
+    filterParams = {},
 }: FetchProductsOptions): Promise<FetchProductsResponse> {
     try {
         const response = await axiosInstance.get("/products", {
@@ -56,6 +61,7 @@ export async function fetchProducts({
                 includeCount: pagination.includeCount,
                 sort: sorting.length && sorting[0]?.id ? sorting.map((s) => `${s.id},${s.desc ? "desc" : "asc"}`).join(",") : undefined,
                 ...(currentSearch && { q: currentSearch }),
+                ...filterParams,
             },
         })
 
@@ -156,13 +162,13 @@ export async function deleteProduct(productId: string): Promise<void> {
 
         // Check for 409 conflict
         if (response.status === 409) {
-            throw new Error("Не можна видалити продукт, який використовується")
+            throw new Error("Не можна видалити товар, який використовується")
         }
 
         // Handle both response formats
         if (response.data && typeof response.data === "object" && "ok" in response.data) {
             if (!response.data.ok) {
-                throw new Error(response.data.error || "Помилка при видаленні продукту")
+                throw new Error(response.data.error || "Помилка при видаленні товару")
             }
         }
     } catch (error: any) {
@@ -171,9 +177,9 @@ export async function deleteProduct(productId: string): Promise<void> {
         // Handle axios errors
         if (error instanceof AxiosError) {
             if (error.response?.status === 409) {
-                throw new Error("Не можна видалити продукт, який використовується")
+                throw new Error("Не можна видалити товар, який використовується")
             }
-            throw new Error(error.response?.data?.error || "Помилка при видаленні продукту")
+            throw new Error(error.response?.data?.error || "Помилка при видаленні товару")
         }
 
         throw error

@@ -140,7 +140,7 @@ export default function ActivityCreate() {
                 endDate: data.endDate,
                 categoryIds: data.categoryIds,
             })
-            toast.success("Activity successfully created")
+            toast.success("Активність успішно створено")
 
             if (isCreateAndAdd) {
                 navigate("/checkout", { state: { addItem: { id: created.activityId, type: "activity" } } })
@@ -149,7 +149,7 @@ export default function ActivityCreate() {
             }
         } catch (error) {
             console.error("Error creating activity:", error)
-            const errorMessage = error instanceof Error ? error.message : "Error creating activity"
+            const errorMessage = error instanceof Error ? error.message : "Не вдалося створити активність"
             toast.error(errorMessage)
         } finally {
             setIsLoading(false)

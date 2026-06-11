@@ -3,12 +3,13 @@ import { Buffer } from "node:buffer"
 import { Hono } from "hono"
 import { getDb } from "@loyalty/db/client"
 import { promotions, promotionAssignments, members, levelPromotions } from "@loyalty/db/schema"
-import { eq, and, desc, sql, lt } from "drizzle-orm"
+import { eq, and, desc, sql, lt, lte, gte, or } from "drizzle-orm"
 import { parsePagination, parseSort, buildPagination } from "@/utils/query-helpers"
 import { generateUniqueCode } from "@/utils/promo-codes"
 import type { Env } from "@/types/env"
 import { v7 as uuidv7 } from 'uuid';
 import { generateCursor } from "drizzle-cursor";
+import { fetchPromoTargetNames } from "@/utils/promotions"
 
 export const promotionsRoute = new Hono<Env>()
 
@@ -24,6 +25,7 @@ promotionsRoute.get("/", async (c) => {
         const sortParam = url.searchParams.get("sort")
         const activeParam = url.searchParams.get("active")?.trim()
         const modeParam = url.searchParams.get("mode")?.trim()
+        const dateParam = url.searchParams.get("date")?.trim()
 
         const db = getDb(c.env)
         const baseWhereConditions = []
@@ -34,6 +36,18 @@ promotionsRoute.get("/", async (c) => {
 
         if (modeParam && (modeParam === "COUPON" || modeParam === "AUTO")) {
             baseWhereConditions.push(eq(promotions.mode, modeParam as "COUPON" | "AUTO"))
+        }
+
+        if (dateParam) {
+            const dateVal = Number.parseInt(dateParam, 10)
+            if (!isNaN(dateVal)) {
+                baseWhereConditions.push(
+                    and(
+                        or(eq(promotions.startDate, -1), lte(promotions.startDate, dateVal)),
+                        or(eq(promotions.endDate, -1), gte(promotions.endDate, dateVal))
+                    )
+                )
+            }
         }
 
         const countWhereExpr = baseWhereConditions.length > 0 ? and(...baseWhereConditions) : undefined
@@ -166,7 +180,10 @@ promotionsRoute.get("/:id", async (c) => {
 
         const levelAssignments = rawLevelPromotions.map((lp) => lp.levelId)
 
-        return c.json({ ok: true, data: { ...item, assignments, levelAssignments } })
+        const promoMap = await fetchPromoTargetNames(db, [item])
+        const targetsMap = Object.fromEntries(promoMap)
+
+        return c.json({ ok: true, data: { ...item, assignments, levelAssignments, targetsMap } })
     } catch (err: any) {
         console.error("[GET /promotions/:id] error", err)
         return c.json({ ok: false, error: "INTERNAL_ERROR", message: String(err?.message ?? err) }, 500)

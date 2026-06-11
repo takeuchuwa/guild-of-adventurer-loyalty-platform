@@ -14,6 +14,7 @@ export interface FetchMembersOptions {
     pagination: CursorParams
     sorting: SortingState
     currentSearch?: string
+    filterParams?: Record<string, any>
 }
 
 export interface ApiPagination {
@@ -32,6 +33,7 @@ export async function fetchMembers({
     pagination,
     sorting,
     currentSearch,
+    filterParams = {},
 }: FetchMembersOptions): Promise<FetchMembersResponse> {
     try {
         console.log(sorting);
@@ -42,6 +44,7 @@ export async function fetchMembers({
                 includeCount: pagination.includeCount,
                 sort: sorting.length && sorting[0]?.id ? sorting.map((s) => `${s.id},${s.desc ? "desc" : "asc"}`).join(",") : undefined,
                 ...(currentSearch && { q: currentSearch }),
+                ...filterParams,
             },
         })
 
@@ -240,5 +243,17 @@ export async function fetchUnclaimedPrizes({ pagination, sorting, currentSearch 
     } catch (error) {
         console.error("Error fetching unclaimed prizes:", error)
         return { entries: [], pagination: { pageSize: pagination.pageSize, hasNextPage: false, nextCursor: null } }
+    }
+}
+
+export async function deleteMember(id: string): Promise<void> {
+    try {
+        const response = await axiosInstance.delete(`/members/${id}`)
+        if (!response.data.ok) {
+            throw new Error(response.data.message || "Server returned ok=false")
+        }
+    } catch (error) {
+        console.error("Error deleting member:", error)
+        throw error
     }
 }

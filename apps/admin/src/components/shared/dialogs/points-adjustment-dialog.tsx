@@ -87,7 +87,7 @@ export function PointsAdjustmentDialog({ open, onOpenChange, member, onSuccess }
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Змінити бали учасника</DialogTitle>
+                    <DialogTitle>Коригування балів вручну</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2 p-4 bg-muted rounded-lg">
@@ -104,7 +104,7 @@ export function PointsAdjustmentDialog({ open, onOpenChange, member, onSuccess }
 
                     <div className="space-y-2">
                         <Label htmlFor="points">
-                            Зміна балів <span className="text-destructive">*</span>
+                            Кількість балів <span className="text-destructive">*</span>
                         </Label>
                         <Input
                             id="points"
@@ -123,7 +123,7 @@ export function PointsAdjustmentDialog({ open, onOpenChange, member, onSuccess }
                         />
                         {errors.points && <p className="text-sm text-destructive">{errors.points}</p>}
                         <p className="text-sm text-muted-foreground">
-                            Використовуйте додатні числа для додавання балів, від'ємні для віднімання
+                            Додатне число — нарахування, від'ємне — списання
                         </p>
                     </div>
 

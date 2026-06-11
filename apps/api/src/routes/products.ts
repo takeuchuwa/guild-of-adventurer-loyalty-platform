@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer"
 import { Hono } from "hono"
 import { getDb } from "@loyalty/db/client"
 import { products, entityCategories, categories } from "@loyalty/db/schema"
-import { sql, eq, and, inArray, lt, desc } from "drizzle-orm"
+import { sql, eq, and, inArray, lt, lte, gt, gte, desc } from "drizzle-orm"
 import { parsePagination, parseSort, buildPagination, buildSearch } from "@/utils/query-helpers"
 import type { Env } from "@/types/env"
 import z from "zod"
@@ -21,6 +21,7 @@ export const ProductBody = z.object({
     price: z.number().min(0).default(0),
     overridePoints: z.number().min(0).default(0).nullable(),
     active: z.boolean().default(true),
+    inventory: z.number().int().min(-1, "Інвентар не може бути менше -1").default(-1),
     categoryIds: z.array(z.string()).min(1, "Оберіть хоча б одну категорію"),
 })
 
@@ -43,12 +44,50 @@ productsRoute.get("/", async (c) => {
 
         const sortParam = url.searchParams.get("sort")
         const categoryId = url.searchParams.get("categoryId")
+        const priceValParam = url.searchParams.get("priceVal")
+        const priceOpParam = url.searchParams.get("priceOp")
+        const pointsValParam = url.searchParams.get("pointsVal")
+        const pointsOpParam = url.searchParams.get("pointsOp")
 
         const db = getDb(c.env)
 
         const baseWhereConditions = []
         if (q) {
             baseWhereConditions.push(buildSearch(q.toUpperCase(), [products.uppercaseName]))
+        }
+
+        if (priceValParam) {
+            const priceVal = parseFloat(priceValParam)
+            if (!isNaN(priceVal)) {
+                if (priceOpParam === "lt") {
+                    baseWhereConditions.push(lt(products.price, priceVal))
+                } else if (priceOpParam === "lte") {
+                    baseWhereConditions.push(lte(products.price, priceVal))
+                } else if (priceOpParam === "eq") {
+                    baseWhereConditions.push(eq(products.price, priceVal))
+                } else if (priceOpParam === "gte") {
+                    baseWhereConditions.push(gte(products.price, priceVal))
+                } else if (priceOpParam === "gt") {
+                    baseWhereConditions.push(gt(products.price, priceVal))
+                }
+            }
+        }
+
+        if (pointsValParam) {
+            const pointsVal = parseFloat(pointsValParam)
+            if (!isNaN(pointsVal)) {
+                if (pointsOpParam === "lt") {
+                    baseWhereConditions.push(lt(products.overridePoints, pointsVal))
+                } else if (pointsOpParam === "lte") {
+                    baseWhereConditions.push(lte(products.overridePoints, pointsVal))
+                } else if (pointsOpParam === "eq") {
+                    baseWhereConditions.push(eq(products.overridePoints, pointsVal))
+                } else if (pointsOpParam === "gte") {
+                    baseWhereConditions.push(gte(products.overridePoints, pointsVal))
+                } else if (pointsOpParam === "gt") {
+                    baseWhereConditions.push(gt(products.overridePoints, pointsVal))
+                }
+            }
         }
 
         // 🔗 Optional category filter
@@ -254,6 +293,7 @@ productsRoute.post("/", async (c) => {
             price: parsed.price,
             overridePoints: parsed.overridePoints,
             active: parsed.active,
+            inventory: parsed.inventory,
             createdAt: now,
             updatedAt: now,
         }
@@ -332,6 +372,7 @@ productsRoute.put("/:id", async (c) => {
             price: parsed.price,
             overridePoints: parsed.overridePoints,
             active: parsed.active,
+            inventory: parsed.inventory,
             updatedAt: now,
         }
 

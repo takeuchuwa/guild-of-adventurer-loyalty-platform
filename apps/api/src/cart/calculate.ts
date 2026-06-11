@@ -76,7 +76,8 @@ async function hydrateItemPricesAndCategories(items: CartItem[], db: any): Promi
                 id: products.productId,
                 price: products.price,
                 name: products.name,
-                overridePoints: products.overridePoints
+                overridePoints: products.overridePoints,
+                inventory: products.inventory
             }).from(products).where(inArray(products.productId, productIds))
             : Promise.resolve([]),
         allItemIds.length > 0
@@ -92,6 +93,9 @@ async function hydrateItemPricesAndCategories(items: CartItem[], db: any): Promi
         if (liveData !== undefined && liveData !== null) {
             item.unitPrice = liveData.price;
             item.name = liveData.name;
+            if (item.type === "product") {
+                item.inventory = liveData.inventory;
+            }
             if (item.type === "activity" && liveData.gameId) {
                 item.game = { gameId: liveData.gameId, name: liveData.gameName || "Гра" };
             }

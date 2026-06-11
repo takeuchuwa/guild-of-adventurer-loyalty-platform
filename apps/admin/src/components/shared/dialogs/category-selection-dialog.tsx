@@ -152,21 +152,21 @@ export function CategorySelectionDialog({
                 <DialogFooter className="flex justify-between">
                     <div className="flex gap-2">
                         {currentStep !== "selection" && (
-                            <Button variant="outline" onClick={handleBack}>
+                            <Button variant="outline" onClick={handleBack} className="cursor-pointer">
                                 Назад
                             </Button>
                         )}
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button variant="outline" onClick={() => onOpenChange(false)} className="cursor-pointer">
                             Скасувати
                         </Button>
                         {currentStep === "confirm" ? (
-                            <Button onClick={handleConfirm} disabled={selectedCategories.size === 0}>
+                            <Button onClick={handleConfirm} disabled={selectedCategories.size === 0} className="cursor-pointer">
                                 Підтвердити
                             </Button>
                         ) : (
-                            <Button onClick={handleNext} disabled={selectedCategories.size === 0}>
+                            <Button onClick={handleNext} disabled={selectedCategories.size === 0} className="cursor-pointer">
                                 Далі
                             </Button>
                         )}

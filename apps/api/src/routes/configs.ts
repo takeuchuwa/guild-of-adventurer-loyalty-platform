@@ -24,21 +24,26 @@ const ActivityTimeSlotConfig = z.object({
   endHour: z.string().regex(/^([01]\d|2[0-3]):?([0-5]\d)$/, "Invalid time format (HH:mm)"),
 })
 
+const MainSystemInstructionConfig = z.object({
+  systemPrompt: z.string().min(1),
+})
+
+const EntitySystemInstructionConfig = z.object({
+  entity: z.enum(["promotion", "activity", "game", "system", "benefit", "prize"] as const),
+  systemPrompt: z.string().min(1),
+  length: z.coerce.number().int().min(1).default(500),
+  outputTokens: z.coerce.number().int().min(1).optional().nullable(),
+})
+
 const BaseConfigBody = z.object({
   name: z.string().min(1),
   active: z.boolean().default(true),
-  triggerKey: z.enum(["level_change", "activity_time_slot"] as const),
+  triggerKey: z.string().min(1),
 })
 
 const CreateBody = BaseConfigBody.and(
   z.object({
-    config: z.union([
-      z.object({ triggerKey: z.literal("level_change") }).strip().transform(() => null),
-      LevelChangeConfig,
-      ActivityTimeSlotConfig,
-    ]).transform((val, ctx) => {
-      return val
-    }),
+    config: z.any(),
   })
 )
 
@@ -46,11 +51,13 @@ const UpdateBody = z.object({
   name: z.string().min(1).optional(),
   active: z.boolean().optional(),
   // triggerKey is immutable via update for safety
-  config: z.union([LevelChangeConfig, ActivityTimeSlotConfig]).optional(),
+  config: z.any().optional(),
 })
 
 export type LevelChangeConfigType = z.infer<typeof LevelChangeConfig>
 export type ActivityTimeSlotConfigType = z.infer<typeof ActivityTimeSlotConfig>
+export type MainSystemInstructionConfigType = z.infer<typeof MainSystemInstructionConfig>
+export type EntitySystemInstructionConfigType = z.infer<typeof EntitySystemInstructionConfig>
 
 export const configsRoute = new Hono<Env>()
 
@@ -177,8 +184,10 @@ configsRoute.post("/", async (c) => {
     const now = Math.floor(Date.now() / 1000)
     const id = uuidv7();
 
-    // Only supported triggers: level_change, activity_time_slot
-    if (!["level_change", "activity_time_slot"].includes(parsed.triggerKey)) {
+    const isEntityInstruction = parsed.triggerKey.startsWith("entity_system_instruction:");
+    const supportedTriggers = ["level_change", "activity_time_slot", "main_system_instruction"];
+
+    if (!supportedTriggers.includes(parsed.triggerKey) && !isEntityInstruction) {
       return c.json({ ok: false, error: "UNSUPPORTED_TRIGGER" }, 400)
     }
 
@@ -187,6 +196,43 @@ configsRoute.post("/", async (c) => {
       cfg = LevelChangeConfig.parse((body as any).config)
     } else if (parsed.triggerKey === "activity_time_slot") {
       cfg = ActivityTimeSlotConfig.parse((body as any).config)
+    } else if (parsed.triggerKey === "main_system_instruction") {
+      cfg = MainSystemInstructionConfig.parse((body as any).config)
+    } else if (isEntityInstruction) {
+      cfg = EntitySystemInstructionConfig.parse((body as any).config)
+      const entityFromKey = parsed.triggerKey.split(":")[1]
+      if (cfg.entity !== entityFromKey) {
+        return c.json({ ok: false, error: "VALIDATION_ERROR", message: "Тип сутності не відповідає ключу тригера." }, 400)
+      }
+    }
+
+    // Uniqueness checks (Point Lookup via trigger_key index)
+    if (parsed.triggerKey === "main_system_instruction") {
+      const existing = await db.select()
+        .from(loyaltyConfigs)
+        .where(eq(loyaltyConfigs.triggerKey, "main_system_instruction"))
+        .get()
+      if (existing) {
+        return c.json({ ok: false, error: "VALIDATION_ERROR", message: "Головна системна інструкція вже існує. Ви можете лише редагувати її." }, 400)
+      }
+    } else if (isEntityInstruction) {
+      const existing = await db.select()
+        .from(loyaltyConfigs)
+        .where(eq(loyaltyConfigs.triggerKey, parsed.triggerKey))
+        .get()
+      if (existing) {
+        const entityUa: Record<string, string> = {
+          promotion: "промоакції",
+          activity: "активності",
+          game: "гри",
+          system: "рольової системи",
+          benefit: "переваги",
+          prize: "призу",
+        }
+        const entityName = parsed.triggerKey.split(":")[1]
+        const entityLabel = entityUa[entityName] || entityName
+        return c.json({ ok: false, error: "VALIDATION_ERROR", message: `Конфігурація для сутності (${entityLabel}) вже існує. Ви можете лише редагувати її.` }, 400)
+      }
     }
 
     await db
@@ -226,10 +272,27 @@ configsRoute.put("/:id", async (c) => {
 
     const now = Math.floor(Date.now() / 1000)
 
+    let cfg: any
+    if (parsed.config) {
+      if (existing.triggerKey === "level_change") {
+        cfg = LevelChangeConfig.parse(parsed.config)
+      } else if (existing.triggerKey === "activity_time_slot") {
+        cfg = ActivityTimeSlotConfig.parse(parsed.config)
+      } else if (existing.triggerKey === "main_system_instruction") {
+        cfg = MainSystemInstructionConfig.parse(parsed.config)
+      } else if (existing.triggerKey.startsWith("entity_system_instruction:")) {
+        cfg = EntitySystemInstructionConfig.parse(parsed.config)
+        const entityFromKey = existing.triggerKey.split(":")[1]
+        if (cfg.entity !== entityFromKey) {
+          return c.json({ ok: false, error: "VALIDATION_ERROR", message: "Тип сутності не відповідає ключу тригера." }, 400)
+        }
+      }
+    }
+
     const patch: any = { updatedAt: now }
     if (typeof parsed.name !== "undefined") patch.name = parsed.name
     if (typeof parsed.active !== "undefined") patch.active = parsed.active
-    if (parsed.config) patch.configJson = JSON.stringify(parsed.config)
+    if (parsed.config) patch.configJson = JSON.stringify(cfg)
 
     await db.update(loyaltyConfigs).set(patch).where(eq(loyaltyConfigs.configId, id)).run()
 

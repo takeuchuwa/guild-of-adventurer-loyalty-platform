@@ -145,6 +145,7 @@ export function GameSelectionDialog({
                                 columns={defaultColumns.filter((col) => col.id === "name")}
                                 selectionMode="single"
                                 onSelectionChange={handleGameSelection}
+                                pageSize={5}
                             />
                         </div>
                     )}
@@ -194,12 +195,12 @@ export function GameSelectionDialog({
                                         <p className="text-sm text-muted-foreground mt-1">Для цієї гри ще не створено жодної системи</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button asChild variant="outline">
+                                        <Button asChild variant="outline" className="cursor-pointer">
                                             <Link to={`/games/${selectedGame.gameId}`} target="_blank">
                                                 Створити редакцію/правила
                                             </Link>
                                         </Button>
-                                        <Button onClick={() => setCurrentStep("confirm")}>Продовжити без редакції/правил</Button>
+                                        <Button onClick={() => setCurrentStep("confirm")} className="cursor-pointer">Продовжити без редакції/правил</Button>
                                     </div>
                                 </div>
                             )}
@@ -234,22 +235,23 @@ export function GameSelectionDialog({
                 <DialogFooter className="flex justify-between">
                     <div className="flex gap-2">
                         {currentStep !== "game" && (
-                            <Button variant="outline" onClick={handleBack}>
+                            <Button variant="outline" onClick={handleBack} className="cursor-pointer">
                                 Назад
                             </Button>
                         )}
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button variant="outline" onClick={() => onOpenChange(false)} className="cursor-pointer">
                             Скасувати
                         </Button>
                         {currentStep === "confirm" ? (
-                            <Button onClick={handleConfirm} disabled={!selectedGame}>
+                            <Button onClick={handleConfirm} disabled={!selectedGame} className="cursor-pointer">
                                 Підтвердити
                             </Button>
                         ) : (
                             <Button
                                 onClick={handleNext}
+                                className="cursor-pointer"
                                 disabled={
                                     currentStep === "game"
                                         ? !selectedGame

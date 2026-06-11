@@ -101,7 +101,8 @@
   "secrets": {
     "required": [
       "BOT_TOKEN",
-      "QR_SECRET_KEY"
+      "QR_SECRET_KEY",
+      "GEMINI_API_KEY"
     ]
   }
 }

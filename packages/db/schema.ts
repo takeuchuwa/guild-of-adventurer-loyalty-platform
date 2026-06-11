@@ -202,6 +202,7 @@ export const products = sqliteTable(
         price: real("price").notNull().default(0),
         overridePoints: integer("override_points").default(0),
         active: integer("active", { mode: "boolean" }).notNull().default(true),
+        inventory: integer("inventory").notNull().default(-1),
         createdAt: integer("created_at").notNull().default(0),
         updatedAt: integer("updated_at").notNull().default(0),
     },

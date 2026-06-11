@@ -3,8 +3,8 @@ import { z } from "zod"
 export const productSchema = z.object({
     name: z
         .string()
-        .min(1, "Назва продукту обов'язкова")
-        .max(100, "Назва продукту не може перевищувати 100 символів")
+        .min(1, "Назва товару обов'язкова")
+        .max(100, "Назва товару не може перевищувати 100 символів")
         .trim(),
     sku: z
         .string()
@@ -29,6 +29,11 @@ export const productSchema = z.object({
         .nullable()
         .optional(),
     categoryIds: z.array(z.string()).min(1, "Оберіть хоча б одну категорію"),
+    inventory: z
+        .number()
+        .int("Кількість на складі має бути цілим числом")
+        .min(-1, "Кількість на складі не може бути меншою за -1")
+        .default(-1),
 })
 
 export type ProductFormData = z.infer<typeof productSchema>

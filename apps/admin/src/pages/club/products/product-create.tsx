@@ -35,8 +35,9 @@ export default function ProductCreatePage() {
                 sku: data.sku || undefined,
                 overridePoints: data.overridePoints === null ? undefined : data.overridePoints,
                 categoryIds: data.categoryIds,
+                inventory: data.inventory,
             })
-            toast.success("Продукт успішно створено")
+            toast.success("Товар успішно створено")
 
             if (isCreateAndAdd) {
                 navigate("/checkout", { state: { addItem: { id: created.productId, type: "product" } } })
@@ -45,7 +46,7 @@ export default function ProductCreatePage() {
             }
         } catch (error) {
             console.error("Error creating product:", error)
-            const errorMessage = error instanceof Error ? error.message : "Помилка при створенні продукту"
+            const errorMessage = error instanceof Error ? error.message : "Помилка при створенні товару"
             toast.error(errorMessage)
         } finally {
             setIsLoading(false)
@@ -63,14 +64,14 @@ export default function ProductCreatePage() {
     return (
         <Layout
             breadcrumbs={[
-                { label: "Продукти", path: "/products" },
-                { label: "Створити продукт", path: "/products/create" },
+                { label: "Товари", path: "/products" },
+                { label: "Створити товар", path: "/products/create" },
             ]}
         >
             <div className="container mx-auto py-10 max-w-2xl">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Створити продукт</h1>
-                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нового продукту</p>
+                    <h1 className="text-3xl font-bold">Створити товар</h1>
+                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нового товару</p>
                 </div>
 
                 <div className="bg-card border rounded-lg p-6">

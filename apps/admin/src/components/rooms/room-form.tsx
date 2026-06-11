@@ -113,7 +113,14 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading = false, m
                             type="text"
                             value={formData.color}
                             onChange={(e) => {
-                                setFormData({ ...formData, color: e.target.value })
+                                let val = e.target.value;
+                                if (val && !val.startsWith("#")) {
+                                    val = "#" + val;
+                                }
+                                if (val.startsWith("#")) {
+                                    val = "#" + val.slice(1).replace(/[^0-9A-Fa-f]/g, "").slice(0, 6);
+                                }
+                                setFormData({ ...formData, color: val })
                                 if (errors.color) {
                                     setErrors({ ...errors, color: undefined })
                                 }

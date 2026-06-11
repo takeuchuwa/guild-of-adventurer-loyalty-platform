@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Check, Lock, Star, Zap, Sparkles, Gift, Award, Tag, ArrowLeft } from "lucide-react"
+import { Check, Lock, Zap, Sparkles, Gift, Award, Tag, ArrowLeft } from "lucide-react"
 import { useMember } from "@/hooks/useMember"
 import { useLevels } from "@/hooks/useLevels"
 

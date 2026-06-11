@@ -269,6 +269,29 @@ checkoutRoute.post("/", async (c) => {
             }
         }
 
+        // Deduct inventory for product items and clamp at 0
+        const productItems = calculatedCart.items.filter((i: any) => i.type === "product" && i.quantity > 0)
+        if (productItems.length > 0) {
+            const productIds = productItems.map(i => i.entityId)
+            const dbProducts = await db.select({ productId: products.productId, name: products.name, inventory: products.inventory })
+                .from(products)
+                .where(inArray(products.productId, productIds))
+                .all()
+            const dbProductMap = new Map(dbProducts.map(p => [p.productId, p]))
+
+            for (const item of productItems) {
+                const dbProd = dbProductMap.get(item.entityId)
+                if (dbProd && dbProd.inventory !== -1) {
+                    const newInventory = Math.max(0, dbProd.inventory - item.quantity)
+                    batchOps.push(
+                        db.update(products)
+                            .set({ inventory: newInventory })
+                            .where(eq(products.productId, item.entityId))
+                    )
+                }
+            }
+        }
+
         // Execute batch DB operations
         if (batchOps.length > 0) {
             try {

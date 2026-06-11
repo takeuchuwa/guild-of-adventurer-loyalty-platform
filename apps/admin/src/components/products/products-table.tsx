@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { DataTable, type DataTableAction } from "@/components/table/data-table"
+import { DataTable, type DataTableAction, type DataTableFilter } from "@/components/table/data-table"
 import { usePagination } from "@/hooks/use-pagination"
 import { useSorting } from "@/hooks/use-sorting"
 import type { CustomColumnDef } from "@/types/table"
@@ -18,24 +18,30 @@ interface ProductsTableProps {
     title?: string
     emptyStateMessage?: string
     actions?: DataTableAction<Product>[]
+    filters?: DataTableFilter[]
+    filterParams?: Record<string, any>
     searchProperties?: UseSearchOptions
     onLoadProductsRef?: React.RefObject<(() => Promise<void>) | null>
     onSelectionChange?: (selected: Map<string, Product>) => void
     initialSelection?: string[]
     pageSize?: number
+    storageKey?: string
 }
 
 export function ProductTable({
     columns,
     selectionMode = "single",
     title,
-    emptyStateMessage = "Не знайдено учасників за вашим запитом",
+    emptyStateMessage = "Не знайдено товарів за вашим запитом",
     actions = [],
+    filters = [],
+    filterParams = {},
     searchProperties,
     onLoadProductsRef,
     onSelectionChange,
     initialSelection,
     pageSize = 10,
+    storageKey,
 }: ProductsTableProps) {
     const [products, setProducts] = useState<Product[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -51,7 +57,7 @@ export function ProductTable({
 
     const allSelectedProducts = useRef<Map<string, Product>>(new Map())
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize)
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
     const { sorting, onSortingChange } = useSorting("", "")
     const { currentSearch, searchProps } = useSearch(searchProperties)
 
@@ -66,6 +72,7 @@ export function ProductTable({
                 },
                 sorting,
                 currentSearch: currentSearch || undefined,
+                filterParams,
             })
             setProducts(fetchedProducts)
             updatePaginationContext(page.hasNextPage, page.nextCursor, page.total)
@@ -76,7 +83,7 @@ export function ProductTable({
         } finally {
             setIsLoading(false)
         }
-    }, [pagination, sorting, currentSearch, getCursor, updatePaginationContext])
+    }, [pagination, sorting, currentSearch, getCursor, updatePaginationContext, filterParams])
 
     useEffect(() => {
         loadProducts()
@@ -135,6 +142,7 @@ export function ProductTable({
             selectionMode={selectionMode}
             emptyStateMessage={emptyStateMessage}
             actions={actions}
+            filters={filters}
             rowId="productId"
             {...searchProps}
             onSimpleSearch={(query) => {

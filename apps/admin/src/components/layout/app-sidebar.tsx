@@ -40,7 +40,7 @@ const data = {
                     url: "/rooms",
                 },
                 {
-                    title: "Системи",
+                    title: "Ігрові системи",
                     icon: () => <Dice5Icon />,
                     url: "/games",
                 }
@@ -55,7 +55,7 @@ const data = {
                     url: "/products",
                 },
                 {
-                    title: "Сесії/Активності",
+                    title: "Активності",
                     icon: () => <Calendar1Icon />,
                     url: "/activities",
                 },
@@ -75,17 +75,17 @@ const data = {
                     url: "/members",
                 },
                 {
-                    title: "Рівні",
+                    title: "Рівні лояльності",
                     icon: () => <ArrowBigUpIcon />,
                     url: "/levels",
                 },
                 {
-                    title: "Конфігурації",
+                    title: "Автоматизація",
                     icon: () => <SettingsIcon />,
                     url: "/configs",
                 },
                 {
-                    title: "Завдання (В розробці)",
+                    title: "Завдання — в розробці",
                     icon: () => <ListCheckIcon />,
                     url: "/",
                     disable: true,

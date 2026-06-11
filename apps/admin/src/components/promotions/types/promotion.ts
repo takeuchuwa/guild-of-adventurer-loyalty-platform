@@ -13,4 +13,5 @@ export interface Promotion {
     config: any
     createdAt: number
     updatedAt: number
+    targetsMap?: Record<string, string>
 }

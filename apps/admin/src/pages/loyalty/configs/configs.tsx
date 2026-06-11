@@ -48,17 +48,17 @@ export default function ConfigsPage() {
   }
 
   return (
-    <Layout breadcrumbs={[{ label: "Конфігурації", path: "/configs" }]}>
+    <Layout breadcrumbs={[{ label: "Автоматизація", path: "/configs" }]}>
       <div className="container mx-auto py-10">
         <ConfigsTable
           columns={configColumns}
-          title="Конфігурації лояльності"
+          title="Конфігурації автоматизації"
           selectionMode="single"
           onLoadRef={loadRef}
           actions={[
             { label: "Додати", icon: <PlusCircle className="mr-0.5 h-4 w-4" />, onClick: handleCreate },
             { label: "Редагувати", icon: <Pencil className="mr-0.5 h-4 w-4" />, onClick: handleEdit, isDisabled: (s) => s.length !== 1 },
-            { label: "Cкинути кеш", icon: <RefreshCcw className="mr-0.5 h-4 w-4" />, onClick: handleRefresh },
+            { label: "Скинути кеш", icon: <RefreshCcw className="mr-0.5 h-4 w-4" />, onClick: handleRefresh },
             { label: "Видалити", icon: <Trash2 className="mr-0.5 h-4 w-4" />, onClick: handleDelete, isDisabled: (s) => s.length !== 1, variant: "destructiveOutline" },
           ]}
         />

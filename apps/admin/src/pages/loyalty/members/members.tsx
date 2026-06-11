@@ -7,9 +7,13 @@ import { Coins, Pencil, Trash2, Users, Gift } from "lucide-react"
 import type { Member } from "@/components/members/types/member.tsx"
 import { memberColumns } from "@/components/members/columns/member-columns.tsx"
 import { useNavigate } from "react-router-dom"
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo } from "react"
 import { PointsAdjustmentWarningDialog } from "@/components/shared/dialogs/points-adjustment-warning-dialog"
 import { PointsAdjustmentDialog } from "@/components/shared/dialogs/points-adjustment-dialog"
+import { DeleteConfirmationDialog } from "@/components/shared/dialogs/delete-confirmation-dialog"
+import { deleteMember } from "@/components/members/api/api"
+import { toast } from "sonner"
+import { LevelFilter } from "@/components/shared/filters/level-filter"
 
 export default function MembersPage() {
   const [activeTab, setActiveTab] = useState<"all" | "unclaimed">("all")
@@ -20,7 +24,34 @@ export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [warningDialogOpen, setWarningDialogOpen] = useState(false)
   const [pointsDialogOpen, setPointsDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null)
   const loadMembersRef = useRef<(() => Promise<void>) | null>(null)
+
+  // Filter state
+  const [levelId, setLevelId] = useState<string | undefined>(undefined)
+
+  const filterParams = useMemo(() => {
+    const params: Record<string, any> = {}
+    if (levelId) {
+      params.levelId = levelId
+    }
+    return params
+  }, [levelId])
+
+  const filters = useMemo(
+    () => [
+      {
+        component: (
+          <LevelFilter
+            selectedLevelId={levelId}
+            onChange={setLevelId}
+          />
+        ),
+      },
+    ],
+    [levelId]
+  )
 
   const handleEditMember = (selected: Member[]) => {
     const member = selected[0]
@@ -42,8 +73,25 @@ export default function MembersPage() {
   const handleDeleteMember = (selected: Member[]) => {
     const member = selected[0]
     if (member) {
-      console.log("Delete member:", member)
-      // TODO: trigger delete confirmation or API call
+      setMemberToDelete(member)
+      setDeleteDialogOpen(true)
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!memberToDelete) return
+    try {
+      await deleteMember(memberToDelete.memberId)
+      toast.success("Авантюриста успішно деактивовано")
+      if (loadMembersRef.current) {
+        await loadMembersRef.current()
+      }
+    } catch (e: any) {
+      console.error(e)
+      toast.error(e.message || "Помилка при деактивації")
+    } finally {
+      setMemberToDelete(null)
+      setDeleteDialogOpen(false)
     }
   }
 
@@ -63,7 +111,7 @@ export default function MembersPage() {
         <div className="flex bg-muted p-1 rounded-md w-fit">
           <button
             onClick={() => setActiveTab("all")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-sm transition-colors ${activeTab === "all"
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-sm transition-colors cursor-pointer ${activeTab === "all"
                 ? "bg-background shadow text-foreground"
                 : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
               }`}
@@ -73,7 +121,7 @@ export default function MembersPage() {
           </button>
           <button
             onClick={() => setActiveTab("unclaimed")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-sm transition-colors ${activeTab === "unclaimed"
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-sm transition-colors cursor-pointer ${activeTab === "unclaimed"
                 ? "bg-background shadow text-foreground"
                 : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
               }`}
@@ -89,6 +137,9 @@ export default function MembersPage() {
             searchPlaceholder={searchPlaceholder}
             title="Авантюристи"
             onLoadMembersRef={loadMembersRef}
+            storageKey="members"
+            filters={filters}
+            filterParams={filterParams}
             actions={[
               {
                 label: "Редагувати профіль",
@@ -127,6 +178,15 @@ export default function MembersPage() {
         onOpenChange={setPointsDialogOpen}
         member={selectedMember}
         onSuccess={handleSuccess}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Деактивувати авантюриста"
+        description="Ця дія деактивує авантюриста в базі даних гільдії."
+        itemName={memberToDelete ? `${memberToDelete.firstName || ""} ${memberToDelete.lastName || ""}`.trim() || memberToDelete.phone || memberToDelete.memberId : undefined}
       />
     </Layout>
   )

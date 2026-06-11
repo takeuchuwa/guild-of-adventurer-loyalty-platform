@@ -207,7 +207,9 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
             return (
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded border border-border flex-shrink-0" style={{ backgroundColor: room.color }} />
-                    <span className="font-medium">{room.name}</span>
+                    <Link to={`/rooms/${room.roomId}`} className="font-medium hover:underline">
+                        {room.name}
+                    </Link>
                 </div>
             )
         },

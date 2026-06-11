@@ -15,6 +15,16 @@ function fmt(ts?: number | null) {
 const triggerLabelMap: Record<string, string> = {
     "level_change": "Зміна рівня учасника",
     "activity_time_slot": "Часові слоти активностей",
+    "main_system_instruction": "Головна системна інструкція ШІ",
+}
+
+const entityLabelMap: Record<string, string> = {
+    "promotion": "Промоакція",
+    "activity": "Активність",
+    "game": "Гра",
+    "system": "Рольова система",
+    "benefit": "Перевага",
+    "prize": "Приз",
 }
 
 export const configColumns: CustomColumnDef<LoyaltyConfig>[] = [
@@ -26,7 +36,16 @@ export const configColumns: CustomColumnDef<LoyaltyConfig>[] = [
         minSize: 20,
         enableSorting: true,
         cell: ({ row }) => {
-            const label = triggerLabelMap[row.original.triggerKey] || row.original.triggerKey;
+            const triggerKey = row.original.triggerKey;
+            if (triggerKey === "main_system_instruction") {
+                return <span className="font-medium">{triggerLabelMap[triggerKey]}</span>
+            }
+            if (triggerKey.startsWith("entity_system_instruction:")) {
+                const entityName = triggerKey.split(":")[1];
+                const entityLabel = entityLabelMap[entityName] || entityName;
+                return <span className="font-medium">Інструкція ШІ для сутності ({entityLabel})</span>
+            }
+            const label = triggerLabelMap[triggerKey] || triggerKey;
             return <span className="font-medium">{label}</span>
         },
     },

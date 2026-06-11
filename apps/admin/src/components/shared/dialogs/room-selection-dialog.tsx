@@ -55,6 +55,7 @@ export function RoomSelectionDialog({ open, onOpenChange, onConfirm }: RoomSelec
                         columns={roomColumns}
                         selectionMode="single"
                         onSelectionChange={handleRoomSelection}
+                        pageSize={5}
                     />
                 </div>
 
@@ -70,10 +71,10 @@ export function RoomSelectionDialog({ open, onOpenChange, onConfirm }: RoomSelec
                 )}
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="cursor-pointer">
                         Скасувати
                     </Button>
-                    <Button onClick={handleConfirm} disabled={!selectedRoom}>
+                    <Button onClick={handleConfirm} disabled={!selectedRoom} className="cursor-pointer">
                         Підтвердити
                     </Button>
                 </DialogFooter>

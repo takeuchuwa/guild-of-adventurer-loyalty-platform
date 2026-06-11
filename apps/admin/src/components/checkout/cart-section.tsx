@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Minus, Plus, Trash2, Tag, Loader2, X } from "lucide-react"
+import { Minus, Plus, Trash2, Tag, Loader2, X, AlertTriangle } from "lucide-react"
 import type { CartState } from "@/components/checkout/types/checkout"
 
 interface CartSectionProps {
@@ -41,7 +41,7 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                     <CardTitle>Кошик</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center text-muted-foreground py-8">Кошик порожній або завантажується...</p>
+                    <p className="text-center text-muted-foreground py-8">Завантаження кошика...</p>
                 </CardContent>
             </Card>
         )
@@ -74,8 +74,8 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                                     {cartState.member.levelName && <Badge variant="secondary" className="text-xs">{cartState.member.levelName}</Badge>}
                                 </div>
                                 <div className="flex justify-between text-muted-foreground">
-                                    <span>{cartState.member.phone || "Без номеру"}</span>
-                                    <span>Бали: <span className="font-medium text-foreground">{cartState.member.pointsBalance}</span></span>
+                                    <span>{cartState.member.phone || "Без номера"}</span>
+                                    <span>Баланс: <span className="font-medium text-foreground">{cartState.member.pointsBalance} балів</span></span>
                                 </div>
                             </div>
                         )}
@@ -92,6 +92,11 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                                         <Badge variant="outline" className="shrink-0">
                                             {item.type === "product" ? "Товар" : item.game ? `${item.game.name}` : "Активність"}
                                         </Badge>
+                                        {item.type === "product" && (
+                                            <Badge variant="secondary" className="shrink-0 text-xs">
+                                                Склад: {item.inventory === -1 ? "необмежено" : `${item.inventory} шт.`}
+                                            </Badge>
+                                        )}
                                     </div>
 
                                     <p className="text-sm text-muted-foreground">
@@ -112,6 +117,18 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                                             +{item.pointsEarned} XP
                                         </p>
                                     )}
+                                    {item.type === "product" && item.inventory !== -1 && item.inventory === 0 && (
+                                        <p className="text-xs text-destructive font-semibold mt-1.5 flex items-center gap-1">
+                                            <AlertTriangle className="h-3 w-3 shrink-0" />
+                                            Немає в наявності на складі
+                                        </p>
+                                    )}
+                                    {item.type === "product" && item.inventory !== -1 && item.inventory > 0 && item.quantity > item.inventory && (
+                                        <p className="text-xs text-amber-600 font-semibold mt-1.5 flex items-center gap-1">
+                                            <AlertTriangle className="h-3 w-3 shrink-0" />
+                                            Недостатньо на складі (доступно: {item.inventory} шт.)
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center gap-3 shrink-0">
@@ -119,7 +136,7 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="h-8 w-8 bg-transparent"
+                                            className="h-8 w-8 bg-transparent cursor-pointer"
                                             onClick={() => actions.updateQuantity(item.id, item.quantity - 1)}
                                         >
                                             <Minus className="h-4 w-4" />
@@ -128,7 +145,7 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="h-8 w-8 bg-transparent"
+                                            className="h-8 w-8 bg-transparent cursor-pointer"
                                             onClick={() => actions.updateQuantity(item.id, item.quantity + 1)}
                                         >
                                             <Plus className="h-4 w-4" />
@@ -137,7 +154,7 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-destructive"
+                                        className="h-8 w-8 text-destructive cursor-pointer"
                                         onClick={() => actions.removeItem(item.id)}
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -152,7 +169,7 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                         <div className="space-y-3">
                             <h4 className="text-sm font-medium flex items-center gap-2">
                                 <Tag className="h-4 w-4" />
-                                Промокоди та Знижки
+                                Промокоди та знижки
                             </h4>
 
                             <div className="flex flex-wrap gap-2">
@@ -188,7 +205,7 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                                     onChange={e => setPromoCode(e.target.value.toUpperCase())}
                                     className="h-9"
                                 />
-                                <Button type="submit" variant="secondary" size="sm" className="h-9">
+                                <Button type="submit" variant="secondary" size="sm" className="h-9 cursor-pointer">
                                     Застосувати
                                 </Button>
                             </form>
@@ -230,12 +247,24 @@ export function CartSection({ cartState, isCartUpdating, actions }: CartSectionP
                             )}
                         </div>
 
+                        {cartState.items.some(item => item.type === "product" && item.inventory !== -1 && item.quantity > item.inventory) && (
+                            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-500 rounded-lg p-3 text-xs flex items-start gap-2 mt-4">
+                                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-semibold">Увага: Недостатньо товару на складі</p>
+                                    <p className="mt-0.5 leading-relaxed">
+                                        Замовлена кількість перевищує наявну на складі. Продаж буде здійснено, залишок товару буде списано до 0.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         <Button
-                            className="w-full mt-4"
+                            className="w-full mt-4 cursor-pointer"
                             size="lg"
                             onClick={handleCheckout}
                         >
-                            Підтвердити касу (Оплата)
+                            Прийняти оплату
                         </Button>
                     </div>
                 )}

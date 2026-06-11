@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useFormContext } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { CategorySelectionDialog } from "@/components/shared/dialogs/category-selection-dialog"
@@ -11,7 +11,7 @@ import type { Product } from "@/components/products/types/product"
 import type { Activity } from "@/components/activities/types/activity"
 import { Layers, Package, CalendarDays, X } from "lucide-react"
 
-export function GlobalFilterSection() {
+export function GlobalFilterSection({ targetsMap }: { targetsMap?: Record<string, string> }) {
     const { watch, setValue } = useFormContext()
 
     const excludeCategories: string[] = watch("config.filter.excludeCategories") || []
@@ -22,6 +22,58 @@ export function GlobalFilterSection() {
     const [categoryDisplayMap, setCategoryDisplayMap] = useState<Map<string, Category>>(new Map())
     const [productDisplayMap, setProductDisplayMap] = useState<Map<string, Product>>(new Map())
     const [activityDisplayMap, setActivityDisplayMap] = useState<Map<string, Activity>>(new Map())
+
+    useEffect(() => {
+        if (!targetsMap) return
+
+        const newCatMap = new Map<string, Category>()
+        excludeCategories.forEach((id) => {
+            if (targetsMap[id]) {
+                newCatMap.set(id, { categoryId: id, name: targetsMap[id] } as any)
+            }
+        })
+        if (newCatMap.size > 0) {
+            setCategoryDisplayMap(prev => {
+                const merged = new Map(prev)
+                newCatMap.forEach((v, k) => {
+                    if (!merged.has(k)) merged.set(k, v)
+                })
+                return merged
+            })
+        }
+
+        const newProdMap = new Map<string, Product>()
+        excludeProducts.forEach((id) => {
+            if (targetsMap[id]) {
+                newProdMap.set(id, { productId: id, name: targetsMap[id] } as any)
+            }
+        })
+        if (newProdMap.size > 0) {
+            setProductDisplayMap(prev => {
+                const merged = new Map(prev)
+                newProdMap.forEach((v, k) => {
+                    if (!merged.has(k)) merged.set(k, v)
+                })
+                return merged
+            })
+        }
+
+        const newActMap = new Map<string, Activity>()
+        excludeActivities.forEach((id) => {
+            if (targetsMap[id]) {
+                newActMap.set(id, { activityId: id, name: targetsMap[id] } as any)
+            }
+        })
+        if (newActMap.size > 0) {
+            setActivityDisplayMap(prev => {
+                const merged = new Map(prev)
+                newActMap.forEach((v, k) => {
+                    if (!merged.has(k)) merged.set(k, v)
+                })
+                return merged
+            })
+        }
+    }, [targetsMap])
 
     // Dialog open states
     const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
@@ -92,9 +144,9 @@ export function GlobalFilterSection() {
 
     return (
         <div>
-            <h4 className="font-semibold mb-2">Глобальні виключення (Область дії)</h4>
+            <h4 className="font-semibold mb-2">Виключення з акції</h4>
             <p className="text-sm text-muted-foreground mb-4">
-                Елементи, що відповідають цим правилам, будуть повністю ігноруватися промо-системою
+                Ці товари, категорії та сесії завжди пропускаються промоакцією — вони не отримають жодних знижок чи бонусів
             </p>
 
             <div className="space-y-4">

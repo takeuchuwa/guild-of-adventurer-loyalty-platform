@@ -61,6 +61,7 @@ export default function LevelsPage() {
                     columns={levelColumns}
                     title="Рівні лояльності"
                     onLoadLevelsRef={loadLevelsRef}
+                    storageKey="levels"
                     actions={[
                         {
                             label: "Додати",

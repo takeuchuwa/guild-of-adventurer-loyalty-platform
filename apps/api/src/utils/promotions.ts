@@ -20,6 +20,26 @@ export async function fetchPromoTargetNames(db: any, promos: any[]): Promise<Map
             if (targets.activities) targets.activities.forEach((id: string) => aIds.add(id))
             if (targets.categories) targets.categories.forEach((id: string) => cIds.add(id))
         }
+
+        const filter = config?.filter;
+        if (filter) {
+            if (filter.excludeProducts) filter.excludeProducts.forEach((id: string) => pIds.add(id))
+            if (filter.excludeActivities) filter.excludeActivities.forEach((id: string) => aIds.add(id))
+            if (filter.excludeCategories) filter.excludeCategories.forEach((id: string) => cIds.add(id))
+        }
+
+        const itemConditions = config?.conditions?.itemConditions;
+        if (itemConditions) {
+            if (itemConditions.contains_product?.values) {
+                itemConditions.contains_product.values.forEach((id: string) => pIds.add(id))
+            }
+            if (itemConditions.contains_activity?.values) {
+                itemConditions.contains_activity.values.forEach((id: string) => aIds.add(id))
+            }
+            if (itemConditions.contains_category?.values) {
+                itemConditions.contains_category.values.forEach((id: string) => cIds.add(id))
+            }
+        }
     }
 
     const [pRes, aRes, cRes] = await db.batch([

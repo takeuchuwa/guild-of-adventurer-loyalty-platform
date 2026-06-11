@@ -176,10 +176,10 @@ export function MemberForm({ initialData, onSubmit, onCancel, onPointsAdjusted, 
                         variant="outline"
                         onClick={() => setWarningDialogOpen(true)}
                         disabled={isLoading}
-                        className="w-full"
+                        className="w-full cursor-pointer"
                     >
                         <AlertTriangle className="mr-2 h-4 w-4" />
-                        Змінити бали учасника
+                        Коригування балів вручну
                     </Button>
                 </div>
 

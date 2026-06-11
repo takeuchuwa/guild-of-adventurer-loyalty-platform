@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Dice6, Sparkles, Users } from "lucide-react"
+import { Calendar, Dice6, Sparkles } from "lucide-react"
 
 export function CalendarTab() {
   return (

@@ -27,7 +27,9 @@ export const categoryColumns: CustomColumnDef<Category>[] = [
         accessorKey: "name",
         cell: ({row}) => {
             return (
-                <div className="font-semibold">{row.original.name}</div>
+                <Link to={`/categories/${row.original.categoryId}`} className="font-semibold hover:underline">
+                    {row.original.name}
+                </Link>
             )
         },
         size: 25,

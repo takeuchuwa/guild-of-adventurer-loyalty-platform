@@ -67,6 +67,7 @@ export default function RoomsPage() {
                     searchProperties={searchProperties}
                     title="Кімнати"
                     onLoadRoomsRef={loadRoomsRef}
+                    storageKey="rooms"
                     actions={[
                         {
                             label: "Додати",

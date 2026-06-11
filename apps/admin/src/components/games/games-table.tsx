@@ -20,24 +20,28 @@ interface GamesTableProps {
     searchProperties?: UseSearchOptions
     onLoadGamesRef?: React.RefObject<(() => Promise<void>) | null>
     onSelectionChange?: (selected: Map<string, Game>) => void
+    pageSize?: number
+    storageKey?: string
 }
 
 export function GameTable({
     columns,
     selectionMode = "single",
     title,
-    emptyStateMessage = "Не знайдено учасників за вашим запитом",
+    emptyStateMessage = "Не знайдено ігрових систем за вашим запитом",
     actions = [],
     searchProperties,
     onLoadGamesRef,
     onSelectionChange,
+    pageSize = 10,
+    storageKey,
 }: GamesTableProps) {
     const [games, setGames] = useState<Game[]>([])
     const [totalElements, setTotalElements] = useState(0)
     const [isLoading, setIsLoading] = useState(false)
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination()
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
     const { sorting, onSortingChange } = useSorting("", "")
     const { currentSearch, searchProps } = useSearch(searchProperties)
 

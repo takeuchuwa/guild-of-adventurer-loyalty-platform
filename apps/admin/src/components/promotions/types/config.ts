@@ -76,22 +76,22 @@ export type ConditionType =
 export interface ConditionOption {
     type: ConditionType
     label: string
-    category: "Cart" | "Items" | "Member"
+    category: "Кошик" | "Елементи" | "Учасник"
     icon: string
 }
 
 export const CONDITION_OPTIONS: ConditionOption[] = [
     // Cart conditions
-    { type: "cart_total", label: "Мінімальна сума", category: "Cart", icon: "🛒" },
-    { type: "cart_item_count", label: "Мінімальна кількість товарів", category: "Cart", icon: "🔢" },
+    { type: "cart_total", label: "Мінімальна сума", category: "Кошик", icon: "🛒" },
+    { type: "cart_item_count", label: "Мінімальна кількість товарів", category: "Кошик", icon: "🔢" },
 
     // Item conditions
-    { type: "contains_category", label: "Категорія", category: "Items", icon: "📁" },
-    { type: "contains_product", label: "Продукт", category: "Items", icon: "📦" },
-    { type: "contains_activity", label: "Активність", category: "Items", icon: "🎯" },
+    { type: "contains_category", label: "Категорія", category: "Елементи", icon: "📁" },
+    { type: "contains_product", label: "Продукт", category: "Елементи", icon: "📦" },
+    { type: "contains_activity", label: "Активність", category: "Елементи", icon: "🎯" },
 
     // Member conditions
-    { type: "member_is_new", label: "New Member", category: "Member", icon: "🆕" },
-    { type: "member_is_birthday", label: "День народження", category: "Member", icon: "🎂" },
-    { type: "max_usage_per_member", label: "Максимальних використань на користувача", category: "Member", icon: "🔄" },
+    { type: "member_is_new", label: "Новий учасник", category: "Учасник", icon: "🆕" },
+    { type: "member_is_birthday", label: "День народження", category: "Учасник", icon: "🎂" },
+    { type: "max_usage_per_member", label: "Максимальних використань на користувача", category: "Учасник", icon: "🔄" },
 ]

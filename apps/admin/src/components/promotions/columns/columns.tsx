@@ -18,6 +18,57 @@ export const promotionsColumns: CustomColumnDef<Promotion>[] = [
         ),
     },
     {
+        id: "effect",
+        header: "Ефект",
+        size: 20,
+        cell: ({ row }) => {
+            const effects = row.original.config?.effects
+            if (!effects) return <span className="text-muted-foreground text-sm">—</span>
+
+            const parts: string[] = []
+
+            if (effects.price) {
+                if (effects.price.type === "percentage") parts.push(`-${effects.price.value}%`)
+                else if (effects.price.type === "fixed") parts.push(`-${effects.price.value}₴`)
+                else if (effects.price.type === "override") parts.push(`${effects.price.value}₴`)
+            }
+
+            if (effects.points) {
+                if (effects.points.type === "multiplier") parts.push(`×${effects.points.value} балів`)
+                else if (effects.points.type === "bonus") parts.push(`+${effects.points.value} балів`)
+            }
+
+            if (parts.length === 0) return <span className="text-muted-foreground text-sm">—</span>
+
+            return (
+                <div className="flex flex-wrap gap-1">
+                    {parts.map((part, i) => (
+                        <Badge key={i} variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {part}
+                        </Badge>
+                    ))}
+                </div>
+            )
+        },
+    },
+    {
+        id: "usage",
+        header: "Використання",
+        size: 15,
+        cell: ({ row }) => {
+            const rem = row.original.usageRemaining
+            return (
+                <div className="text-sm">
+                    {rem === null ? (
+                        <span className="text-xl leading-none" title="Необмежено">∞</span>
+                    ) : (
+                        <span>Залишилось: {rem}</span>
+                    )}
+                </div>
+            )
+        },
+    },
+    {
         id: "code",
         header: "Код",
         accessorKey: "code",

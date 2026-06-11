@@ -45,7 +45,7 @@ export function TablePagination({ pagination, onPaginationChange, sizes, hasNext
                         size="sm"
                         onClick={handleCalculate}
                         disabled={isCalculating}
-                        className="h-8 shadow-sm flex items-center bg-background"
+                        className="h-8 shadow-sm flex items-center bg-background cursor-pointer"
                     >
                         {isCalculating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Calculator className="h-4 w-4 mr-2" />}
                         Порахувати всього

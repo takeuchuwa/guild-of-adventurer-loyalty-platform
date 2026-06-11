@@ -12,6 +12,7 @@ import { levelsRoute } from "@/routes/levels"
 import { configsRoute } from "@/routes/configs"
 import { promotionsRoute } from "@/routes/promotions"
 import { cartRoute } from "@/routes/cart"
+import { aiRoute } from "@/routes/ai"
 
 const app = new Hono<Env>()
 
@@ -30,5 +31,6 @@ app.route("/levels", levelsRoute)
 app.route("/configs", configsRoute)
 app.route("/promotions", promotionsRoute)
 app.route("/cart", cartRoute)
+app.route("/ai", aiRoute)
 
 export default app

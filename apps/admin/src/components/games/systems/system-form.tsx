@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { AiTextarea } from "@/components/ui/ai-textarea"
 import { Loader2 } from "lucide-react"
 import type { System } from "@/components/games/systems/types/system"
 import { z } from "zod"
@@ -90,13 +91,15 @@ export function SystemForm({ mode, initialData, onSubmit, onCancel, isLoading = 
 
             <div className="space-y-2">
                 <Label htmlFor="description">Опис</Label>
-                <Textarea
+                <AiTextarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Введіть опис редакції/правил"
                     disabled={isLoading}
                     rows={4}
+                    entityType="system"
+                    entityName={formData.name}
                 />
             </div>
 

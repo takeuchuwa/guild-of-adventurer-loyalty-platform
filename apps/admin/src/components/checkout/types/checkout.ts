@@ -13,6 +13,7 @@ export interface CartItem {
         name: string;
     } | null;
     pointsEarned?: number;
+    inventory?: number;
 }
 
 export interface PromoState {

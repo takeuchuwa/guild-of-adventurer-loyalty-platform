@@ -6,7 +6,9 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, X } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Loader2, X, HelpCircle } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { Product } from "@/components/products/types/product"
 import { z } from "zod"
 import { type ProductFormData, productSchema } from "@/components/products/types/validations/product-validation"
@@ -28,12 +30,15 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
         initialData?.categories?.map((c) => ({ categoryId: c.categoryId, name: c.name })) || [],
     )
 
+    const [isInfinite, setIsInfinite] = useState<boolean>(initialData ? initialData.inventory === -1 : true)
+
     const [formData, setFormData] = useState<ProductFormData>({
         name: initialData?.name || "",
         sku: initialData?.sku || "",
         price: initialData?.price || 0,
         overridePoints: initialData?.overridePoints ?? null,
         categoryIds: initialData?.categories?.map((c) => c.categoryId) || [],
+        inventory: initialData?.inventory ?? -1,
     })
 
     const [errors, setErrors] = useState<Partial<Record<keyof ProductFormData, string>>>({})
@@ -46,7 +51,9 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
                 price: initialData.price || 0,
                 overridePoints: initialData.overridePoints ?? null,
                 categoryIds: initialData.categories?.map((c) => c.categoryId) || [],
+                inventory: initialData.inventory ?? -1,
             })
+            setIsInfinite(initialData.inventory === -1)
 
             if (initialData.categories) {
                 setSelectedCategories(initialData.categories.map((c) => ({ categoryId: c.categoryId, name: c.name })))
@@ -107,7 +114,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="name">
-                        Назва продукту <span className="text-destructive">*</span>
+                        Назва товару <span className="text-destructive">*</span>
                     </Label>
                     <Input
                         id="name"
@@ -118,7 +125,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
                                 setErrors({ ...errors, name: undefined })
                             }
                         }}
-                        placeholder="Введіть назву продукту"
+                        placeholder="Введіть назву товару"
                         disabled={isLoading}
                         className={errors.name ? "border-destructive" : ""}
                     />
@@ -126,7 +133,24 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="sku">SKU</Label>
+                    <div className="flex items-center gap-1.5">
+                        <Label htmlFor="sku">SKU</Label>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <button type="button" className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                                        <HelpCircle className="h-3.5 w-3.5" />
+                                    </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs text-sm p-3">
+                                    <p className="font-semibold mb-1">Що таке SKU?</p>
+                                    <p className="text-muted-foreground text-xs leading-normal">
+                                        <strong>SKU (Stock Keeping Unit)</strong> — це унікальний ідентифікатор товару (зазвичай 11 цифр). Він використовується для обліку залишків на складі та ідентифікації товарів під час продажу на касі або сканування.
+                                    </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                     <Input
                         id="sku"
                         value={formData.sku}
@@ -171,7 +195,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="overridePoints">Бали досвіду (необов'язково)</Label>
+                    <Label htmlFor="overridePoints">Бали за товар (вручну)</Label>
                     <Input
                         id="overridePoints"
                         type="number"
@@ -184,12 +208,61 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading = false
                                 setErrors({ ...errors, overridePoints: undefined })
                             }
                         }}
-                        placeholder="Залишіть порожнім для автоматичного розрахунку (10% ціни)"
+                        placeholder="Залиште порожнім — буде нараховано автоматично (10% ціни)"
                         disabled={isLoading}
                         className={errors.overridePoints ? "border-destructive" : ""}
                     />
                     {errors.overridePoints && <p className="text-sm text-destructive">{errors.overridePoints}</p>}
                     <p className="text-sm text-muted-foreground">Якщо не вказано, буде використано 10% від ціни</p>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="isInfinite"
+                            checked={isInfinite}
+                            onCheckedChange={(checked) => {
+                                const isChecked = checked === true
+                                setIsInfinite(isChecked)
+                                setFormData({
+                                    ...formData,
+                                    inventory: isChecked ? -1 : (initialData && initialData.inventory !== -1 ? initialData.inventory : 0),
+                                })
+                                if (errors.inventory) {
+                                    setErrors({ ...errors, inventory: undefined })
+                                }
+                            }}
+                            disabled={isLoading}
+                        />
+                        <Label htmlFor="isInfinite" className="cursor-pointer">
+                            Необмежена кількість на складі
+                        </Label>
+                    </div>
+
+                    {!isInfinite && (
+                        <div className="space-y-2">
+                            <Label htmlFor="inventory">
+                                Кількість на складі <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="inventory"
+                                type="number"
+                                min="0"
+                                value={formData.inventory === -1 ? "" : formData.inventory}
+                                onChange={(e) => {
+                                    const value = e.target.value === "" ? 0 : Number.parseInt(e.target.value)
+                                    setFormData({ ...formData, inventory: isNaN(value) ? 0 : value })
+                                    if (errors.inventory) {
+                                        setErrors({ ...errors, inventory: undefined })
+                                    }
+                                }}
+                                placeholder="Введіть кількість товару на складі"
+                                disabled={isLoading}
+                                className={errors.inventory ? "border-destructive" : ""}
+                            />
+                            {errors.inventory && <p className="text-sm text-destructive">{errors.inventory}</p>}
+                        </div>
+                    )}
                 </div>
 
                 <div className="space-y-2">

@@ -18,7 +18,7 @@ export function PointsLedgerTable({ memberId, onLoadLedger }: PointsLedgerTableP
     const [totalElements, setTotalElements] = useState(0)
     const [isLoading, setIsLoading] = useState(false)
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(5)
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(5, "points-ledger")
     const { sorting, onSortingChange } = useSorting("occurredAt", "desc")
 
     const loadLedger = useCallback(async () => {

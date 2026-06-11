@@ -60,7 +60,7 @@ export default function CheckoutPage() {
     try {
       const parsedData = JSON.parse(scannedData); 
       if (parsedData.type !== 'member') {
-        throw new Error('Очікувався QR учасника.');
+        throw new Error('Очікується QR-код учасника — цей код не відповідного типу.');
       }
       const member = await verifyMemberQR(parsedData);
       handleSelectMember(member);
@@ -69,7 +69,7 @@ export default function CheckoutPage() {
     } catch (err: any) {
       console.error(err);
       setScanStatus('error');
-      setScanError(err.message || 'Невірний QR код.');
+      setScanError(err.message || 'Невірний QR-код учасника.');
       setTimeout(() => setScanStatus('idle'), 3000);
     }
   });
@@ -159,15 +159,15 @@ export default function CheckoutPage() {
     <Layout breadcrumbs={[{ label: "Каса", path: "/checkout" }]}>
       <div className="mx-auto max-w-7xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Оформлення каси</h1>
+          <h1 className="text-2xl font-bold">Каса</h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => actions.flushCart()} disabled={isCartUpdating}>
+            <Button variant="destructiveOutline" size="sm" onClick={() => actions.flushCart()} disabled={isCartUpdating} className="cursor-pointer">
               <Trash2 className="mr-2 h-4 w-4" />
-              Очистити
+              Очистити кошик
             </Button>
-            <Button variant="outline" size="sm" onClick={() => actions.refreshCart()} disabled={isCartUpdating}>
+            <Button variant="outline" size="sm" onClick={() => actions.refreshCart()} disabled={isCartUpdating} className="cursor-pointer">
               <RefreshCw className="mr-2 h-4 w-4" />
-              Перерахувати
+              Перерахувати суми
             </Button>
           </div>
         </div>
@@ -195,7 +195,7 @@ export default function CheckoutPage() {
                   </Badge>
                 ) : isInputActive ? (
                   <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-200 shadow-sm flex items-center">
-                    <AlertCircle className="mr-2 h-4 w-4" /> Сканер заблоковано (зніміть фокус з поля)
+                    <AlertCircle className="mr-2 h-4 w-4" /> Сканер вимкнено (прибрати фокус з поля)
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="border-emerald-500 text-emerald-600 bg-emerald-50 shadow-sm flex items-center">
@@ -230,8 +230,9 @@ export default function CheckoutPage() {
                         variant="outline"
                         size="sm"
                         onClick={handleRemoveMember}
+                        className="cursor-pointer"
                       >
-                        Змінити / Видалити
+                        Змінити учасника
                       </Button>
                     </div>
                   </div>
@@ -281,11 +282,11 @@ export default function CheckoutPage() {
                               }, 0);
                             }
                           }}
-                          placeholder="Пошук учасника за номером телефону..."
+                          placeholder="Пошук за номером телефону (+38...)"
                           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pl-9 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                         />
                       </div>
-                      <Button type="submit" variant="secondary" size="sm" className="w-full">
+                      <Button type="submit" variant="secondary" size="sm" className="w-full cursor-pointer">
                         <Search className="h-4 w-4 mr-2" />
                         Знайти учасника
                       </Button>
@@ -314,7 +315,7 @@ export default function CheckoutPage() {
                       </div>
                     )}
                     <p className="text-[13px] text-muted-foreground pt-1 flex items-center">
-                      💡 Підказка: скористайтеся сканером QR в будь-який момент
+                      💡 Або скористайтеся QR-сканером
                     </p>
                   </div>
                 )}
@@ -348,14 +349,14 @@ export default function CheckoutPage() {
                           <div className="flex gap-2 w-full">
                             <Button
                               variant="outline"
-                              className="flex-1"
+                              className="flex-1 cursor-pointer"
                               onClick={() => navigate(`/activities/create?name=${encodeURIComponent(itemSearch)}&returnTo=checkout`)}
                             >
                               Створити активність
                             </Button>
                             <Button
                               variant="outline"
-                              className="flex-1"
+                              className="flex-1 cursor-pointer"
                               onClick={() => navigate(`/products/create?name=${encodeURIComponent(itemSearch)}&returnTo=checkout`)}
                             >
                               Створити продукт
@@ -376,7 +377,18 @@ export default function CheckoutPage() {
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                       <Package className="h-4 w-4 text-muted-foreground" />
-                                      <span className="font-medium">{product.name}</span>
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">{product.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {product.inventory === -1 ? (
+                                            <span className="text-emerald-600 font-medium">Необмежено</span>
+                                          ) : product.inventory === 0 ? (
+                                            <span className="text-destructive font-semibold">Немає в наявності</span>
+                                          ) : (
+                                            <span>На складі: {product.inventory} шт.</span>
+                                          )}
+                                        </span>
+                                      </div>
                                     </div>
                                     <span className="text-sm text-muted-foreground">{product.price} грн</span>
                                   </div>

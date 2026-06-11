@@ -29,6 +29,9 @@ export interface CartItem {
     /** The human-readable name of the product or activity (fetched during calculation). */
     name?: string;
 
+    /** The current available inventory quantity for products. */
+    inventory?: number;
+
     /** Optional game information attached to an activity. */
     game?: {
         gameId: string;

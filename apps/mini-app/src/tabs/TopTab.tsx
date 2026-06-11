@@ -1,29 +1,6 @@
 import { useEffect, useRef, useCallback } from "react"
-import { Trophy, Loader2, CircleStar } from "lucide-react"
+import { Trophy, Loader2 } from "lucide-react"
 import { useLeaderboard } from "@/context/LeaderboardContext"
-
-// Avatar placeholder — no photo, just initials or generic icon
-function Avatar({ displayName, size = "md", gold = false }: { displayName: string; size?: "sm" | "md" | "lg"; gold?: boolean }) {
-  const initials = displayName
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase()
-
-  const sizeClass = size === "lg" ? "w-20 h-20 text-xl" : size === "md" ? "w-14 h-14 text-base" : "w-10 h-10 text-xs"
-  const borderClass = gold
-    ? "border-4 border-guild-gold"
-    : "border-2 border-guild-card-border"
-
-  return (
-    <div
-      className={`${sizeClass} ${borderClass} rounded-full bg-guild-card flex items-center justify-center font-bold text-guild-text-muted shrink-0`}
-    >
-      {initials || "?"}
-    </div>
-  )
-}
 
 export function TopTab() {
   const { items: sorted, isLoading, isLoadingMore, hasMore, loadFirstPage, loadMore } = useLeaderboard()

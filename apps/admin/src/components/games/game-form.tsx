@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { AiTextarea } from "@/components/ui/ai-textarea"
 import { Loader2 } from "lucide-react"
 import type { Game } from "./types/game"
 import { z } from "zod"
@@ -78,7 +79,7 @@ export function GameForm({ initialData, onSubmit, onCancel, isLoading = false, m
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="name">
-                        Назва гри <span className="text-destructive">*</span>
+                        Назва ігрової системи <span className="text-destructive">*</span>
                     </Label>
                     <Input
                         id="name"
@@ -98,13 +99,15 @@ export function GameForm({ initialData, onSubmit, onCancel, isLoading = false, m
 
                 <div className="space-y-2">
                     <Label htmlFor="description">Опис</Label>
-                    <Textarea
+                    <AiTextarea
                         id="description"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        placeholder="Опис гри (необов'язково)"
+                        placeholder="Опис ігрової системи (необов'язково)"
                         disabled={isLoading}
                         rows={4}
+                        entityType="game"
+                        entityName={formData.name}
                     />
                 </div>
             </div>

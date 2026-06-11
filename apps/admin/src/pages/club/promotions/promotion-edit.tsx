@@ -92,6 +92,7 @@ export default function PromotionEditPage() {
                             },
                             levelAssignments: (promotion as any).levelAssignments ?? [],
                         }}
+                        targetsMap={promotion.targetsMap}
                         existingAssignments={(promotion as any).assignments as PromotionAssignment[] | undefined}
                         onSubmit={handleSubmit}
                         onCancel={() => navigate("/promotions")}

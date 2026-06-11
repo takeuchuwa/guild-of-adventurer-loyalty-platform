@@ -18,7 +18,7 @@ export default function ActivityEdit() {
     useEffect(() => {
         const fetchActivity = async () => {
             if (!id) {
-                toast.error("Activity ID not found")
+                toast.error("ID активності не знайдено")
                 navigate("/activities")
                 return
             }
@@ -29,7 +29,7 @@ export default function ActivityEdit() {
                 setActivity(data)
             } catch (error) {
                 console.error("Error fetching activity:", error)
-                toast.error("Error loading activity")
+                toast.error("Не вдалося завантажити активність")
                 navigate("/activities")
             } finally {
                 setIsFetching(false)
@@ -45,11 +45,11 @@ export default function ActivityEdit() {
         setIsLoading(true)
         try {
             await updateActivity(id, data)
-            toast.success("Activity successfully updated")
+            toast.success("Активність успішно оновлено")
             navigate("/activities")
         } catch (error) {
             console.error("Error updating activity:", error)
-            const errorMessage = error instanceof Error ? error.message : "Error updating activity"
+            const errorMessage = error instanceof Error ? error.message : "Не вдалося оновити активність"
             toast.error(errorMessage)
         } finally {
             setIsLoading(false)

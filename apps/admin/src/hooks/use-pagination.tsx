@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { PaginationState } from "@tanstack/react-table";
 
 export interface CursorPaginationContext {
@@ -7,10 +7,22 @@ export interface CursorPaginationContext {
     total?: number;
 }
 
-export function usePagination(initialSize = 10) {
-    const [pagination, setPaginationState] = useState<PaginationState>({
-        pageSize: initialSize,
-        pageIndex: 0,
+export function usePagination(initialSize = 10, storageKey?: string) {
+    const [pagination, setPaginationState] = useState<PaginationState>(() => {
+        if (storageKey) {
+            try {
+                const stored = localStorage.getItem(`table-page-size:${storageKey}`);
+                if (stored) {
+                    const parsed = parseInt(stored, 10);
+                    if (!isNaN(parsed) && parsed > 0) {
+                        return { pageSize: parsed, pageIndex: 0 };
+                    }
+                }
+            } catch {
+                // localStorage unavailable, fall through
+            }
+        }
+        return { pageSize: initialSize, pageIndex: 0 };
     });
 
     const [context, setContext] = useState<CursorPaginationContext>({
@@ -26,21 +38,59 @@ export function usePagination(initialSize = 10) {
     // It's set to true by user action, read during fetch, then reset after fetch.
     const includeCountRef = useRef(false);
 
+    // Track previous page size to detect when it changes
+    const prevPageSizeRef = useRef<number>(pagination.pageSize);
+
+    // Sync state when storageKey is set/changed (handles late-initialization/dynamic props)
+    useEffect(() => {
+        if (storageKey) {
+            try {
+                const stored = localStorage.getItem(`table-page-size:${storageKey}`);
+                if (stored) {
+                    const parsed = parseInt(stored, 10);
+                    if (!isNaN(parsed) && parsed > 0 && parsed !== pagination.pageSize) {
+                        setPaginationState((prev) => ({ ...prev, pageSize: parsed, pageIndex: 0 }));
+                        prevPageSizeRef.current = parsed;
+                    }
+                }
+            } catch (e) {
+                console.error('[usePagination] localStorage read failed:', e);
+            }
+        }
+    }, [storageKey]);
+
+    // Handle side-effects of page size changes (resetting context/cursors, persisting to localStorage)
+    useEffect(() => {
+        const prevPageSize = prevPageSizeRef.current;
+        if (pagination.pageSize !== prevPageSize) {
+            prevPageSizeRef.current = pagination.pageSize;
+
+            // Reset cursors and pagination context
+            cursorsRef.current = [null];
+            setContext((prev) => ({
+                ...prev,
+                hasNextPage: false,
+                nextCursor: null,
+            }));
+
+            // Persist the new page size to localStorage
+            if (storageKey) {
+                try {
+                    console.log(`[usePagination] Saving page size ${pagination.pageSize} for key "${storageKey}"`);
+                    localStorage.setItem(`table-page-size:${storageKey}`, String(pagination.pageSize));
+                } catch (e) {
+                    console.error('[usePagination] localStorage write failed:', e);
+                }
+            }
+        }
+    }, [pagination.pageSize, storageKey]);
+
     const onPaginationChange = useCallback((updater: React.SetStateAction<PaginationState>) => {
         setPaginationState((old) => {
             const next = typeof updater === "function" ? updater(old) : updater;
-
-            // If page size changes, reset everything to the first page
             if (next.pageSize !== old.pageSize) {
-                cursorsRef.current = [null];
-                setContext((prev) => ({
-                    ...prev,
-                    hasNextPage: false,
-                    nextCursor: null,
-                }));
                 return { ...next, pageIndex: 0 };
             }
-
             return { ...next };
         });
     }, []);

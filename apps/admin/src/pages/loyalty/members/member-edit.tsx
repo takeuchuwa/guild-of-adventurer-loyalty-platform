@@ -22,7 +22,7 @@ export default function MemberEditPage() {
 
     const fetchMember = async () => {
         if (!id) {
-            toast.error("ID учасника не знайдено")
+            toast.error("ID авантюриста не знайдено")
             navigate("/members")
             return
         }
@@ -54,7 +54,7 @@ export default function MemberEditPage() {
             navigate("/members")
         } catch (error) {
             console.error("Error updating member:", error)
-            const errorMessage = error instanceof Error ? error.message : "Помилка при оновленні учасника"
+            const errorMessage = error instanceof Error ? error.message : "Не вдалося зберегти зміни"
             toast.error(errorMessage)
         } finally {
             setIsLoading(false)
@@ -77,8 +77,8 @@ export default function MemberEditPage() {
         return (
             <Layout
                 breadcrumbs={[
-                    { label: "Учасники", path: "/members" },
-                    { label: "Редагувати учасника", path: `/members/${id}` },
+                    { label: "Авантюристи", path: "/members" },
+                    { label: "Редагування профілю", path: `/members/${id}` },
                 ]}
             >
                 <div className="container mx-auto py-10 max-w-2xl">
@@ -97,14 +97,14 @@ export default function MemberEditPage() {
     return (
         <Layout
             breadcrumbs={[
-                { label: "Учасники", path: "/members" },
-                { label: "Редагувати учасника", path: `/members/${id}` },
+                { label: "Авантюристи", path: "/members" },
+                { label: "Редагування профілю", path: `/members/${id}` },
             ]}
         >
             <div className="container mx-auto py-10 max-w-6xl">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагувати учасника</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть інформацію про учасника</p>
+                    <h1 className="text-3xl font-bold">Редагування профілю авантюриста</h1>
+                    <p className="text-muted-foreground mt-2">Оновіть ім'я, прізвище або вручно отримайте призи.</p>
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">

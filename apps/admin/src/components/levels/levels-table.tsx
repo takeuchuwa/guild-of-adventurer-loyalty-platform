@@ -21,6 +21,8 @@ interface LevelsTableProps {
     searchProperties?: UseSearchOptions
     onLoadLevelsRef?: React.RefObject<(() => Promise<void>) | null>
     onSelectionChange?: (selected: Map<string, Level>) => void
+    pageSize?: number
+    storageKey?: string
 }
 
 export function LevelsTable({
@@ -32,13 +34,15 @@ export function LevelsTable({
     searchProperties,
     onLoadLevelsRef,
     onSelectionChange,
+    pageSize = 10,
+    storageKey,
 }: LevelsTableProps) {
     const [levels, setLevels] = useState<Level[]>([])
     const [totalElements, setTotalElements] = useState(0)
     const [isLoading, setIsLoading] = useState(false)
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination()
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
     const { sorting, onSortingChange } = useSorting("minPoints", "asc")
     const { currentSearch, searchProps } = useSearch(searchProperties)
 

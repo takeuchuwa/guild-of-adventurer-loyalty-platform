@@ -20,6 +20,8 @@ interface RoomsTableProps {
     searchProperties?: UseSearchOptions
     onLoadRoomsRef?: React.RefObject<(() => Promise<void>) | null>
     onSelectionChange?: (selected: Map<string, Room>) => void
+    pageSize?: number
+    storageKey?: string
 }
 
 export function RoomsTable({
@@ -31,13 +33,15 @@ export function RoomsTable({
     searchProperties,
     onLoadRoomsRef,
     onSelectionChange,
+    pageSize = 10,
+    storageKey,
 }: RoomsTableProps) {
     const [rooms, setRooms] = useState<Room[]>([])
     const [totalElements, setTotalElements] = useState(0)
     const [isLoading, setIsLoading] = useState(false)
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
-    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination()
+    const { pagination, onPaginationChange, context, getCursor, getIncludeCount, updatePaginationContext, triggerCountFetch, resetCursors } = usePagination(pageSize, storageKey)
     const { sorting, onSortingChange } = useSorting("name", "asc")
     const { currentSearch, searchProps } = useSearch(searchProperties)
 

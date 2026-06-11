@@ -70,6 +70,7 @@ export default function CategoriesPage() {
                     searchProperties={searchProperties}
                     title="Категорії"
                     onLoadCategoriesRef={reloadCategoriesRef}
+                    storageKey="categories"
                     actions={[
                         {
                             label: "Додати",

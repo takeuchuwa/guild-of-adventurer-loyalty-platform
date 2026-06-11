@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { AiTextarea } from "@/components/ui/ai-textarea"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { TimePicker } from "@/components/ui/time-picker"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -268,13 +269,15 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
 
             <div className="space-y-2">
                 <Label htmlFor="description">Опис</Label>
-                <Textarea
+                <AiTextarea
                     id="description"
                     value={formData.description || ""}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Введіть опис активності"
                     rows={3}
                     disabled={isLoading}
+                    entityType="activity"
+                    entityName={formData.name}
                 />
             </div>
 
@@ -304,7 +307,7 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="overridePoints">Перевизначити бали</Label>
+                <Label htmlFor="overridePoints">Бали за активність (вручну)</Label>
                 <Input
                     id="overridePoints"
                     type="number"
@@ -318,7 +321,7 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
                             setErrors({ ...errors, overridePoints: undefined })
                         }
                     }}
-                    placeholder="Залишіть порожнім для автоматичного розрахунку (10% ціни)"
+                    placeholder="Залиште порожнім — буде нараховано автоматично (10% ціни)"
                     disabled={isLoading}
                     className={errors.overridePoints ? "border-destructive" : ""}
                 />
@@ -385,14 +388,14 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
             </div>
 
             <div className="space-y-2">
-                <Label>Гра</Label>
+                <Label>Ігрова система</Label>
                 {selectedGame ? (
                     <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                         <div className="flex-1">
                             <p className="font-semibold">{selectedGame.name}</p>
                             {selectedSystem && <p className="text-sm text-muted-foreground">{selectedSystem.name}</p>}
                         </div>
-                        <Button type="button" variant="ghost" size="sm" onClick={handleRemoveGame} disabled={isLoading}>
+                        <Button type="button" variant="ghost" size="sm" onClick={handleRemoveGame} disabled={isLoading} className="cursor-pointer">
                             <X className="w-4 h-4" />
                         </Button>
                     </div>
@@ -401,10 +404,10 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
                         type="button"
                         variant="outline"
                         onClick={() => setGameDialogOpen(true)}
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         disabled={isLoading}
                     >
-                        Обрати систему
+                        Обрати ігрову систему
                     </Button>
                 )}
             </div>
@@ -418,7 +421,7 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
                             style={{ backgroundColor: selectedRoom.color }}
                         />
                         <p className="flex-1 font-semibold">{selectedRoom.name}</p>
-                        <Button type="button" variant="ghost" size="sm" onClick={handleRemoveRoom} disabled={isLoading}>
+                        <Button type="button" variant="ghost" size="sm" onClick={handleRemoveRoom} disabled={isLoading} className="cursor-pointer">
                             <X className="w-4 h-4" />
                         </Button>
                     </div>
@@ -427,7 +430,7 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
                         type="button"
                         variant="outline"
                         onClick={() => setRoomDialogOpen(true)}
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         disabled={isLoading}
                     >
                         Призначити кімнату
