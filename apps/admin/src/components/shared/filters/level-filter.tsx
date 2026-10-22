@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check, ChevronDown, Award, Loader2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { fetchLevels } from "@/components/levels/api/level-api"
-import type { Level } from "@/components/levels/types/level"
+import { useLevels } from "@/hooks/use-levels"
 
 interface LevelFilterProps {
     selectedLevelId: string | undefined
@@ -14,28 +13,9 @@ interface LevelFilterProps {
 }
 
 export function LevelFilter({ selectedLevelId, onChange }: LevelFilterProps) {
-    const [levels, setLevels] = useState<Level[]>([])
+    // Shared cache — the ladder is already loaded for the level badges in the table.
+    const { levels, isLoading } = useLevels()
     const [open, setOpen] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
-    const [hasLoaded, setHasLoaded] = useState(false)
-
-    useEffect(() => {
-        if (open && !hasLoaded) {
-            const loadLevels = async () => {
-                setIsLoading(true)
-                try {
-                    const data = await fetchLevels({ pageSize: 100 })
-                    setLevels(data.levels || [])
-                    setHasLoaded(true)
-                } catch (error) {
-                    console.error("Error loading filter levels:", error)
-                } finally {
-                    setIsLoading(false)
-                }
-            }
-            loadLevels()
-        }
-    }, [open, hasLoaded])
 
     const selectedLevel = levels.find((l) => l.levelId === selectedLevelId)
 
@@ -67,7 +47,7 @@ export function LevelFilter({ selectedLevelId, onChange }: LevelFilterProps) {
                                 e.stopPropagation()
                                 onChange(undefined)
                             }}
-                            className="ml-1 rounded-full p-0.5 hover:bg-accent cursor-pointer"
+                            className="ml-1 p-0.5 hover:bg-accent cursor-pointer"
                             title="Очистити фільтр"
                         >
                             <X className="h-3 w-3" />

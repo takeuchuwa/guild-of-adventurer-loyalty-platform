@@ -171,29 +171,20 @@ export default function ActivityCreate() {
                 { label: "Створити активність", path: "/activities/create" },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Створити активність</h1>
-                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нової активності</p>
+            {hasCalculatedDates ? (
+                <ActivityForm
+                    onSubmit={handleSubmit}
+                    onCancel={handleCancel}
+                    isLoading={isLoading}
+                    mode="create"
+                    initialData={initialData}
+                    showCreateAndAdd={returnTo === "checkout"}
+                />
+            ) : (
+                <div className="flex items-center justify-center p-8">
+                    <span className="text-muted-foreground animate-pulse">Завантаження налаштувань часу...</span>
                 </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    {hasCalculatedDates ? (
-                        <ActivityForm
-                            onSubmit={handleSubmit}
-                            onCancel={handleCancel}
-                            isLoading={isLoading}
-                            mode="create"
-                            initialData={initialData}
-                            showCreateAndAdd={returnTo === "checkout"}
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center p-8">
-                            <span className="text-muted-foreground animate-pulse">Завантаження налаштувань часу...</span>
-                        </div>
-                    )}
-                </div>
-            </div>
+            )}
         </Layout>
     )
 }

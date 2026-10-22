@@ -1,12 +1,49 @@
 import { useState, useEffect } from "react"
-import { Settings, UserPen, ChevronDown, Gift, Trophy, Ticket, Target, Tag, Calendar } from "lucide-react"
 import { QrCodeDisplay } from "@/components/QrCodeDisplay"
-import { Badge } from "@/components/ui/badge"
+import { Tower, type TowerFloor } from "@/components/Tower"
+import { CategoryIcon } from "@/components/CategoryIcon"
 import { useMember } from "@/hooks/useMember"
 import { useLevels } from "@/hooks/useLevels"
 import { SettingsModal } from "@/components/SettingsModal"
 import { EditProfileModal } from "@/components/EditProfileModal"
 import { LevelRoadmapPopover } from "@/components/LevelRoadmapPopover"
+
+// Small outline ticket + stub glyph for promo rows (22x14 slot).
+function TicketIcon({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`w-[22px] h-[14px] shrink-0 border-2 border-guild-gold box-border flex items-center justify-end pr-[5px] ${className}`}
+    >
+      <span className="w-[2px] h-[8px] bg-guild-gold block" />
+    </span>
+  )
+}
+
+// Copy-able promo code row: tap copies the code and flips to a 120ms color
+// inversion, showing "СКОПІЙОВАНО" for ~1.2s.
+function CopyCodeChip({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(code)
+    } catch {
+      // clipboard unavailable — still show feedback
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1200)
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="font-mono text-[11px] font-bold tracking-[0.08em] uppercase bg-guild-text text-guild-bg-bottom px-2.5 py-1.5 shrink-0 transition-colors"
+    >
+      {copied ? "Скопійовано" : code}
+    </button>
+  )
+}
 
 function getPrizeWord(count: number): string {
   const mod100 = count % 100
@@ -123,9 +160,13 @@ export function ProfileTab() {
 
   const [animatedProgress, setAnimatedProgress] = useState(0)
 
-  let currentLevel: any, currentIdx: number, nextLevel: any, prevLevel: any, progressClamped = 0;
+  let currentLevel: any, currentIdx = 0, nextLevel: any, progressClamped = 0;
   let promotions: any[] = [];
   let unclaimedPrizes: any[] = [];
+  // Card mini-tower: exactly 3 floor slots, bottom-up order for <Tower>.
+  let cardFloors: TowerFloor[] = [];
+  let isMaxLevel = false;
+  let floorCaption = "";
 
   if (member && levels.length > 0) {
     currentLevel = levels.find((l: any) => l.levelId === member.levelId) || levels[0]
@@ -133,7 +174,7 @@ export function ProfileTab() {
     if (currentIdx === -1) currentIdx = 0;
 
     nextLevel = currentIdx < levels.length - 1 ? levels[currentIdx + 1] : null
-    prevLevel = currentIdx > 0 ? levels[currentIdx - 1] : null
+    isMaxLevel = !nextLevel
 
     const progress = nextLevel
       ? ((member.pointsBalance - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100
@@ -142,6 +183,41 @@ export function ProfileTab() {
 
     promotions = member.promotions || []
     unclaimedPrizes = member.unclaimedPrizes || []
+
+    const currentFloor: TowerFloor = {
+      id: currentLevel.levelId,
+      name: currentLevel.name,
+      minPoints: currentLevel.minPoints,
+      status: "current",
+      fillPercent: animatedProgress,
+    }
+
+    if (isMaxLevel) {
+      // Max level: one completed floor below current; a roof cap is drawn separately above.
+      const prev = currentIdx > 0 ? levels[currentIdx - 1] : null
+      cardFloors = [
+        ...(prev ? [{ id: prev.levelId, name: prev.name, minPoints: prev.minPoints, status: "completed" as const }] : []),
+        currentFloor,
+      ]
+      floorCaption = `ПОВЕРХ ${levels.length} З ${levels.length}`
+    } else if (currentIdx === 0) {
+      // First level: current at full width, up to two locked floors above.
+      const upper = levels.slice(currentIdx + 1, currentIdx + 3)
+      cardFloors = [
+        currentFloor,
+        ...upper.map((lvl: any) => ({ id: lvl.levelId, name: lvl.name, minPoints: lvl.minPoints, status: "locked" as const })),
+      ]
+      floorCaption = `ПОВЕРХ 1 З ${levels.length}`
+    } else {
+      // Middle: one completed below, current, one locked above.
+      const prev = levels[currentIdx - 1]
+      cardFloors = [
+        { id: prev.levelId, name: prev.name, minPoints: prev.minPoints, status: "completed" },
+        currentFloor,
+        ...(nextLevel ? [{ id: nextLevel.levelId, name: nextLevel.name, minPoints: nextLevel.minPoints, status: "locked" as const }] : []),
+      ]
+      floorCaption = `ПОВЕРХ ${currentIdx + 1} З ${levels.length}`
+    }
   }
 
   useEffect(() => {
@@ -189,7 +265,7 @@ export function ProfileTab() {
       {/* Profile Info */}
       <div className="flex items-center gap-3 mb-2">
         {/* Avatar */}
-        <div className="w-14 h-14 rounded-full bg-guild-card-hover border-2 border-guild-gold/30 flex items-center justify-center shrink-0 overflow-hidden">
+        <div className="w-14 h-14 rounded-full bg-guild-card-hover border-2 border-guild-gold/30 flex items-center justify-center shrink-0 overflow-hidden" data-radius-exempt>
           {member.photoUrl ? (
             <img src={member.photoUrl} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
@@ -197,10 +273,10 @@ export function ProfileTab() {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-guild-text truncate">
+          <h2 className="font-heading text-xl uppercase tracking-wide text-guild-text truncate">
             Привіт, {member.firstName} {member.lastName}!
           </h2>
-          <div className="flex gap-4 mt-1">
+          <div className="flex gap-2 mt-2">
             {(() => {
               const stats = (member.statistics as Record<string, number>) || {};
               const oneshots = stats["Ваншоти"] || 0;
@@ -217,13 +293,13 @@ export function ProfileTab() {
               return (
                 <>
                   {oneshots > 0 && (
-                    <div className="text-xs text-guild-text-muted whitespace-nowrap">
-                      <span className="font-semibold text-guild-text">{oneshots}</span> Ваншотів
+                    <div className="font-mono text-[10px] tracking-wider uppercase text-guild-gold border border-guild-gold/45 px-2 py-1 whitespace-nowrap">
+                      {oneshots} Ваншотів
                     </div>
                   )}
                   {quests > 0 && (
-                    <div className="text-xs text-guild-text-muted whitespace-nowrap">
-                      <span className="font-semibold text-guild-text">{quests}</span> Квестів
+                    <div className="font-mono text-[10px] tracking-wider uppercase text-guild-gold border border-guild-gold/45 px-2 py-1 whitespace-nowrap">
+                      {quests} Квестів
                     </div>
                   )}
                 </>
@@ -237,111 +313,76 @@ export function ProfileTab() {
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={() => setIsEditProfileOpen(true)}
-          className="glass-card flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-medium text-guild-text-muted transition-colors"
+          className="h-11 border border-guild-gold/35 flex items-center justify-center font-mono text-[11px] uppercase tracking-wider text-guild-text transition-colors active:bg-guild-gold active:text-guild-bg-bottom"
         >
-          <UserPen className="w-4 h-4" />
           Змінити профіль
         </button>
         <button
           onClick={() => setIsSettingsOpen(true)}
-          className="glass-card flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-medium text-guild-text-muted transition-colors"
+          className="h-11 border border-guild-gold/35 flex items-center justify-center font-mono text-[11px] uppercase tracking-wider text-guild-text transition-colors active:bg-guild-gold active:text-guild-bg-bottom"
         >
-          <Settings className="w-4 h-4" />
           Налаштування
         </button>
       </div>
 
       {/* Level Progress */}
       <div
-        className="glass-card p-4 cursor-pointer active:scale-[0.98] transition-transform relative"
+        className="border-2 border-guild-gold p-4 flex gap-4 cursor-pointer active:opacity-80 transition-opacity"
         onClick={() => setIsLevelRoadmapOpen(true)}
       >
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xs font-semibold text-guild-text-muted uppercase tracking-wider">Рівень</h3>
-          <span className="text-sm font-semibold text-guild-orange">
-            {Math.round(progressClamped)}%
-          </span>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex items-baseline justify-between">
+            <span className="font-mono text-[10px] tracking-[0.24em] text-guild-gold uppercase">Рівень</span>
+            <span className="font-mono text-base font-bold text-guild-pure-gold">
+              {Math.round(progressClamped)}%
+            </span>
+          </div>
+          <div className="font-heading text-2xl font-bold uppercase leading-tight mt-2.5 mb-1.5 text-guild-text">
+            {currentLevel.name}
+          </div>
+          <div className="font-mono text-xs text-guild-pure-gold mt-auto">
+            {isMaxLevel
+              ? `${member.pointsBalance.toLocaleString("uk-UA")} XP`
+              : `${member.pointsBalance.toLocaleString("uk-UA")} / ${nextLevel.minPoints.toLocaleString("uk-UA")} XP`}
+          </div>
+          <div className="font-mono text-[10px] tracking-wider text-guild-text-muted uppercase mt-1.5">
+            {isMaxLevel ? "Вежа збудована" : `До рівня «${nextLevel.name}»`}
+          </div>
         </div>
 
-        {/* Progress bar with current level badge */}
-        <div className="relative mt-8 mb-1">
-          {/* Current level badge – animated with fill and edge clamping */}
-          {(() => {
-            // Logic to keep badge centered but clamp it at container edges
-            // 0% progress -> translateX(0%)
-            // 15% - 85% progress -> translateX(-50%)
-            // 100% progress -> translateX(-100%)
-            let translateX = -50
-            if (animatedProgress < 15) {
-              translateX = (animatedProgress / 15) * -50
-            } else if (animatedProgress > 85) {
-              translateX = -50 - ((animatedProgress - 85) / 15) * 50
-            }
-
-            return (
-              <div
-                className="absolute -top-7 pointer-events-none transition-all duration-700"
-                style={{
-                  left: `${animatedProgress}%`,
-                  transform: `translateX(${translateX}%)`,
-                  transitionTimingFunction: 'cubic-bezier(0.25, 1, 0.5, 1)',
-                }}
-              >
-                <Badge
-                  variant="default"
-                  shiny
-                  className="bg-guild-orange whitespace-nowrap"
-                >
-                  {currentLevel.name}
-                </Badge>
-              </div>
-            )
-          })()}
-
-          <div className="progress-bar-track">
+        {/* Mini tower: exactly 3 floor slots, fixed card height at every level */}
+        <div className="w-[104px] shrink-0 flex flex-col justify-end">
+          {isMaxLevel && (
             <div
-              className="progress-bar-fill"
-              style={{ width: `${animatedProgress}%` }}
+              className="mx-auto mb-[3px] shrink-0"
+              style={{ width: 0, height: 0, borderLeft: "26px solid transparent", borderRight: "26px solid transparent", borderBottom: "20px solid var(--color-guild-gold)" }}
             />
-          </div>
-
-          {/* Prev / Next level labels & Experience counter – below the bar */}
-          <div className="relative flex items-center justify-between mt-1.5 min-h-6">
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-guild-text-dim/20 text-guild-text-muted font-bold">
-              {prevLevel?.name || "—"}
-            </span>
-
-            <div className="absolute left-1/2 -translate-x-1/2 text-xs font-bold text-guild-text-dim whitespace-nowrap">
-              {nextLevel
-                ? `${member.pointsBalance - currentLevel.minPoints} / ${nextLevel.minPoints - currentLevel.minPoints} досвіду`
-                : "Максимальний рівень досягнуто! 🎉"}
-            </div>
-
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-guild-text-dim/20 text-guild-text-muted font-bold">
-              {nextLevel?.name || "Макс"}
-            </span>
+          )}
+          <Tower floors={cardFloors} compact />
+          <div className="font-mono text-[9px] tracking-wider text-guild-text-dim text-center mt-1.5 whitespace-nowrap">
+            {floorCaption}
           </div>
         </div>
       </div>
 
       {/* POS QR Code (collapsible) */}
-      <div className={`glass-card overflow-hidden transition-all duration-400 ${qrExpanded ? '' : ''}`}>
+      <div className={`border bg-guild-modal-bg overflow-hidden transition-[border-width] ${qrExpanded ? "border-2 border-guild-gold" : "border-guild-card-border"}`}>
         <button
           onClick={() => setQrExpanded(!qrExpanded)}
           className="w-full flex items-center justify-between p-4 relative z-10"
         >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-guild-gold/15 flex items-center justify-center">
-              <svg className="w-5 h-5 text-guild-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM17 14h3v3h-3zM14 17h3v3h-3zM17 20h3" />
-              </svg>
+          <div className="flex items-center gap-3.5 min-w-0">
+            <CategoryIcon shape="square" glyph="QR" size={38} className="text-guild-gold shrink-0" />
+            <div className="min-w-0 text-left">
+              <span className="font-heading uppercase tracking-wide text-base text-guild-text block">QR код для нарахування</span>
+              <span className="font-mono text-[10px] text-guild-text-dim block mt-1 leading-snug whitespace-nowrap">
+                покажіть адміністратору
+              </span>
             </div>
-            <span className="font-bold text-guild-text">QR код для нарахування</span>
           </div>
-          <ChevronDown
-            className={`w-5 h-5 text-guild-text-muted transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${qrExpanded ? "rotate-180" : ""
-              }`}
-          />
+          <span className="font-mono text-guild-gold text-sm w-5 text-center shrink-0">
+            {qrExpanded ? "–" : "+"}
+          </span>
         </button>
 
         {/* Expanded QR */}
@@ -350,48 +391,34 @@ export function ProfileTab() {
             }`}
         >
           <div className="overflow-hidden">
-            <div className="px-4 pb-4 flex flex-col items-center gap-2">
+            <div className="px-4 pb-4 flex justify-center">
               <QrCodeDisplay value={member.qrcode} size={180} />
-              <p className="text-xs text-guild-text-dim text-center pt-2">
-                Проскануйте код в адміністратора для нарахування досвіду
-              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Prizes Card */}
-      <div className="glass-card overflow-hidden">
+      <div className={`border bg-guild-modal-bg overflow-hidden transition-[border-width] ${prizesExpanded ? "border-2 border-guild-gold" : "border-guild-card-border"}`}>
         <button
           onClick={() => setPrizesExpanded(!prizesExpanded)}
           className="w-full flex items-center justify-between p-4 relative z-10"
         >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-guild-gold/15 flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-guild-gold" />
-            </div>
-            <h3 className="text-base font-bold text-guild-text">Призи</h3>
-          </div>
-          <ChevronDown
-            className={`w-5 h-5 text-guild-text-muted transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${prizesExpanded ? "rotate-180" : ""
-              }`}
-          />
-        </button>
-
-        <div
-          className={`grid transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${prizesExpanded ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
-            }`}
-        >
-          <div className="overflow-hidden">
-            <div className="px-4 pb-3">
-              <p className="text-xs text-guild-text-muted pl-8">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <CategoryIcon shape="square" glyph={String(unclaimedPrizes.length)} size={38} className="text-guild-gold shrink-0" />
+            <div className="min-w-0 text-left">
+              <h3 className="font-heading uppercase tracking-wide text-base text-guild-text">Призи</h3>
+              <span className={`font-mono text-[10px] block mt-1 leading-snug ${unclaimedPrizes.length > 0 ? "text-guild-pure-gold" : "text-guild-text-dim"}`}>
                 {unclaimedPrizes.length > 0
-                  ? `На вас чекає ${unclaimedPrizes.length} ${getPrizeWord(unclaimedPrizes.length)}!`
-                  : "Немає незабраних призів"}
-              </p>
+                  ? `на вас чекає ${unclaimedPrizes.length} ${getPrizeWord(unclaimedPrizes.length)}!`
+                  : "немає незабраних призів"}
+              </span>
             </div>
           </div>
-        </div>
+          <span className="font-mono text-guild-gold text-sm w-5 text-center shrink-0">
+            {prizesExpanded ? "–" : "+"}
+          </span>
+        </button>
 
         <div
           className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${prizesExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
@@ -418,7 +445,7 @@ export function ProfileTab() {
                       <div className="flex flex-col gap-2 pl-2">
                         {prizeNames.map((name: string, j: number) => (
                           <div key={j} className="flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-guild-gold shadow-[0_0_6px_rgba(200,166,121,0.6)] shrink-0" />
+                            <div className="w-2 h-2 bg-guild-gold rotate-45 shrink-0" />
                             <span className="text-guild-text font-medium text-sm leading-tight">{name}</span>
                           </div>
                         ))}
@@ -427,7 +454,7 @@ export function ProfileTab() {
                   )
                 })
               ) : (
-                <p className="text-sm text-guild-text-muted">Немає незабраних винагород</p>
+                <p className="text-sm text-guild-text-muted text-center">Немає незабраних винагород</p>
               )}
             </div>
           </div>
@@ -435,98 +462,81 @@ export function ProfileTab() {
       </div>
 
       {/* Discounts/Promos Card */}
-      <div className="glass-card overflow-hidden">
+      <div className={`border bg-guild-modal-bg overflow-hidden transition-[border-width] ${promosExpanded ? "border-2 border-guild-gold" : "border-guild-card-border"}`}>
         <button
           onClick={() => setPromosExpanded(!promosExpanded)}
           className="w-full flex items-center justify-between p-4 relative z-10"
         >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <Gift className="w-5 h-5 text-emerald-400" />
-            </div>
-            <h3 className="text-base font-bold text-guild-text">Знижки</h3>
-          </div>
-          <ChevronDown
-            className={`w-5 h-5 text-guild-text-muted transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${promosExpanded ? "rotate-180" : ""
-              }`}
-          />
-        </button>
-
-        <div
-          className={`grid transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${promosExpanded ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
-            }`}
-        >
-          <div className="overflow-hidden">
-            <div className="px-4 pb-3">
-              <p className="text-xs text-guild-text-muted pl-8">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <CategoryIcon shape="square" glyph="%" size={38} className="text-guild-gold shrink-0" />
+            <div className="min-w-0 text-left">
+              <h3 className="font-heading uppercase tracking-wide text-base text-guild-text">Знижки</h3>
+              <span className="font-mono text-[10px] text-guild-text-dim block mt-1 leading-snug">
                 {promotions.length > 0
                   ? `${promotions.length} ${getDiscountWord(promotions.length)} доступно`
                   : "Знижок немає"}
-              </p>
+              </span>
             </div>
           </div>
-        </div>
+          <span className="font-mono text-guild-gold text-sm w-5 text-center shrink-0">
+            {promosExpanded ? "–" : "+"}
+          </span>
+        </button>
 
         <div
           className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${promosExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
             }`}
         >
           <div className="overflow-hidden">
-            <div className="px-4 pb-4 flex flex-col gap-3 relative z-0 mt-2">
-              <div className="absolute left-8 top-0 bottom-4 w-px bg-white/5" />
+            <div className="ml-[26px]">
               {promotions.length > 0 ? (
                 promotions.map((promo, i) => {
                   const { effectsText, targetText, conditionsText, periodText } = formatPromoData(promo, member?.targetsMap);
                   return (
-                    <div key={i} className="flex items-start relative pl-12 py-1">
-                      <div className="absolute left-8 top-2 -ml-[3.5px] w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                      <div className="flex flex-col items-start w-full -mt-0.5">
-                        <span className="text-guild-text font-semibold text-sm flex items-start gap-1.5 leading-tight">
-                          <Ticket className="w-4 h-4 text-emerald-400 mt-px shrink-0" />
-                          <span className={promo.isPersonal ? "text-amber-300" : ""}>{promo.name}</span>
-                        </span>
-                        {promo.description && (
-                          <span className="text-guild-text-dim text-xs block mt-1 pl-5">{promo.description}</span>
-                        )}
+                    <div key={i} className="border-t border-guild-gold/15 first:border-t-0 py-2.5">
+                      <div className="flex items-start gap-2.5">
+                        <TicketIcon className="mt-[3px]" />
+                        <div className="flex-1 min-w-0">
+                          <span className={`font-heading text-[15px] uppercase tracking-wide leading-tight block ${promo.isPersonal ? "text-guild-pure-gold" : "text-guild-text"}`}>
+                            {promo.name}
+                          </span>
+                          {promo.description && (
+                            <p className="text-guild-text-muted text-[13px] leading-relaxed mt-1.5">{promo.description}</p>
+                          )}
 
-                        <div className="flex flex-col gap-1.5 mt-2 mb-1 bg-white/5 p-3 rounded-lg border border-white/5 w-full">
-                          {targetText && (
-                            <span className="text-guild-text-dim text-xs leading-none flex items-center gap-1.5">
-                              <Target className="w-3.5 h-3.5 text-guild-text shrink-0" />
-                              <span><span className="text-guild-text font-medium">Діє:</span> {targetText}</span>
-                            </span>
-                          )}
-                          {effectsText && (
-                            <span className="text-guild-text-dim text-xs leading-tight flex items-start gap-1.5">
-                              <Gift className="w-3.5 h-3.5 text-guild-text mt-px shrink-0" />
-                              <span><span className="text-guild-text font-medium">Ефект:</span> {effectsText}</span>
-                            </span>
-                          )}
-                          {conditionsText && (
-                            <span className="text-guild-text-dim text-xs leading-tight flex items-start gap-1.5">
-                              <Tag className="w-3.5 h-3.5 text-guild-text mt-px shrink-0" />
-                              <span><span className="text-guild-text font-medium">Умови:</span> {conditionsText}</span>
-                            </span>
-                          )}
-                          {periodText && (
-                            <span className="text-guild-text-dim text-xs leading-tight flex items-start gap-1.5">
-                              <Calendar className="w-3.5 h-3.5 text-guild-text mt-px shrink-0" />
-                              <span><span className="text-guild-text font-medium">Дія:</span> {periodText}</span>
-                            </span>
+                          <div className="flex flex-wrap gap-1.5 mt-3">
+                            {effectsText && (
+                              <span className="font-mono text-[10px] tracking-[0.14em] uppercase bg-guild-gold text-guild-bg-bottom font-bold px-2 py-1 whitespace-nowrap">
+                                {effectsText}
+                              </span>
+                            )}
+                            {targetText && (
+                              <span className="font-mono text-[10px] tracking-[0.14em] uppercase border border-guild-gold/50 text-guild-gold px-2 py-1">
+                                {targetText}
+                              </span>
+                            )}
+                            {conditionsText && (
+                              <span className="font-mono text-[10px] tracking-[0.14em] uppercase border border-dashed border-guild-text-dim text-guild-text-muted px-2 py-1">
+                                {conditionsText}
+                              </span>
+                            )}
+                          </div>
+
+                          {(periodText || promo.promoCode) && (
+                            <div className="flex items-center justify-between gap-2.5 mt-3">
+                              <span className="font-mono text-[10px] tracking-[0.14em] text-guild-text-dim uppercase whitespace-nowrap">
+                                {periodText}
+                              </span>
+                              {promo.promoCode && <CopyCodeChip code={promo.promoCode} />}
+                            </div>
                           )}
                         </div>
-
-                        {promo.promoCode && (
-                          <Badge variant="secondary" className="mt-1 font-mono text-[11px] text-emerald-400 bg-emerald-400/10 border-emerald-400/20 px-2 py-0.5 h-auto">
-                            {promo.promoCode}
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <p className="text-sm text-guild-text-muted pl-12">Знижок немає</p>
+                <p className="text-sm text-guild-text-muted py-2 text-center">Знижок немає</p>
               )}
             </div>
           </div>

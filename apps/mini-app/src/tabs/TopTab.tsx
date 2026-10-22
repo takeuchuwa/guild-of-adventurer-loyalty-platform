@@ -1,6 +1,10 @@
 import { useEffect, useRef, useCallback } from "react"
-import { Trophy, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { useLeaderboard } from "@/context/LeaderboardContext"
+
+const hatch = (opacity: number): React.CSSProperties => ({
+  backgroundImage: `repeating-linear-gradient(45deg, rgba(201,158,58,${opacity}) 0 2px, transparent 2px 9px)`,
+})
 
 export function TopTab() {
   const { items: sorted, isLoading, isLoadingMore, hasMore, loadFirstPage, loadMore } = useLeaderboard()
@@ -36,143 +40,104 @@ export function TopTab() {
     <div className="flex flex-col pb-24">
 
       {/* ── Title ─────────────────────────────────────────────────────── */}
-      <div className="text-center px-4 mb-8 mt-2">
-        <h2 className="text-2xl font-extrabold tracking-tight text-guild-text">
-          Таблиця лідерів
-        </h2>
-        <p className="text-[11px] font-bold tracking-[0.2em] text-guild-text-muted uppercase mt-1">
+      <div className="px-4 mb-6 mt-2">
+        <p className="font-mono text-[10px] tracking-[0.24em] text-guild-gold uppercase mb-2">
           Зала слави шукачів пригод
         </p>
+        <h2 className="font-heading text-[28px] font-semibold uppercase tracking-wide text-guild-text">
+          Таблиця лідерів
+        </h2>
       </div>
 
-      {/* ── Podium ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-2 px-4 mb-4 items-end">
+      {/* ── Podium: three tower floors ───────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-2 px-4 mb-6 items-end">
 
         {/* 2nd place */}
         {second ? (
-          <div className="flex flex-col items-center min-w-0">
-            {/* Rank badge */}
-            {/* Name - allow wrapping but limit to 2 lines to keep consistent height */}
-            <div className="h-10 flex items-center justify-center px-1 w-full overflow-hidden">
-              <p className={`text-[10px] sm:text-xs font-bold text-center leading-tight line-clamp-2 ${second.isCurrentUser ? "text-guild-gold" : "text-guild-text"}`}>
-                {second.isCurrentUser ? `${second.displayName} (Ви)` : second.displayName}
-              </p>
-            </div>
-            <div className="w-full h-24 bg-guild-card rounded-t-xl flex flex-col items-center justify-end pb-3">
-              <span className={`text-2xl font-black relative ${second.isCurrentUser ? "text-guild-gold" : "text-guild-text-muted"}`}>2</span>
-              <p className="text-xs text-guild-text-muted font-black flex flex-col items-center leading-none pt-4">
-                {second.pointsBalance.toLocaleString("uk-UA")}
-                <span className="text-[9px] opacity-60 font-bold uppercase mt-0.5 tracking-tighter">Досвіду</span>
-              </p>
+          <div className="flex flex-col items-center gap-2 min-w-0">
+            <p className={`text-[13px] font-semibold text-center truncate w-full ${second.isCurrentUser ? "text-guild-gold" : "text-guild-text"}`}>
+              {second.isCurrentUser ? `${second.displayName} (Ви)` : second.displayName}
+            </p>
+            <p className="font-mono text-[11px] text-guild-text-muted text-center leading-tight">
+              {second.pointsBalance.toLocaleString("uk-UA")}
+              <span className="block text-[8px] tracking-tighter uppercase opacity-70">Досвіду</span>
+            </p>
+            <div
+              style={hatch(0.1)}
+              className="w-full h-[84px] border border-guild-gold/45 flex items-center justify-center"
+            >
+              <span className="font-heading text-3xl text-guild-text-muted">2</span>
             </div>
           </div>
         ) : <div />}
 
         {/* 1st place */}
         {first ? (
-          <div className="flex flex-col items-center z-10 min-w-0">
-            {/* Trophy icon */}
-            <Trophy className="w-6 h-6 text-guild-gold shrink-0" />
-            <div className="h-10 flex items-center justify-center mb-2 px-1 w-full overflow-hidden">
-              <p className={`text-xs sm:text-sm font-black text-center leading-tight line-clamp-2 ${first.isCurrentUser ? "text-guild-gold" : "text-guild-text"}`}>
-                {first.isCurrentUser ? `${first.displayName} (Ви)` : first.displayName}
-              </p>
+          <div className="flex flex-col items-center gap-2 z-10 min-w-0">
+            <div className="relative w-[34px] h-[34px] flex items-center justify-center">
+              <span className="absolute w-5 h-5 border-2 border-guild-gold rotate-45" />
+              <span className="relative font-mono text-[11px] text-guild-gold">I</span>
             </div>
-            {/* Tallest platform */}
-            <div
-              className="w-full h-36 rounded-t-2xl flex flex-col items-center justify-end pb-4 relative overflow-hidden shadow-[0_0_20px_rgba(200,166,121,0.1)]"
-              style={{ background: "rgba(40,78,65,0.7)" }}
-            >
-              <div className="absolute inset-0 bg-linear-to-t from-guild-gold/20 to-transparent" />
-              <span className="text-3xl font-black text-guild-gold relative">1</span>
-              <p className="text-sm text-guild-text-muted font-black relative flex flex-col items-center leading-none pt-6">
-                {first.pointsBalance.toLocaleString("uk-UA")}
-                <span className="text-[10px] opacity-70 font-bold uppercase mt-0.5 tracking-tighter">Досвіду</span>
-              </p>
+            <p className={`text-[15px] font-bold text-center truncate w-full ${first.isCurrentUser ? "text-guild-pure-gold" : "text-guild-text"}`}>
+              {first.isCurrentUser ? `${first.displayName} (Ви)` : first.displayName}
+            </p>
+            <p className="font-mono text-xs text-guild-pure-gold text-center leading-tight">
+              {first.pointsBalance.toLocaleString("uk-UA")}
+              <span className="block text-[8px] tracking-tighter uppercase opacity-70">Досвіду</span>
+            </p>
+            <div className="w-full h-[126px] border-2 border-guild-gold bg-guild-gold text-guild-bg-bottom flex items-center justify-center">
+              <span className="font-heading text-[44px] font-bold">1</span>
             </div>
           </div>
         ) : <div />}
 
         {/* 3rd place */}
         {third ? (
-          <div className="flex flex-col items-center min-w-0">
-            <div className="h-10 flex items-center justify-center px-1 w-full overflow-hidden">
-              <p className={`text-[10px] sm:text-xs font-bold text-center leading-tight line-clamp-2 ${third.isCurrentUser ? "text-guild-gold" : "text-guild-text"}`}>
-                {third.isCurrentUser ? `${third.displayName} (Ви)` : third.displayName}
-              </p>
-            </div>
-            <div className="w-full h-20 bg-guild-card rounded-t-xl flex flex-col items-center justify-end pb-3">
-              <span className={`text-xl font-black relative ${third.isCurrentUser ? "text-guild-gold" : "text-guild-text-muted"}`}>3</span>
-              <p className="text-xs text-guild-text-muted font-black flex flex-col items-center leading-none pt-2">
-                {third.pointsBalance.toLocaleString("uk-UA")}
-                <span className="text-[9px] opacity-60 font-bold uppercase mt-0.5 tracking-tighter">Досвіду</span>
-              </p>
+          <div className="flex flex-col items-center gap-2 min-w-0">
+            <p className={`text-[13px] font-semibold text-center truncate w-full ${third.isCurrentUser ? "text-guild-gold" : "text-guild-text"}`}>
+              {third.isCurrentUser ? `${third.displayName} (Ви)` : third.displayName}
+            </p>
+            <p className="font-mono text-[11px] text-guild-text-muted text-center leading-tight">
+              {third.pointsBalance.toLocaleString("uk-UA")}
+              <span className="block text-[8px] tracking-tighter uppercase opacity-70">Досвіду</span>
+            </p>
+            <div
+              style={hatch(0.08)}
+              className="w-full h-[62px] border border-guild-gold/32 flex items-center justify-center"
+            >
+              <span className="font-heading text-2xl text-guild-text-muted">3</span>
             </div>
           </div>
         ) : <div />}
       </div>
 
       {/* ── Leaderboard list (4th+) ───────────────────────────────────── */}
-      <div className="flex flex-col gap-2.5 px-4">
+      <div className="flex flex-col px-4">
         {rest.map((entry, i) => {
           const isCurrentUser = entry.isCurrentUser
           const rank = i + 4
-
-          if (isCurrentUser) {
-            // Current user — highlighted card
-            return (
-              <div
-                key={entry.memberId}
-                ref={i === rest.length - 1 ? loadMoreRef : null}
-                className="glass-card p-4 rounded-xl flex items-center justify-between"
-                style={{
-                  background: "rgba(40,78,65,0.8)",
-                  boxShadow: "0 0 20px rgba(200,166,121,0.1)",
-                  outline: "1px solid rgba(200,166,121,0.2)",
-                }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full bg-guild-gold flex items-center justify-center shrink-0">
-                    <span className="text-sm font-black text-guild-bg-bottom">{rank}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-black text-guild-gold truncate">
-                      Ви <span className="text-[10px] text-guild-orange font-medium ml-1">({entry.displayName})</span>
-                    </p>
-                    <p className="text-[10px] text-guild-text-muted uppercase font-bold tracking-wide">
-                      {entry.levelName}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-black text-guild-gold">{entry.pointsBalance.toLocaleString("uk-UA")}</p>
-                  <p className="text-[9px] text-guild-text-muted uppercase font-bold tracking-tighter opacity-60">Досвіду</p>
-                </div>
-              </div>
-            )
-          }
 
           return (
             <div
               key={entry.memberId}
               ref={i === rest.length - 1 ? loadMoreRef : null}
-              className="glass-card p-4 rounded-xl flex items-center justify-between"
+              className={`flex items-center gap-3.5 py-3.5 pr-3 border-b border-guild-gold/12 ${isCurrentUser ? "bg-guild-card border-l-2 border-l-guild-gold pl-3" : "pl-1"
+                }`}
             >
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-bold text-guild-text-muted">{rank}</span>
-                </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-guild-text truncate">{entry.displayName}</p>
-                  <p className="text-[10px] text-guild-text-muted uppercase font-semibold tracking-wide">
-                    {entry.levelName}
-                  </p>
-                </div>
+              <span className={`font-mono text-[13px] w-6 shrink-0 ${isCurrentUser ? "text-guild-gold" : "text-guild-text-muted"}`}>
+                {rank}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className={`text-[15px] font-semibold truncate ${isCurrentUser ? "text-guild-pure-gold" : "text-guild-text"}`}>
+                  {isCurrentUser ? `Ви (${entry.displayName})` : entry.displayName}
+                </p>
+                <p className="font-mono text-[10px] text-guild-text-dim uppercase tracking-wide mt-1">
+                  {entry.levelName}
+                </p>
               </div>
-              <div className="text-right shrink-0">
-                <p className="font-black text-guild-text">{entry.pointsBalance.toLocaleString("uk-UA")}</p>
-                <p className="text-[9px] text-guild-text-muted/75 uppercase font-bold tracking-tighter">Досвіду</p>
-              </div>
+              <span className={`font-mono text-sm font-bold shrink-0 ${isCurrentUser ? "text-guild-pure-gold" : "text-guild-text"}`}>
+                {entry.pointsBalance.toLocaleString("uk-UA")}
+              </span>
             </div>
           )
         })}

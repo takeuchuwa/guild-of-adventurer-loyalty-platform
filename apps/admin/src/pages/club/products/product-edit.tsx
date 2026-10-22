@@ -68,10 +68,8 @@ export default function ProductEditPage() {
                     { label: "Редагувати товар", path: `/products/${id}` },
                 ]}
             >
-                <div className="container mx-auto py-10 max-w-2xl">
-                    <div className="flex items-center justify-center h-64">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                    </div>
+                <div className="flex h-64 items-center justify-center">
+                    <Loader2 className="text-primary h-8 w-8 animate-spin" />
                 </div>
             </Layout>
         )
@@ -88,22 +86,13 @@ export default function ProductEditPage() {
                 { label: "Редагувати товар", path: `/products/${id}` },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагувати товар</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть інформацію про товар</p>
-                </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    <ProductForm
-                        mode="edit"
-                        initialData={product}
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancel}
-                        isLoading={isLoading}
-                    />
-                </div>
-            </div>
+            <ProductForm
+                mode="edit"
+                initialData={product}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isLoading={isLoading}
+            />
         </Layout>
     )
 }

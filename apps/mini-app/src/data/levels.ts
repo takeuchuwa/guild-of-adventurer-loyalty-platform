@@ -16,13 +16,13 @@ export interface Prize {
 }
 
 export const mockLevels: LevelTier[] = [
-  { levelId: "F", name: "Новачок", minPoints: 0, sortOrder: 0 },
-  { levelId: "E", name: "Помічник", minPoints: 70, sortOrder: 1 },
-  { levelId: "D", name: "Учень", minPoints: 170, sortOrder: 2 },
-  { levelId: "C", name: "Підмайстер", minPoints: 470, sortOrder: 3 },
-  { levelId: "B", name: "Майстер", minPoints: 1270, sortOrder: 4 },
-  { levelId: "A", name: "Грандмайстер", minPoints: 2470, sortOrder: 5 },
-  { levelId: "S", name: "Легенда", minPoints: 5000, sortOrder: 6 },
+  { levelId: "F", name: "Гість", minPoints: 0, sortOrder: 0 },
+  { levelId: "E", name: "Мандрівник", minPoints: 70, sortOrder: 1 },
+  { levelId: "D", name: "Сходжувач", minPoints: 170, sortOrder: 2 },
+  { levelId: "C", name: "Дослідник", minPoints: 470, sortOrder: 3 },
+  { levelId: "B", name: "Вартовий", minPoints: 1270, sortOrder: 4 },
+  { levelId: "A", name: "Архітектор", minPoints: 2470, sortOrder: 5 },
+  { levelId: "S", name: "Хранитель", minPoints: 5000, sortOrder: 6 },
 ]
 
 export const mockBenefits: Record<string, Benefit[]> = {

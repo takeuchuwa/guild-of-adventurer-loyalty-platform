@@ -27,6 +27,7 @@ interface CategoriesTableProps {
     initialSelection?: string[]
     pageSize?: number
     storageKey?: string
+    meta?: Record<string, any>
 }
 
 export function CategoryTable({
@@ -42,6 +43,7 @@ export function CategoryTable({
     initialSelection,
     pageSize = 10,
     storageKey,
+    meta,
 }: CategoriesTableProps) {
     const [categories, setCategories] = useState<Category[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -151,6 +153,7 @@ export function CategoryTable({
                 searchProps.onSimpleSearch(query);
                 resetCursors();
             }}
+            meta={meta}
         />
     )
 }

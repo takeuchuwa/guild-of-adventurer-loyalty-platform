@@ -64,9 +64,8 @@ export function EffectsSection() {
             <p className="text-sm text-muted-foreground mb-2">
                 Оберіть, що отримає клієнт при застосуванні промоакції
             </p>
-            <p className="text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded-md px-3 py-1.5 mb-4 flex items-center gap-1.5">
-                <span>💡</span>
-                <span>Можна обрати декілька ефектів одночасно — наприклад, знижку і бонусні бали</span>
+            <p className="text-xs text-primary bg-[rgba(201,158,58,.07)] border border-[rgba(201,158,58,.35)] rounded-md px-3 py-1.5 mb-4 flex items-center gap-1.5">
+                                <span>Можна обрати декілька ефектів одночасно — наприклад, знижку і бонусні бали</span>
             </p>
 
             {effectsError && (
@@ -77,7 +76,7 @@ export function EffectsSection() {
 
             <div className="space-y-6">
                 {/* Group 1: Price Adjustments */}
-                <div className={`border rounded-lg transition-colors ${priceType !== "none" ? "bg-green-50/30 border-green-200 border-l-4 border-l-green-400 shadow-sm" : "bg-muted/20"}`}>
+                <div className={`border rounded-lg transition-colors ${priceType !== "none" ? "bg-[rgba(201,158,58,.07)] border-[rgba(201,158,58,.35)] border-l-4 border-l-accent-bright shadow-sm" : "bg-muted/20"}`}>
                     <div className="p-4 flex items-center space-x-3">
                         <Checkbox
                             id="enable-price"
@@ -97,7 +96,7 @@ export function EffectsSection() {
                     </div>
 
                     {priceType !== "none" && (
-                        <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50">
+                        <div className="px-4 pb-4 pt-2 border-t bg-surface-2">
                             <RadioGroup
                                 value={priceType}
                                 onValueChange={(value) => {
@@ -128,7 +127,7 @@ export function EffectsSection() {
                                                 onChange={(e) =>
                                                     setValue("config.effects.price.value", Number(e.target.value))
                                                 }
-                                                className="w-24 bg-white"
+                                                className="w-24 bg-surface"
                                             />
                                             <span className="text-sm text-muted-foreground">% знижки</span>
                                         </div>
@@ -151,7 +150,7 @@ export function EffectsSection() {
                                                 onChange={(e) =>
                                                     setValue("config.effects.price.value", Number(e.target.value))
                                                 }
-                                                className="w-32 bg-white"
+                                                className="w-32 bg-surface"
                                             />
                                             <span className="text-sm text-muted-foreground">грн знижки на кошик</span>
                                         </div>
@@ -175,7 +174,7 @@ export function EffectsSection() {
                                                 onChange={(e) =>
                                                     setValue("config.effects.price.value", Number(e.target.value))
                                                 }
-                                                className="w-32 bg-white"
+                                                className="w-32 bg-surface"
                                             />
                                             <span className="text-sm text-muted-foreground">грн</span>
                                         </div>
@@ -187,7 +186,7 @@ export function EffectsSection() {
                 </div>
 
                 {/* Group 2: Loyalty Rewards */}
-                <div className={`border rounded-lg transition-colors ${pointsType !== "none" ? "bg-blue-50/30 border-blue-200 border-l-4 border-l-blue-400 shadow-sm" : "bg-muted/20"}`}>
+                <div className={`border rounded-lg transition-colors ${pointsType !== "none" ? "bg-[rgba(201,158,58,.07)] border-[rgba(201,158,58,.35)] border-l-4 border-l-primary shadow-sm" : "bg-muted/20"}`}>
                     <div className="p-4 flex items-center space-x-3">
                         <Checkbox
                             id="enable-points"
@@ -207,7 +206,7 @@ export function EffectsSection() {
                     </div>
 
                     {pointsType !== "none" && (
-                        <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50">
+                        <div className="px-4 pb-4 pt-2 border-t bg-surface-2">
                             <RadioGroup
                                 value={pointsType}
                                 onValueChange={(value) => {
@@ -236,7 +235,7 @@ export function EffectsSection() {
                                                 onChange={(e) =>
                                                     setValue("config.effects.points.value", Number(e.target.value))
                                                 }
-                                                className="w-24 bg-white"
+                                                className="w-24 bg-surface"
                                             />
                                             <span className="text-sm text-muted-foreground">рази більше балів</span>
                                         </div>
@@ -260,7 +259,7 @@ export function EffectsSection() {
                                                 onChange={(e) =>
                                                     setValue("config.effects.points.value", Number(e.target.value))
                                                 }
-                                                className="w-24 bg-white"
+                                                className="w-24 bg-surface"
                                             />
                                             <span className="text-sm text-muted-foreground">балів</span>
                                         </div>
@@ -273,9 +272,8 @@ export function EffectsSection() {
 
                 {/* Group 3: Free Item — teaser only, feature not yet implemented */}
                 <div className="border border-dashed rounded-lg px-4 py-3 bg-muted/5 flex items-center gap-2 text-muted-foreground">
-                    <span>🎁</span>
-                    <span className="text-sm">Безкоштовний бонус</span>
-                    <span className="text-[10px] uppercase font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded ml-auto">
+                                        <span className="text-sm">Безкоштовний бонус</span>
+                    <span className="text-[10px] uppercase font-bold bg-[rgba(138,106,30,.12)] text-brass px-2 py-0.5 rounded ml-auto">
                         Скоро
                     </span>
                 </div>

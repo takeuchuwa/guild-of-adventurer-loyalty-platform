@@ -1,6 +1,6 @@
 import type {CustomColumnDef} from "@/types/table"
 import type {Category} from "@/components/categories/types/category-types.tsx"
-import {Calendar1Icon, ScanBarcodeIcon} from "lucide-react"
+import {Calendar1Icon, ScanBarcodeIcon, ExternalLink} from "lucide-react"
 import type {ReactNode} from "react";
 import {Link} from "react-router-dom";
 
@@ -25,7 +25,25 @@ export const categoryColumns: CustomColumnDef<Category>[] = [
         id: "name",
         header: "Назва",
         accessorKey: "name",
-        cell: ({row}) => {
+        cell: ({row, table}) => {
+            const isDialog = (table.options.meta as any)?.isDialog
+            if (isDialog) {
+                return (
+                    <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">{row.original.name}</span>
+                        <a
+                            href={`/categories/${row.original.categoryId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors p-0.5"
+                            data-no-select="true"
+                            title="Відкрити сторінку категорії в новій вкладці"
+                        >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                    </div>
+                )
+            }
             return (
                 <Link to={`/categories/${row.original.categoryId}`} className="font-semibold hover:underline">
                     {row.original.name}
@@ -39,14 +57,19 @@ export const categoryColumns: CustomColumnDef<Category>[] = [
         header: "Тип категорії",
         accessorKey: "kind",
         size: 75,
-        cell: ({row}) => {
+        cell: ({row, table}) => {
             const kind = row.original.kind as keyof typeof categoryKindMap
             const data = categoryKindMap[kind]
             if (!data) return null
+            const isDialog = (table.options.meta as any)?.isDialog
             return (
                 <div className="flex items-center gap-2">
                     {data.icon}
-                    <Link to={`${data.link}`} className="text-primary hover:underline">{data.label}</Link>
+                    {isDialog ? (
+                        <span className="font-semibold text-foreground">{data.label}</span>
+                    ) : (
+                        <Link to={`${data.link}`} className="text-primary hover:underline">{data.label}</Link>
+                    )}
                 </div>
             )
         },

@@ -740,7 +740,13 @@ membersRoute.get("/", async (c) => {
         // We assume sortParam looks something like "pointsBalance.desc"
         const sortField = sortParam?.split(',')[0] || 'memberId';
         const sortDir = (sortParam?.split(',')[1]?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
-        const sortColumn = (members as any)[sortField] || members.memberId;
+        
+        let actualSortField = sortField;
+        if (sortField === "levelId") {
+            actualSortField = "pointsBalance";
+        }
+        
+        const sortColumn = (members as any)[actualSortField] || members.memberId;
 
         // 3. Configure drizzle-cursor
         const isCustomSort = sortField !== 'memberId';
@@ -749,7 +755,7 @@ membersRoute.get("/", async (c) => {
             cursors: isCustomSort ? [
                 {
                     order: sortDir,
-                    key: sortField, // This key MUST match the property name in your returned object
+                    key: actualSortField, // This key MUST match the property name in your returned object
                     schema: sortColumn
                 }
             ] : [],
@@ -768,7 +774,7 @@ membersRoute.get("/", async (c) => {
                 const decodedJson = Buffer.from(cursor, 'base64').toString('utf-8');
                 const cursorObj = JSON.parse(decodedJson);
                 // Validate that the cursor object contains all required keys for the current sort
-                if (isCustomSort && !(sortField in cursorObj)) {
+                if (isCustomSort && !(actualSortField in cursorObj)) {
                     validCursor = null;
                 } else if (!('memberId' in cursorObj)) {
                     validCursor = null;

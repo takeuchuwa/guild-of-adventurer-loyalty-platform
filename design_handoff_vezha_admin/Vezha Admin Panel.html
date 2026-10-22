@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#0A0908; color:#EDE6D8; -webkit-font-smoothing:antialiased; }
+  a { color:#C99E3A; text-decoration:none; }
+  a:hover { color:#E3C46A; }
+</style>
+</helmet>
+
+<div style="background:#0A0908; font-family:Manrope,sans-serif; padding:72px 64px 140px; display:flex; flex-direction:column; gap:96px; width:max-content;">
+
+  <section style="display:flex; flex-direction:column; gap:26px; max-width:1600px;">
+    <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.24em; color:#C99E3A; text-transform:uppercase;">Vezha · адмінпанель · редизайн v1.0</div>
+    <h1 style="font-family:Oswald,sans-serif; font-weight:700; font-size:92px; line-height:.92; margin:0; text-transform:uppercase;">Адмінпанель</h1>
+    <p style="font-size:19px; line-height:1.6; max-width:900px; color:rgba(237,230,216,.72); margin:0; text-wrap:pretty;">Та сама структура, що в поточному shadcn-адмінці: список → створення → редагування, ті самі домени й копірайт. Змінюється мова форми — тверда темна база, золотий хаїрлайн, радіус 0, дані в моно. Панель і застосунок читаються як одна система: адмін бачить ту саму вежу, що й гравець.</p>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:rgba(201,158,58,.22);">
+      <div style="background:#141210; padding:22px 24px;"><div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase; margin-bottom:10px;">Щільність</div><div style="font-size:15px; line-height:1.5; color:rgba(237,230,216,.8);">Рядок таблиці 52 px, поле 12/16. Адмін працює швидко — повітря менше, ніж у застосунку.</div></div>
+      <div style="background:#141210; padding:22px 24px;"><div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase; margin-bottom:10px;">Радіус 0</div><div style="font-size:15px; line-height:1.5; color:rgba(237,230,216,.8);">Жодних rounded-xl карток shadcn. Межа — 1 px rgba(201,158,58,.22), активна — 2 px золота.</div></div>
+      <div style="background:#141210; padding:22px 24px;"><div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase; margin-bottom:10px;">Один акцент</div><div style="font-size:15px; line-height:1.5; color:rgba(237,230,216,.8);">Золото — лише первинна дія й активний стан. «Кров» #7E2B21 — тільки видалення.</div></div>
+      <div style="background:#141210; padding:22px 24px;"><div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase; margin-bottom:10px;">Іконки</div><div style="font-size:15px; line-height:1.5; color:rgba(237,230,216,.8);">Замість lucide — геометрія: квадрат (класифікація), ромб (клуб), коло (лояльність).</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 01 MEMBERS LIST ============ -->
+  <section style="display:flex; flex-direction:column; gap:18px;">
+    <div style="display:flex; align-items:baseline; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.2em; color:#C99E3A;">01</span><h2 style="font-family:Oswald,sans-serif; font-weight:600; font-size:32px; margin:0; text-transform:uppercase; letter-spacing:.06em;">Підкорювачі · список</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.4);">/members · 1600×1020</span></div>
+
+    <div style="width:1600px; height:1020px; display:flex; background:#0E0D0C; border:1px solid rgba(201,158,58,.22); overflow:hidden;">
+      <dc-import name="AdminSidebar" active="Підкорювачі" hint-size="252px,100%"></dc-import>
+      <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        <div style="height:60px; flex:none; border-bottom:1px solid rgba(201,158,58,.14); display:flex; align-items:center; padding:0 28px; gap:16px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(237,230,216,.45);">Головна <span style="color:rgba(201,158,58,.6);">/</span> <span style="color:#EDE6D8;">Підкорювачі</span></div>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:20px;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:rgba(237,230,216,.4);">СБ · 12.08 · 21:14</div>
+            <div style="display:flex; align-items:center; gap:10px;"><span style="width:26px; height:26px; border:1px solid rgba(201,158,58,.5); display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:13px; color:#C99E3A;">Д</span><span style="font-size:13.5px; color:rgba(237,230,216,.7);">Даша · DM</span></div>
+          </div>
+        </div>
+
+        <div style="flex:1; padding:28px 28px 0; display:flex; flex-direction:column; gap:20px; min-height:0;">
+          <div style="display:flex; align-items:flex-end; gap:24px;">
+            <div>
+              <h3 style="font-family:Oswald,sans-serif; font-weight:700; font-size:40px; margin:0 0 6px; text-transform:uppercase; letter-spacing:.03em;">Підкорювачі</h3>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; color:rgba(237,230,216,.45);">1 284 · АКТИВНИХ 947 · НОВИХ ЗА ТИЖДЕНЬ +23</div>
+            </div>
+            <div style="margin-left:auto; display:flex; gap:10px;">
+              <div style="border:1px solid rgba(237,230,216,.2); color:rgba(237,230,216,.8); padding:11px 18px; font-family:Oswald,sans-serif; font-size:14px; letter-spacing:.1em; text-transform:uppercase;">Експорт CSV</div>
+              <div style="background:#C99E3A; color:#0E0D0C; padding:11px 20px; font-family:Oswald,sans-serif; font-weight:600; font-size:14px; letter-spacing:.1em; text-transform:uppercase;">+ Новий підкорювач</div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:24px; border-bottom:1px solid rgba(201,158,58,.16);">
+            <div style="padding:0 2px 12px; border-bottom:2px solid #C99E3A; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.1em; text-transform:uppercase; color:#EDE6D8; margin-bottom:-1px;">Усі</div>
+            <div style="padding:0 2px 12px; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.1em; text-transform:uppercase; color:rgba(237,230,216,.5);">Незабрані призи <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#C99E3A;">7</span></div>
+            <div style="padding:0 2px 12px; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.1em; text-transform:uppercase; color:rgba(237,230,216,.5);">Деактивовані</div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; border:1px solid rgba(201,158,58,.28); background:#141210; height:42px; min-width:320px; padding:0 14px; gap:10px;">
+              <span style="width:12px; height:12px; border:2px solid #C99E3A; border-radius:50%; flex:none;"></span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(237,230,216,.4);">+38 (0__) ___-__-__</span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; border:1px solid rgba(237,230,216,.16); height:42px; width:190px; padding:0 14px; font-size:13.5px; color:rgba(237,230,216,.75);">Рівень: усі <span style="font-family:'JetBrains Mono',monospace; color:rgba(201,158,58,.7);">▾</span></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; border:1px solid rgba(237,230,216,.16); height:42px; width:210px; padding:0 14px; font-size:13.5px; color:rgba(237,230,216,.75);">Візит: 30 днів <span style="font-family:'JetBrains Mono',monospace; color:rgba(201,158,58,.7);">▾</span></div>
+            <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:#C99E3A;">ОБРАНО 2</span>
+              <div style="border:1px solid rgba(201,158,58,.45); color:#E3C46A; height:34px; display:flex; align-items:center; padding:0 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Нарахувати XP</div>
+              <div style="border:1px solid rgba(126,43,33,.75); color:#C0574B; height:34px; display:flex; align-items:center; padding:0 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Деактивувати</div>
+            </div>
+          </div>
+
+          <div style="border:1px solid rgba(201,158,58,.2); display:flex; flex-direction:column; min-height:0;">
+            <div style="display:grid; grid-template-columns:44px 1.6fr 1.1fr 78px 1fr 1.1fr 1fr 120px; align-items:center; height:44px; padding:0 16px; background:#141210; border-bottom:1px solid rgba(201,158,58,.2); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#C99E3A;">
+              <div><span style="width:14px; height:14px; border:1px solid rgba(201,158,58,.5); display:block;"></span></div>
+              <div>Підкорювач</div><div>Телефон</div><div>LVL</div><div>XP / до рівня</div><div>Останній візит</div><div>Призи</div><div style="text-align:right;">Дії</div>
+            </div>
+            <sc-for list="{{ members }}" as="m" hint-placeholder-count="9">
+              <div style="display:grid; grid-template-columns:44px 1.6fr 1.1fr 78px 1fr 1.1fr 1fr 120px; align-items:center; height:56px; padding:0 16px; border-bottom:1px solid rgba(201,158,58,.08); background:{{ m.rowBg }};">
+                <div><span style="width:14px; height:14px; border:1px solid {{ m.checkBorder }}; background:{{ m.checkFill }}; display:block;"></span></div>
+                <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                  <span style="width:30px; height:30px; border:1px solid rgba(201,158,58,.35); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:13px; color:#C99E3A; flex:none;">{{ m.initial }}</span>
+                  <span style="font-size:15px; font-weight:600; color:#EDE6D8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ m.name }}</span>
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(237,230,216,.68);">{{ m.phone }}</div>
+                <div><span style="display:inline-flex; align-items:center; gap:5px; border:1px solid rgba(201,158,58,.45); padding:3px 8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:#E3C46A;">lvl {{ m.lvl }}</span></div>
+                <div style="display:flex; flex-direction:column; gap:5px; padding-right:24px;">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#EDE6D8;">{{ m.xp }}</span>
+                  <span style="display:block; height:3px; background:rgba(237,230,216,.12);"><span style="display:block; height:3px; width:{{ m.pct }}; background:#C99E3A;"></span></span>
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(237,230,216,.55);">{{ m.visit }}</div>
+                <div><span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.1em; color:{{ m.prizeFg }}; border:1px solid {{ m.prizeBorder }}; padding:3px 8px;">{{ m.prizeText }}</span></div>
+                <div style="display:flex; gap:8px; justify-content:flex-end; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em;">
+                  <span style="border:1px solid rgba(237,230,216,.18); padding:4px 8px; color:rgba(237,230,216,.6);">РЕД</span>
+                  <span style="border:1px solid rgba(201,158,58,.4); padding:4px 8px; color:#C99E3A;">XP</span>
+                </div>
+              </div>
+            </sc-for>
+            <div style="margin-top:auto; display:flex; align-items:center; justify-content:space-between; padding:0 16px; height:52px; background:#121110; font-family:'JetBrains Mono',monospace; font-size:12px; color:rgba(237,230,216,.55);">
+              <div>2 з 1 284 обрано</div>
+              <div style="display:flex; align-items:center; gap:18px;">
+                <div>Рядків: 10 ▾</div>
+                <div>Сторінка 1 з 129</div>
+                <div style="display:flex; gap:6px;">
+                  <span style="border:1px solid rgba(237,230,216,.15); width:30px; height:28px; display:flex; align-items:center; justify-content:center; color:rgba(237,230,216,.3);">‹</span>
+                  <span style="border:1px solid rgba(201,158,58,.5); width:30px; height:28px; display:flex; align-items:center; justify-content:center; color:#C99E3A;">›</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 MEMBER CARD ============ -->
+  <section style="display:flex; flex-direction:column; gap:18px;">
+    <div style="display:flex; align-items:baseline; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.2em; color:#C99E3A;">02</span><h2 style="font-family:Oswald,sans-serif; font-weight:600; font-size:32px; margin:0; text-transform:uppercase; letter-spacing:.06em;">Картка підкорювача</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.4);">/members/:id · вежа = рівень</span></div>
+
+    <div style="width:1600px; height:1020px; display:flex; background:#0E0D0C; border:1px solid rgba(201,158,58,.22); overflow:hidden;">
+      <dc-import name="AdminSidebar" active="Підкорювачі" hint-size="252px,100%"></dc-import>
+      <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        <div style="height:60px; flex:none; border-bottom:1px solid rgba(201,158,58,.14); display:flex; align-items:center; padding:0 28px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(237,230,216,.45);">Головна <span style="color:rgba(201,158,58,.6);">/</span> Підкорювачі <span style="color:rgba(201,158,58,.6);">/</span> <span style="color:#EDE6D8;">Ірина Ковальчук</span></div>
+          <div style="margin-left:auto; display:flex; gap:10px;">
+            <div style="border:1px solid rgba(126,43,33,.7); color:#C0574B; padding:8px 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Деактивувати</div>
+            <div style="border:1px solid rgba(237,230,216,.2); color:rgba(237,230,216,.8); padding:8px 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Редагувати</div>
+          </div>
+        </div>
+
+        <div style="flex:1; display:grid; grid-template-columns:400px 1fr; min-height:0;">
+          <div style="border-right:1px solid rgba(201,158,58,.14); padding:28px; display:flex; flex-direction:column; gap:26px;">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span style="width:66px; height:66px; border:2px solid #C99E3A; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:26px; color:#C99E3A; flex:none;">І</span>
+              <div>
+                <div style="font-family:Oswald,sans-serif; font-weight:600; font-size:28px; text-transform:uppercase; letter-spacing:.03em; line-height:1.05;">Ірина Ковальчук</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:12px; color:rgba(237,230,216,.5); margin-top:6px;">+38 (067) 214-88-31 · ID 00412</div>
+              </div>
+            </div>
+
+            <div style="border:1px solid rgba(201,158,58,.22); padding:20px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase; margin-bottom:16px;">Вежа підкорювача</div>
+              <div style="display:flex; gap:18px; align-items:flex-end;">
+                <div style="display:flex; flex-direction:column-reverse; gap:4px; flex:1;">
+                  <sc-for list="{{ floors }}" as="f" hint-placeholder-count="8">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:rgba(237,230,216,.35); width:16px;">{{ f.n }}</span>
+                      <span style="height:14px; flex:1; background:{{ f.fill }}; border:1px solid {{ f.border }};"></span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:44px; font-weight:700; color:#E3C46A; line-height:1;">5</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em; color:rgba(237,230,216,.5); margin-top:6px;">РІВЕНЬ · ВАРТОВА</div>
+                </div>
+              </div>
+              <div style="margin-top:18px; display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:12px; color:rgba(237,230,216,.6);"><span>4 850 XP</span><span>до lvl 6 — 650</span></div>
+              <div style="margin-top:8px; height:4px; background:rgba(237,230,216,.12);"><div style="height:4px; width:78%; background:#C99E3A;"></div></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px; background:rgba(201,158,58,.18);">
+              <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+                <div style="background:#141210; padding:16px 18px;">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:#EDE6D8;">{{ s.v }}</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; color:rgba(237,230,216,.45); text-transform:uppercase; margin-top:6px;">{{ s.k }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase; margin-bottom:12px;">Незабрані призи · 1</div>
+              <div style="border:1px solid rgba(201,158,58,.35); background:rgba(201,158,58,.06); padding:14px 16px; display:flex; align-items:center; justify-content:space-between;">
+                <div><div style="font-size:15px; font-weight:600;">Безкоштовна година кімнати</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.5); margin-top:4px;">lvl 5 · видано 02.08</div></div>
+                <div style="background:#C99E3A; color:#0E0D0C; padding:8px 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Видати</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:28px; display:flex; flex-direction:column; gap:18px; min-height:0;">
+            <div style="display:flex; align-items:center; gap:24px; border-bottom:1px solid rgba(201,158,58,.16);">
+              <div style="padding:0 2px 12px; border-bottom:2px solid #C99E3A; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:-1px;">Історія XP</div>
+              <div style="padding:0 2px 12px; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.1em; text-transform:uppercase; color:rgba(237,230,216,.5);">Покупки</div>
+              <div style="padding:0 2px 12px; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.1em; text-transform:uppercase; color:rgba(237,230,216,.5);">Активності</div>
+              <div style="margin-left:auto; margin-bottom:10px; display:flex; gap:10px;">
+                <div style="border:1px solid rgba(201,158,58,.5); color:#C99E3A; padding:8px 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Коригувати XP</div>
+              </div>
+            </div>
+
+            <div style="border:1px solid rgba(201,158,58,.2); flex:1; display:flex; flex-direction:column; min-height:0;">
+              <div style="display:grid; grid-template-columns:150px 1fr 120px 130px 1fr; height:42px; align-items:center; padding:0 16px; background:#141210; border-bottom:1px solid rgba(201,158,58,.2); font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#C99E3A;">
+                <div>Дата</div><div>Подія</div><div>Зміна</div><div>Баланс</div><div>Хто</div>
+              </div>
+              <sc-for list="{{ ledger }}" as="l" hint-placeholder-count="11">
+                <div style="display:grid; grid-template-columns:150px 1fr 120px 130px 1fr; height:50px; align-items:center; padding:0 16px; border-bottom:1px solid rgba(201,158,58,.08);">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:12.5px; color:rgba(237,230,216,.55);">{{ l.date }}</div>
+                  <div style="font-size:14.5px; color:#EDE6D8;">{{ l.event }}</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:{{ l.color }};">{{ l.delta }}</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(237,230,216,.7);">{{ l.balance }}</div>
+                  <div style="font-size:13.5px; color:rgba(237,230,216,.5);">{{ l.by }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 FORM ============ -->
+  <section style="display:flex; flex-direction:column; gap:18px;">
+    <div style="display:flex; align-items:baseline; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.2em; color:#C99E3A;">03</span><h2 style="font-family:Oswald,sans-serif; font-weight:600; font-size:32px; margin:0; text-transform:uppercase; letter-spacing:.06em;">Форма · товар</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.4);">/products/create · шаблон для всіх сутностей</span></div>
+
+    <div style="width:1600px; height:980px; display:flex; background:#0E0D0C; border:1px solid rgba(201,158,58,.22); overflow:hidden;">
+      <dc-import name="AdminSidebar" active="Товари" hint-size="252px,100%"></dc-import>
+      <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        <div style="height:60px; flex:none; border-bottom:1px solid rgba(201,158,58,.14); display:flex; align-items:center; padding:0 28px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(237,230,216,.45);">Головна <span style="color:rgba(201,158,58,.6);">/</span> Товари <span style="color:rgba(201,158,58,.6);">/</span> <span style="color:#EDE6D8;">Новий товар</span></div>
+        </div>
+
+        <div style="flex:1; display:grid; grid-template-columns:1fr 380px; min-height:0;">
+          <div style="padding:30px 32px; display:flex; flex-direction:column; gap:26px; overflow:hidden;">
+            <h3 style="font-family:Oswald,sans-serif; font-weight:700; font-size:36px; margin:0; text-transform:uppercase; letter-spacing:.03em;">Новий товар</h3>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Назва <span style="color:#C0574B;">*</span></div>
+              <div style="border:2px solid #C99E3A; background:#141210; height:46px; display:flex; align-items:center; padding:0 14px; font-size:15px; color:#EDE6D8;">Кубики d20 «Смола», набір 7 шт</div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">SKU <span style="color:#C0574B;">*</span></div>
+                <div style="border:1px solid rgba(237,230,216,.18); background:#121110; height:46px; display:flex; align-items:center; padding:0 14px; font-family:'JetBrains Mono',monospace; font-size:14px;">VZH-DICE-007</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Ціна, ₴ <span style="color:#C0574B;">*</span></div>
+                <div style="border:1px solid rgba(126,43,33,.8); background:#121110; height:46px; display:flex; align-items:center; padding:0 14px; font-family:'JetBrains Mono',monospace; font-size:14px; color:rgba(237,230,216,.4);">0</div>
+                <div style="font-size:12.5px; color:#C0574B;">Ціна має бути більшою за 0</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Залишок</div>
+                <div style="border:1px solid rgba(237,230,216,.18); background:#121110; height:46px; display:flex; align-items:center; padding:0 14px; font-family:'JetBrains Mono',monospace; font-size:14px;">24</div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(237,230,216,.6);"><span style="width:14px; height:14px; border:1px solid rgba(237,230,216,.3); display:block;"></span> Необмежений</div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Опис</div>
+              <div style="border:1px solid rgba(237,230,216,.18); background:#121110; height:96px; padding:12px 14px; font-size:14.5px; line-height:1.55; color:rgba(237,230,216,.7);">Сім кубиків смоляного кольору з золотими цифрами. Той самий набір, яким кидають за столом у Вежі.</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Категорії</div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+                  <div style="border:1px solid rgba(201,158,58,.4); background:rgba(201,158,58,.07); padding:9px 12px; display:flex; align-items:center; gap:12px; font-size:14px;">{{ c }}<span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:rgba(237,230,216,.45);">×</span></div>
+                </sc-for>
+                <div style="border:1px dashed rgba(237,230,216,.25); padding:9px 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:rgba(237,230,216,.6);">+ Додати</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border-left:1px solid rgba(201,158,58,.14); background:#121110; padding:30px 26px; display:flex; flex-direction:column; gap:26px;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Лояльність</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="font-size:14px; color:rgba(237,230,216,.75);">XP за покупку</div>
+              <div style="border:1px solid rgba(237,230,216,.18); height:46px; display:flex; align-items:center; padding:0 14px; font-family:'JetBrains Mono',monospace; font-size:14px;">авто · 1 XP / 10 ₴</div>
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(237,230,216,.6);"><span style="width:14px; height:14px; border:1px solid #C99E3A; background:#C99E3A; display:block;"></span> Перевизначити вручну</div>
+            </div>
+            <div style="height:1px; background:rgba(201,158,58,.16);"></div>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:14.5px;">Активний</span><span style="width:42px; height:22px; background:#C99E3A; display:flex; align-items:center; justify-content:flex-end; padding:2px;"><span style="width:18px; height:18px; background:#0E0D0C; display:block;"></span></span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:14.5px; color:rgba(237,230,216,.75);">Показувати в застосунку</span><span style="width:42px; height:22px; border:1px solid rgba(237,230,216,.25); display:flex; align-items:center; padding:2px;"><span style="width:18px; height:18px; background:rgba(237,230,216,.3); display:block;"></span></span></div>
+            </div>
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
+              <div style="background:#C99E3A; color:#0E0D0C; height:48px; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-weight:600; font-size:15px; letter-spacing:.12em; text-transform:uppercase;">Створити товар</div>
+              <div style="border:1px solid rgba(201,158,58,.45); color:#E3C46A; height:48px; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.12em; text-transform:uppercase;">Створити та в кошик</div>
+              <div style="border:1px solid rgba(237,230,216,.18); color:rgba(237,230,216,.65); height:48px; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:15px; letter-spacing:.12em; text-transform:uppercase;">Скасувати</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 CHECKOUT ============ -->
+  <section style="display:flex; flex-direction:column; gap:18px;">
+    <div style="display:flex; align-items:baseline; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.2em; color:#C99E3A;">04</span><h2 style="font-family:Oswald,sans-serif; font-weight:600; font-size:32px; margin:0; text-transform:uppercase; letter-spacing:.06em;">Каса</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.4);">/checkout · сканер + кошик</span></div>
+
+    <div style="width:1600px; height:980px; display:flex; background:#0E0D0C; border:1px solid rgba(201,158,58,.22); overflow:hidden;">
+      <dc-import name="AdminSidebar" active="Каса" hint-size="252px,100%"></dc-import>
+      <div style="flex:1; display:grid; grid-template-columns:1fr 460px; min-width:0;">
+        <div style="padding:28px; display:flex; flex-direction:column; gap:20px; min-height:0;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="flex:1; border:2px solid #C99E3A; background:#141210; height:52px; display:flex; align-items:center; padding:0 16px; gap:12px;">
+              <span style="width:14px; height:14px; border:2px solid #C99E3A; display:block;"></span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:14px; color:rgba(237,230,216,.45);">Скануй штрихкод або шукай товар…</span>
+              <span style="margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.14em; color:#C99E3A; border:1px solid rgba(201,158,58,.4); padding:3px 7px;">СКАНЕР ГОТОВИЙ</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <sc-for list="{{ catTabs }}" as="c" hint-placeholder-count="5">
+              <div style="border:1px solid {{ c.border }}; background:{{ c.bg }}; color:{{ c.fg }}; padding:8px 14px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">{{ c.label }}</div>
+            </sc-for>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:rgba(201,158,58,.16); align-content:start;">
+            <sc-for list="{{ posItems }}" as="p" hint-placeholder-count="12">
+              <div style="background:#141210; padding:18px; height:150px; display:flex; flex-direction:column; justify-content:space-between;">
+                <div style="font-size:15px; font-weight:600; line-height:1.35; color:#EDE6D8;">{{ p.name }}</div>
+                <div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:#E3C46A;">{{ p.price }} ₴</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.14em; color:rgba(237,230,216,.4); margin-top:6px;">{{ p.stock }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border-left:1px solid rgba(201,158,58,.22); background:#121110; display:flex; flex-direction:column; min-height:0;">
+          <div style="padding:20px 24px; border-bottom:1px solid rgba(201,158,58,.16); display:flex; align-items:center; gap:14px;">
+            <span style="width:40px; height:40px; border:1px solid rgba(201,158,58,.45); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:16px; color:#C99E3A;">І</span>
+            <div style="flex:1;"><div style="font-size:15px; font-weight:600;">Ірина Ковальчук</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.5); margin-top:3px;">lvl 5 · 4 850 XP · знижка 10%</div></div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.4);">×</span>
+          </div>
+          <div style="flex:1; overflow:hidden;">
+            <sc-for list="{{ cart }}" as="c" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; gap:14px; padding:16px 24px; border-bottom:1px solid rgba(201,158,58,.08);">
+                <div style="flex:1; min-width:0;"><div style="font-size:14.5px; font-weight:600; color:#EDE6D8;">{{ c.name }}</div><div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.45); margin-top:4px;">{{ c.unit }} ₴ × {{ c.qty }}</div></div>
+                <div style="display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:13px;">
+                  <span style="border:1px solid rgba(237,230,216,.18); width:26px; height:26px; display:flex; align-items:center; justify-content:center; color:rgba(237,230,216,.6);">−</span>
+                  <span style="width:22px; text-align:center;">{{ c.qty }}</span>
+                  <span style="border:1px solid rgba(201,158,58,.4); width:26px; height:26px; display:flex; align-items:center; justify-content:center; color:#C99E3A;">+</span>
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; width:80px; text-align:right;">{{ c.sum }} ₴</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:22px 24px; border-top:1px solid rgba(201,158,58,.22); display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(237,230,216,.6);"><span>Проміжний підсумок</span><span>1 340 ₴</span></div>
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(237,230,216,.6);"><span>Знижка lvl 5</span><span style="color:#C0574B;">−134 ₴</span></div>
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:13px; color:rgba(237,230,216,.6);"><span>Нарахування XP</span><span style="color:#E3C46A;">+120</span></div>
+            <div style="height:1px; background:rgba(201,158,58,.22); margin:6px 0;"></div>
+            <div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-family:Oswald,sans-serif; font-size:20px; letter-spacing:.1em; text-transform:uppercase;">До сплати</span><span style="font-family:'JetBrains Mono',monospace; font-size:34px; font-weight:700; color:#E3C46A;">1 206 ₴</span></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;">
+              <div style="border:1px solid rgba(201,158,58,.45); color:#E3C46A; height:48px; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:14px; letter-spacing:.1em; text-transform:uppercase;">Готівка</div>
+              <div style="border:1px solid rgba(201,158,58,.45); color:#E3C46A; height:48px; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-size:14px; letter-spacing:.1em; text-transform:uppercase;">Картка</div>
+            </div>
+            <div style="background:#C99E3A; color:#0E0D0C; height:56px; display:flex; align-items:center; justify-content:center; font-family:Oswald,sans-serif; font-weight:700; font-size:17px; letter-spacing:.14em; text-transform:uppercase;">Провести · F9</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 05 PROMO BUILDER + DIALOG ============ -->
+  <section style="display:flex; flex-direction:column; gap:18px;">
+    <div style="display:flex; align-items:baseline; gap:18px;"><span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.2em; color:#C99E3A;">05</span><h2 style="font-family:Oswald,sans-serif; font-weight:600; font-size:32px; margin:0; text-transform:uppercase; letter-spacing:.06em;">Промоакція · конструктор правил</h2><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:rgba(237,230,216,.4);">/promotions/:id + діалог видалення</span></div>
+
+    <div style="width:1600px; height:1000px; display:flex; background:#0E0D0C; border:1px solid rgba(201,158,58,.22); overflow:hidden; position:relative;">
+      <dc-import name="AdminSidebar" active="Промоакції" hint-size="252px,100%"></dc-import>
+      <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+        <div style="height:60px; flex:none; border-bottom:1px solid rgba(201,158,58,.14); display:flex; align-items:center; padding:0 28px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(237,230,216,.45);">Головна <span style="color:rgba(201,158,58,.6);">/</span> Промоакції <span style="color:rgba(201,158,58,.6);">/</span> <span style="color:#EDE6D8;">Вечір одностріл</span></div>
+        </div>
+        <div style="flex:1; padding:30px 32px; display:flex; flex-direction:column; gap:24px; min-height:0;">
+          <div style="display:flex; align-items:flex-end; gap:20px;">
+            <div>
+              <h3 style="font-family:Oswald,sans-serif; font-weight:700; font-size:36px; margin:0 0 8px; text-transform:uppercase;">Вечір одностріл</h3>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; color:rgba(237,230,216,.5);">ID 0031 · ЩОСЕРЕДИ 18:00–23:00 · ДІЄ ДО 30.09</div>
+            </div>
+            <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+              <span style="border:1px solid rgba(201,158,58,.45); color:#E3C46A; padding:6px 12px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em;">АКТИВНА</span>
+              <div style="border:1px solid rgba(126,43,33,.7); color:#C0574B; padding:10px 16px; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Видалити</div>
+              <div style="background:#C99E3A; color:#0E0D0C; padding:10px 18px; font-family:Oswald,sans-serif; font-weight:600; font-size:13px; letter-spacing:.1em; text-transform:uppercase;">Зберегти</div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; background:rgba(201,158,58,.2); flex:1; min-height:0;">
+            <div style="background:#121110; padding:24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:14px; height:14px; border:2px solid #C99E3A; display:block;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Умови</span></div>
+              <sc-for list="{{ conditions }}" as="c" hint-placeholder-count="3">
+                <div style="border:1px solid rgba(201,158,58,.24); padding:14px 16px;">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; color:rgba(237,230,216,.4); text-transform:uppercase; margin-bottom:8px;">{{ c.kind }}</div>
+                  <div style="font-size:15px; line-height:1.45; color:#EDE6D8;">{{ c.text }}</div>
+                </div>
+              </sc-for>
+              <div style="border:1px dashed rgba(237,230,216,.22); padding:12px; text-align:center; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:rgba(237,230,216,.55);">+ Умова</div>
+            </div>
+            <div style="background:#121110; padding:24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:14px; height:14px; border:2px solid #C99E3A; transform:rotate(45deg); display:block;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Ефекти</span></div>
+              <sc-for list="{{ effects }}" as="e" hint-placeholder-count="2">
+                <div style="border:1px solid rgba(201,158,58,.4); background:rgba(201,158,58,.06); padding:14px 16px;">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; color:#C99E3A; text-transform:uppercase; margin-bottom:8px;">{{ e.kind }}</div>
+                  <div style="font-size:15px; line-height:1.45; color:#EDE6D8;">{{ e.text }}</div>
+                </div>
+              </sc-for>
+              <div style="border:1px dashed rgba(237,230,216,.22); padding:12px; text-align:center; font-family:Oswald,sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:rgba(237,230,216,.55);">+ Ефект</div>
+            </div>
+            <div style="background:#121110; padding:24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; gap:10px;"><span style="width:14px; height:14px; border:2px solid #C99E3A; border-radius:50%; display:block;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C99E3A; text-transform:uppercase;">Цілі та охоплення</span></div>
+              <div style="border:1px solid rgba(201,158,58,.24); padding:14px 16px;">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; color:rgba(237,230,216,.4); text-transform:uppercase; margin-bottom:10px;">Рівні</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; font-family:'JetBrains Mono',monospace; font-size:12px;">
+                  <sc-for list="{{ lvlChips }}" as="l" hint-placeholder-count="6">
+                    <span style="border:1px solid {{ l.border }}; background:{{ l.bg }}; color:{{ l.fg }}; padding:5px 9px;">lvl {{ l.n }}</span>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="border:1px solid rgba(201,158,58,.24); padding:14px 16px;">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; color:rgba(237,230,216,.4); text-transform:uppercase; margin-bottom:10px;">Прогноз</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:700; color:#E3C46A;">312</div>
+                <div style="font-size:13.5px; color:rgba(237,230,216,.55); margin-top:6px;">підкорювачів підпадають під умови</div>
+              </div>
+              <div style="border:1px solid rgba(201,158,58,.24); padding:14px 16px; flex:1;">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; color:rgba(237,230,216,.4); text-transform:uppercase; margin-bottom:10px;">Текст у застосунку</div>
+                <div style="font-size:14.5px; line-height:1.55; color:rgba(237,230,216,.78);">«Середа — вечір одностріл. Приходь без партії: стіл, DM і −20% на кімнату. Місць мало, XP багато.»</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="position:absolute; inset:0; background:rgba(10,9,8,.72); display:flex; align-items:center; justify-content:center;">
+        <div style="width:520px; background:#121110; border:1px solid rgba(201,158,58,.4); padding:30px 32px; display:flex; flex-direction:column; gap:18px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; color:#C0574B; text-transform:uppercase; display:flex; align-items:center; gap:10px;"><span style="width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:12px solid #C0574B; display:block;"></span>Незворотна дія</div>
+          <div style="font-family:Oswald,sans-serif; font-weight:600; font-size:28px; text-transform:uppercase; letter-spacing:.03em;">Видалити промоакцію</div>
+          <div style="font-size:15px; line-height:1.6; color:rgba(237,230,216,.72);">«<strong style="color:#EDE6D8;">Вечір одностріл</strong>» зникне з бази Вежі разом з історією застосувань. Щоб підтвердити — введи слово <span style="font-family:'JetBrains Mono',monospace; color:#E3C46A;">видалити</span>.</div>
+          <div style="border:1px solid rgba(237,230,216,.2); background:#0E0D0C; height:46px; display:flex; align-items:center; padding:0 14px; font-family:'JetBrains Mono',monospace; font-size:14px; color:rgba(237,230,216,.35);">видал<span style="width:1px; height:18px; background:#C99E3A; margin-left:2px; display:block;"></span></div>
+          <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:4px;">
+            <div style="border:1px solid rgba(237,230,216,.2); color:rgba(237,230,216,.7); padding:12px 20px; font-family:Oswald,sans-serif; font-size:14px; letter-spacing:.1em; text-transform:uppercase;">Скасувати</div>
+            <div style="background:rgba(126,43,33,.35); border:1px solid rgba(126,43,33,.6); color:rgba(192,87,75,.55); padding:12px 20px; font-family:Oswald,sans-serif; font-size:14px; letter-spacing:.1em; text-transform:uppercase;">Видалити</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const gold = "#C99E3A";
+    const M = [
+      ["Ірина Ковальчук", "+38 (067) 214-88-31", 5, "4 850 / 5 500", "88%", "вчора", 1, true],
+      ["Богдан Лисенко", "+38 (093) 771-02-14", 3, "1 920 / 2 400", "80%", "10.08", 0, false],
+      ["Марта Дзюба", "+38 (050) 118-45-90", 7, "9 310 / 11 000", "85%", "09.08", 2, true],
+      ["Олег Сич", "+38 (099) 340-77-01", 2, "780 / 1 200", "65%", "07.08", 0, false],
+      ["Катерина Гриб", "+38 (068) 902-11-56", 4, "3 140 / 3 800", "83%", "05.08", 0, false],
+      ["Тарас Шульга", "+38 (063) 455-19-27", 1, "260 / 600", "43%", "04.08", 0, false],
+      ["Анна Верес", "+38 (095) 620-33-48", 6, "6 780 / 8 000", "85%", "02.08", 1, false],
+      ["Дмитро Кульчицький", "+38 (096) 210-58-73", 3, "2 050 / 2 400", "85%", "28.07", 0, false],
+      ["Софія Радченко", "+38 (073) 884-60-12", 8, "12 400 / 14 000", "89%", "26.07", 0, false],
+    ];
+    const members = M.map(([name, phone, lvl, xp, pct, visit, prizes, sel]) => ({
+      name, phone, lvl, xp, pct, visit,
+      initial: name[0],
+      rowBg: sel ? "rgba(201,158,58,.05)" : "transparent",
+      checkBorder: sel ? gold : "rgba(237,230,216,.28)",
+      checkFill: sel ? gold : "transparent",
+      prizeText: prizes ? prizes + " НЕЗАБРАНО" : "—",
+      prizeFg: prizes ? "#E3C46A" : "rgba(237,230,216,.3)",
+      prizeBorder: prizes ? "rgba(201,158,58,.45)" : "transparent",
+    }));
+
+    const floors = Array.from({ length: 8 }, (_, i) => {
+      const n = 8 - i;
+      const on = n <= 5;
+      return { n: String(n).padStart(2, "0"), fill: on ? (n === 5 ? "#E3C46A" : "rgba(201,158,58,.7)") : "transparent", border: on ? "transparent" : "rgba(237,230,216,.12)" };
+    });
+
+    const stats = [
+      { v: "37", k: "візитів" }, { v: "14 200 ₴", k: "витрачено" },
+      { v: "9", k: "одностріли" }, { v: "112", k: "днів у вежі" },
+    ];
+
+    const L = [
+      ["12.08 · 20:41", "Покупка · Каса", "+120", "4 850", "Даша · DM"],
+      ["12.08 · 18:05", "Візит · Кімната «Смола»", "+80", "4 730", "авто"],
+      ["09.08 · 21:12", "Одностріл «Північний тракт»", "+250", "4 650", "Ігор · DM"],
+      ["05.08 · 19:30", "Промо «Вечір одностріл»", "+100", "4 400", "авто"],
+      ["02.08 · 17:44", "Приз lvl 5 видано", "−0", "4 300", "Даша · DM"],
+      ["01.08 · 22:03", "Покупка · Каса", "+64", "4 300", "Марк · DM"],
+      ["28.07 · 20:18", "Коригування · помилка каси", "−150", "4 236", "Даша · DM"],
+      ["25.07 · 19:55", "Кампанія «Мідний шлях», сесія 6", "+300", "4 386", "Ігор · DM"],
+      ["21.07 · 18:22", "Візит · Кімната «Пергамент»", "+80", "4 086", "авто"],
+      ["18.07 · 21:40", "Покупка · Каса", "+96", "4 006", "Марк · DM"],
+      ["14.07 · 19:10", "Кампанія «Мідний шлях», сесія 5", "+300", "3 910", "Ігор · DM"],
+    ];
+    const ledger = L.map(([date, event, delta, balance, by]) => ({
+      date, event, delta, balance, by,
+      color: delta.startsWith("−") && delta !== "−0" ? "#C0574B" : delta === "−0" ? "rgba(237,230,216,.45)" : "#E3C46A",
+    }));
+
+    const chips = ["Аксесуари", "Кубики", "Мерч Вежі"];
+
+    const catTabs = ["Усі", "Напої", "Снеки", "Кубики", "Час у кімнаті"].map((label, i) => ({
+      label,
+      border: i === 0 ? gold : "rgba(237,230,216,.16)",
+      bg: i === 0 ? "rgba(201,158,58,.1)" : "transparent",
+      fg: i === 0 ? "#E3C46A" : "rgba(237,230,216,.6)",
+    }));
+
+    const posItems = [
+      ["Кава чорна", 45, "БЕЗ ЛІМІТУ"], ["Чай трав'яний", 40, "БЕЗ ЛІМІТУ"], ["Лимонад «Кров»", 65, "12 ШТ"],
+      ["Кубики d20 набір", 420, "24 ШТ"], ["Година кімнати «Смола»", 250, "БЕЗ ЛІМІТУ"], ["Година кімнати «Пергамент»", 220, "БЕЗ ЛІМІТУ"],
+      ["Снек мікс", 80, "31 ШТ"], ["Блокнот гравця", 180, "7 ШТ"], ["Футболка Вежа", 690, "5 ШТ"],
+      ["Мат для карт", 540, "3 ШТ"], ["Одностріл · вхід", 350, "БЕЗ ЛІМІТУ"], ["Кампанія · сесія", 300, "БЕЗ ЛІМІТУ"],
+    ].map(([name, price, stock]) => ({ name, price, stock }));
+
+    const cart = [
+      ["Година кімнати «Смола»", 250, 3, "750"],
+      ["Кава чорна", 45, 4, "180"],
+      ["Лимонад «Кров»", 65, 2, "130"],
+      ["Снек мікс", 80, 1, "80"],
+      ["Кубики d20 набір", 200, 1, "200"],
+    ].map(([name, unit, qty, sum]) => ({ name, unit, qty, sum }));
+
+    const conditions = [
+      { kind: "Час", text: "Середа, 18:00–23:00" },
+      { kind: "Кошик", text: "Містить «Одностріл · вхід»" },
+      { kind: "Підкорювач", text: "Рівень 2 і вище, візит за останні 60 днів" },
+    ];
+    const effects = [
+      { kind: "Знижка", text: "−20% на годину кімнати" },
+      { kind: "Досвід", text: "×2 XP за сесію одностріла" },
+    ];
+    const lvlChips = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => {
+      const on = n >= 2;
+      return { n, border: on ? "rgba(201,158,58,.5)" : "rgba(237,230,216,.14)", bg: on ? "rgba(201,158,58,.1)" : "transparent", fg: on ? "#E3C46A" : "rgba(237,230,216,.3)" };
+    });
+
+    return { members, floors, stats, ledger, chips, catTabs, posItems, cart, conditions, effects, lvlChips };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -57,7 +57,7 @@ async function main() {
             body: JSON.stringify({
                 menu_button: {
                     type: "web_app",
-                    text: "Гільдія",
+                    text: "Вежа",
                     web_app: { url },
                 },
             }),

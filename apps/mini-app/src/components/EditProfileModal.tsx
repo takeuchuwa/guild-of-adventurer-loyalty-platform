@@ -1,11 +1,25 @@
 import { useState, useEffect, useRef } from "react"
-import { X, Loader2, Calendar, AlertCircle } from "lucide-react"
+import { Loader2 } from "lucide-react"
+import { BottomSheet, SheetTitleRow } from "@/components/BottomSheet"
+import { CategoryIcon } from "@/components/CategoryIcon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as ShadcnCalendar } from "@/components/ui/calendar"
 import { axiosInstance } from "@/lib/api-utils"
 import { useRawInitData } from "@tma.js/sdk-react"
 import { uk } from "date-fns/locale"
 import type { Member } from "@/types/member"
+
+// Calendar glyph: box + top rail + two ticks, per the sheet icon spec.
+function CalendarGlyph({ className = "" }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" className={className}>
+      <rect x="1" y="3" width="18" height="16" fill="none" stroke="currentColor" strokeWidth={2} />
+      <line x1="1" y1="8" x2="19" y2="8" stroke="currentColor" strokeWidth={2} />
+      <line x1="6" y1="1" x2="6" y2="5" stroke="currentColor" strokeWidth={2} />
+      <line x1="14" y1="1" x2="14" y2="5" stroke="currentColor" strokeWidth={2} />
+    </svg>
+  )
+}
 
 interface EditProfileModalProps {
   isOpen: boolean
@@ -54,24 +68,7 @@ export function EditProfileModal({ isOpen, onClose, member, onSuccess }: EditPro
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [isRendered, setIsRendered] = useState(isOpen)
-  const [isClosing, setIsClosing] = useState(false)
-
   const scrollRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsRendered(true)
-      setIsClosing(false)
-    } else if (isRendered) {
-      setIsClosing(true)
-      const timer = setTimeout(() => {
-        setIsRendered(false)
-        setIsClosing(false)
-      }, 300)
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen, isRendered])
 
   const initDataRaw = useRawInitData()
 
@@ -84,24 +81,6 @@ export function EditProfileModal({ isOpen, onClose, member, onSuccess }: EditPro
       setError(null)
     }
   }, [isOpen, member])
-
-  // Absolutely Bulletproof iOS Tab Scroll Lock
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const scrollY = window.scrollY;
-
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollY);
-    };
-  }, [isOpen]);
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     const target = e.target;
@@ -177,195 +156,154 @@ export function EditProfileModal({ isOpen, onClose, member, onSuccess }: EditPro
     return date;
   }
 
-  if (!isRendered) return null
+  const fieldClass =
+    "w-full h-12 min-h-11 px-3.5 bg-transparent border border-guild-card-border text-guild-text placeholder:text-guild-text-dim outline-none transition-colors group-focus-within:border-2 group-focus-within:border-guild-gold"
 
   return (
-    <>
-      <div
-        className={`modal-overlay ${isClosing ? 'animate-fadeOut' : ''}`}
-        onClick={onClose}
-      />
-
-      <div
-        ref={scrollRef}
-        className={`modal-content flex flex-col overscroll-y-none ${isClosing ? 'animate-slideDown' : ''}`}
-        onClick={onClose}
-      >
-        <div className="flex-1 shrink-0 min-h-32 cursor-pointer" onClick={onClose} />
-        <div
-          className="w-full bg-guild-modal-bg rounded-t-[2.5rem] shadow-2xl flex flex-col relative border-t border-white/5 shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Drag Handle */}
-          <div className="flex justify-center pt-4 pb-2">
-            <div className="w-12 h-1.5 bg-white/10 rounded-full" />
-          </div>
-
-          {/* Header */}
-          <header className="flex items-center justify-between px-6 py-2 pb-4">
-            <h1 className="text-guild-gold font-bold text-xl tracking-tight">
-              Редагувати профіль
-            </h1>
-            <button
-              onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors active:scale-95 duration-200"
-            >
-              <X className="w-5 h-5 text-guild-text-muted" />
-            </button>
-          </header>
-
-          {/* Content Area */}
-          <div className="px-6 space-y-6 flex-1 pb-4">
-
-            {/* Error Banner */}
-            {error && (
-              <div className="flex items-start gap-3 bg-guild-negative/10 border border-guild-negative/20 text-guild-negative rounded-xl p-3 text-sm">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <p className="leading-relaxed">{error}</p>
-              </div>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      contentRef={scrollRef}
+      header={<SheetTitleRow title="Редагувати профіль" onClose={onClose} />}
+      footer={
+        <div className="flex flex-col shrink-0 mt-4">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full h-[52px] bg-guild-gold text-guild-bg-bottom font-heading font-semibold text-[17px] flex items-center justify-center gap-2 uppercase tracking-[0.1em] active:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Збереження...
+              </>
+            ) : (
+              "Зберегти"
             )}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={isSaving}
+            className="w-full h-12 font-mono text-xs tracking-wider uppercase text-guild-text-muted disabled:opacity-50"
+          >
+            Скасувати
+          </button>
+        </div>
+      }
+    >
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-start gap-3 border border-guild-negative/40 text-guild-negative p-3 text-sm mb-4">
+          <CategoryIcon shape="triangle" glyph="!" size={20} className="shrink-0 mt-0.5" />
+          <p className="leading-relaxed">{error}</p>
+        </div>
+      )}
 
-            {/* Form Fields */}
-            <div className="space-y-6">
-              {/* First Name */}
-              <div className="space-y-2">
-                <label className="block text-guild-text-muted font-bold text-xs uppercase tracking-widest pl-1">Ім'я (обов'язково)</label>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="Введіть ваше ім'я"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    onFocus={handleFocus}
-                    maxLength={32}
-                    className="w-full h-14 px-5 bg-black/20 border-none rounded-2xl text-guild-text placeholder:text-guild-text-muted/50 focus:ring-2 focus:ring-guild-gold/50 transition-all outline-none"
-                    style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                  />
-                  <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none group-focus-within:border-guild-gold/30 transition-colors"></div>
-                </div>
-              </div>
+      {/* First Name */}
+      <div className="group mb-3.5">
+        <span className="font-mono text-[9px] tracking-[0.2em] uppercase block mb-2 text-guild-text-muted group-focus-within:text-guild-gold transition-colors">
+          Ім'я (обов'язково)
+        </span>
+        <input
+          type="text"
+          placeholder="Введіть ваше ім'я"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          onFocus={handleFocus}
+          maxLength={32}
+          className={fieldClass}
+        />
+      </div>
 
-              {/* Last Name */}
-              <div className="space-y-2">
-                <label className="block text-guild-text-muted font-bold text-xs uppercase tracking-widest pl-1">Прізвище</label>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="Введіть ваше прізвище"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    onFocus={handleFocus}
-                    maxLength={32}
-                    className="w-full h-14 px-5 bg-black/20 border-none rounded-2xl text-guild-text placeholder:text-guild-text-muted/50 focus:ring-2 focus:ring-guild-gold/50 transition-all outline-none"
-                    style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                  />
-                  <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none group-focus-within:border-guild-gold/30 transition-colors"></div>
-                </div>
-              </div>
+      {/* Last Name */}
+      <div className="group mb-3.5">
+        <span className="font-mono text-[9px] tracking-[0.2em] uppercase block mb-2 text-guild-text-muted group-focus-within:text-guild-gold transition-colors">
+          Прізвище
+        </span>
+        <input
+          type="text"
+          placeholder="Введіть ваше прізвище"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          onFocus={handleFocus}
+          maxLength={32}
+          className={fieldClass}
+        />
+      </div>
 
-              {/* Nickname */}
-              <div className="space-y-2">
-                <label className="block text-guild-text-muted font-bold text-xs uppercase tracking-widest pl-1">Псевдонім</label>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="Ваш псевдонім у Гільдії"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    onFocus={handleFocus}
-                    maxLength={32}
-                    className="w-full h-14 px-5 bg-black/20 border-none rounded-2xl text-guild-text placeholder:text-guild-text-muted/50 focus:ring-2 focus:ring-guild-gold/50 transition-all outline-none"
-                    style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                  />
-                  <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none group-focus-within:border-guild-gold/30 transition-colors"></div>
-                </div>
-              </div>
+      {/* Nickname */}
+      <div className="group mb-3.5">
+        <span className="font-mono text-[9px] tracking-[0.2em] uppercase block mb-2 text-guild-text-muted group-focus-within:text-guild-gold transition-colors">
+          Псевдонім
+        </span>
+        <input
+          type="text"
+          placeholder="Ваш псевдонім у Вежі"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          onFocus={handleFocus}
+          maxLength={32}
+          className={fieldClass}
+        />
+      </div>
 
-              {/* Date of Birth */}
-              <div className="space-y-3 pb-4">
-                <label className="block text-guild-text-muted font-bold text-xs uppercase tracking-widest pl-1">Дата народження</label>
-                <div className="relative group">
-                  <input
-                    type="text"
-                    placeholder="ДД.ММ.РРРР"
-                    value={birthDate}
-                    onChange={(e) => setBirthDate(e.target.value)}
-                    onFocus={handleFocus}
-                    className="w-full h-14 px-5 bg-black/20 border-none rounded-2xl text-guild-text placeholder:text-guild-text-muted/50 focus:ring-2 focus:ring-guild-gold/50 transition-all outline-none font-mono"
-                    style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                  />
-                  <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none group-focus-within:border-guild-gold/30 transition-colors"></div>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors"
-                      >
-                        <Calendar className="w-5 h-5 text-guild-text-muted/50 group-focus-within:text-guild-gold/50 transition-colors" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-100 bg-surface-container-high/95 backdrop-blur-3xl border-guild-gold/20 rounded-[1.5rem] shadow-2xl" align="end" sideOffset={12}>
-                      <ShadcnCalendar
-                        mode="single"
-                        selected={getBirthDateAsDate()}
-                        defaultMonth={getBirthDateAsDate()}
-                        onSelect={(date) => {
-                          if (date) {
-                            const d = String(date.getDate()).padStart(2, "0");
-                            const m = String(date.getMonth() + 1).padStart(2, "0");
-                            const y = date.getFullYear();
-                            setBirthDate(`${d}.${m}.${y}`);
-                          }
-                        }}
-                        initialFocus
-                        locale={uk}
-                        captionLayout="dropdown"
-                        startMonth={new Date(1920, 0)}
-                        endMonth={new Date()}
-                      />
-                    </PopoverContent>
-                  </Popover>
-
-                </div>
-                {/* Warning Note */}
-                <div className="flex items-start gap-3 px-3 py-3 bg-guild-gold/10 rounded-xl">
-                  <AlertCircle className="w-4 h-4 text-guild-gold mt-0.5 shrink-0" />
-                  <p className="text-guild-gold font-medium text-[11px] leading-relaxed">
-                    Дату народження можна змінити лише один раз на рік. В іншому випадку зверніться до адміністратора.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Actions */}
-          <footer className="p-6 pt-4 border-white/5 rounded-b-[2.5rem] flex flex-col space-y-3 z-10 relative mt-auto">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full py-4 rounded-full bg-linear-to-r from-guild-gold to-guild-gold-light text-black font-bold text-sm flex items-center justify-center gap-2 uppercase tracking-widest shadow-lg shadow-guild-gold/10 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:scale-100"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Збереження...
-                </>
-              ) : (
-                "Зберегти"
-              )}
-            </button>
-            <button
-              onClick={onClose}
-              disabled={isSaving}
-              className="w-full py-4 rounded-full text-guild-text-muted font-semibold text-sm hover:bg-white/5 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100"
-            >
-              Скасувати
-            </button>
-          </footer>
+      {/* Date of Birth */}
+      <div className="group mb-3.5">
+        <span className="font-mono text-[9px] tracking-[0.2em] uppercase block mb-2 text-guild-text-muted group-focus-within:text-guild-gold transition-colors">
+          Дата народження
+        </span>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="ДД.ММ.РРРР"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            onFocus={handleFocus}
+            className={`${fieldClass} font-mono pr-11`}
+          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-guild-text-muted transition-colors"
+              >
+                <CalendarGlyph className="text-guild-gold/70" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-100" align="end" sideOffset={12}>
+              <ShadcnCalendar
+                mode="single"
+                selected={getBirthDateAsDate()}
+                defaultMonth={getBirthDateAsDate()}
+                onSelect={(date) => {
+                  if (date) {
+                    const d = String(date.getDate()).padStart(2, "0");
+                    const m = String(date.getMonth() + 1).padStart(2, "0");
+                    const y = date.getFullYear();
+                    setBirthDate(`${d}.${m}.${y}`);
+                  }
+                }}
+                initialFocus
+                locale={uk}
+                captionLayout="dropdown"
+                startMonth={new Date(1920, 0)}
+                endMonth={new Date()}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        {/* Warning Note */}
+        <div className="flex items-start gap-3 border border-guild-gold/45 px-3.5 py-3 mt-3">
+          <span
+            className="shrink-0 mt-[3px]"
+            style={{ width: 0, height: 0, borderLeft: "9px solid transparent", borderRight: "9px solid transparent", borderBottom: "15px solid var(--color-guild-gold)" }}
+          />
+          <p className="text-guild-text/90 text-[13px] leading-relaxed">
+            Дату народження можна змінити лише один раз на рік. В іншому випадку зверніться до адміністратора.
+          </p>
         </div>
       </div>
-    </>
+    </BottomSheet>
   )
 }

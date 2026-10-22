@@ -1,126 +1,82 @@
-import { useState, useEffect } from "react"
-import { X, HelpCircle, Dice5, ShoppingBag, Star, Users } from "lucide-react"
+import { BottomSheet } from "./BottomSheet"
+import { CategoryIcon } from "./CategoryIcon"
 
 interface HelpModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
-const helpItems = [
+const helpItems: { shape: "hex" | "square" | "diamond"; glyph: string; title: string; text: string }[] = [
   {
-    icon: Dice5,
+    shape: "hex",
+    glyph: "20",
     title: "Грайте в ігри",
     text: "Беріть участь у партіях D&D, Daggerheart та інших настільних пригодах.",
   },
   {
-    icon: ShoppingBag,
+    shape: "square",
+    glyph: "₴",
     title: "Купуйте в таверні",
     text: "Смакуйте напої та їжу в нашому закладі. Кожне замовлення додає вам досвіду.",
   },
   {
-    icon: Star,
+    shape: "hex",
+    glyph: "XP",
     title: "Підвищуйте рівень",
-    text: "Накопичуйте досвід, щоб розблокувати постійні знижки та унікальні призи гільдії.",
+    text: "Накопичуйте досвід, щоб розблокувати постійні знижки та унікальні призи Вежі.",
   },
   {
-    icon: Users,
+    shape: "diamond",
+    glyph: "+1",
     title: "Запрошуйте друзів",
-    text: "Приводьте нових авантюристів до гільдії та отримуйте реферальні бонуси.",
+    text: "Приводьте нових підкорювачів до Вежі та отримуйте реферальні бонуси.",
   },
 ]
 
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
-  const [isRendered, setIsRendered] = useState(isOpen)
-  const [isClosing, setIsClosing] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsRendered(true)
-      setIsClosing(false)
-    } else if (isRendered) {
-      setIsClosing(true)
-      const timer = setTimeout(() => {
-        setIsRendered(false)
-        setIsClosing(false)
-      }, 300)
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen, isRendered])
-
-  if (!isRendered) return null
-
   return (
-    <>
-      <div
-        className={`modal-overlay ${isClosing ? 'animate-fadeOut' : ''}`}
-        onClick={onClose}
-      />
-
-      <div
-        className={`modal-content flex flex-col overscroll-y-none ${isClosing ? 'animate-slideDown' : ''}`}
-        onClick={onClose}
-      >
-        <div className="flex-1 shrink-0 min-h-32 cursor-pointer" onClick={onClose} />
-        <div
-          className="w-full bg-guild-modal-bg rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex flex-col relative border-t border-white/5 shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header Section */}
-          <div className="flex flex-col items-center pt-3 pb-6 px-6 relative">
-            {/* Drag Handle */}
-            <div className="w-12 h-1.5 bg-white/10 rounded-full mb-6"></div>
-
-            {/* Close Icon */}
-            <div className="absolute top-6 right-6">
-              <button
-                onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors active:scale-95 duration-200"
-              >
-                <X className="w-5 h-5 text-guild-text-muted" />
-              </button>
-            </div>
-
-            {/* Hero Icon & Title */}
-            <div className="flex flex-col items-center gap-4 text-center mt-4">
-              <div className="w-20 h-20 rounded-full bg-guild-gold/10 flex items-center justify-center shadow-[0_0_32px_rgba(229,193,146,0.15)]">
-                <HelpCircle className="w-10 h-10 text-guild-gold" />
-              </div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-guild-gold">
-                Як це працює?
-              </h1>
-              <p className="text-guild-text-muted font-medium max-w-[280px]">
-                Станьте частиною легенди та отримуйте нагороди за свої пригоди.
-              </p>
-            </div>
-          </div>
-
-          {/* Cards List (Content) */}
-          <div className="px-6 pb-6 space-y-3">
-            {helpItems.map((item, i) => (
-              <div key={i} className="glass-card bg-black/20 outline outline-white/5 p-5 rounded-xl flex items-start gap-4 hover:bg-white/5 transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
-                  <item.icon className="w-6 h-6 text-guild-gold" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-guild-text leading-tight">
-                    {item.title}
-                  </h3>
-                  <p className="text-guild-text-muted text-sm mt-1 leading-relaxed">
-                    {item.text}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            <p className="text-guild-text-dim text-sm font-medium tracking-wide text-center pb-4">
-              Якщо у вас є запитання, звертайтеся до адміністраторів гільдії.
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      header={
+        <div className="relative shrink-0 mb-4.5">
+          <button
+            onClick={onClose}
+            className="absolute right-0 top-0 w-[34px] h-[34px] flex items-center justify-center border border-guild-gold/40 font-mono text-guild-gold text-sm transition-colors active:bg-guild-gold active:text-guild-bg-bottom"
+            aria-label="Закрити"
+          >
+            ×
+          </button>
+          <div className="flex flex-col items-center gap-3.5 text-center pt-1">
+            <CategoryIcon shape="diamond" glyph="?" size={64} className="text-guild-gold" />
+            <h1 className="font-heading text-2xl font-semibold uppercase tracking-wide text-guild-text">
+              Як це працює?
+            </h1>
+            <p className="text-guild-text-muted text-sm leading-relaxed max-w-[280px]">
+              Станьте частиною легенди та отримуйте нагороди за свої пригоди.
             </p>
-
           </div>
-
-
         </div>
-      </div>
-    </>
+      }
+    >
+      {helpItems.map((item, i) => (
+        <div
+          key={i}
+          className="flex items-start gap-3.5 py-3.5 border-t border-guild-card-border first:border-t-0"
+        >
+          <CategoryIcon shape={item.shape} glyph={item.glyph} size={34} className="text-guild-gold shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-heading text-base uppercase tracking-wide text-guild-text leading-tight">
+              {item.title}
+            </h3>
+            <p className="text-guild-text-muted text-[13px] mt-1.5 leading-relaxed">{item.text}</p>
+          </div>
+        </div>
+      ))}
+
+      <p className="font-mono text-[10px] tracking-wider text-guild-text-dim uppercase text-center border-t border-guild-card-border pt-3.5 mt-1">
+        Якщо у вас є запитання, звертайтеся до адміністраторів Вежі.
+      </p>
+    </BottomSheet>
   )
 }

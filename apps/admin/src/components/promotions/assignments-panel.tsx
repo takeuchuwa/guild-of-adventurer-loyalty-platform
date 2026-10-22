@@ -155,7 +155,7 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
     })
 
     return (
-        <div className="border rounded-lg bg-white shadow-sm p-6">
+        <div className="border rounded-lg bg-surface shadow-sm p-6">
             <h3 className="text-xl font-semibold mb-4">Цільова аудиторія</h3>
 
             <Tabs defaultValue="levels" className="w-full">
@@ -193,7 +193,7 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
                     </RadioGroup>
 
                     {levelScope === "all" ? (
-                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[rgba(201,158,58,.07)] border border-[rgba(201,158,58,.35)] text-accent-bright text-sm">
                             <Globe className="h-4 w-4 shrink-0" />
                             <span>Ця промоакція застосовується до <strong>всіх рівнів</strong></span>
                         </div>
@@ -212,7 +212,7 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
                                         {levels.map((level) => (
                                             <div
                                                 key={level.levelId}
-                                                className="flex items-center space-x-2 border rounded p-3 hover:bg-gray-50 transition-colors"
+                                                className="flex items-center space-x-2 border rounded p-3 hover:bg-surface-2 transition-colors"
                                             >
                                                 <Checkbox
                                                     id={`level-${level.levelId}`}
@@ -230,9 +230,8 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
                                         ))}
                                     </div>
                                     {levelAssignments.length === 0 && (
-                                        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 flex items-center gap-1.5">
-                                            <span>⚠️</span>
-                                            <span>Оберіть хоча б один рівень, або переключіть на «Для всіх рівнів». Якщо ви хочете вимкнути промоакцію, зніміть прапорець «Активна» в блоці основної інформації вище.</span>
+                                        <p className="text-xs text-brass bg-[rgba(138,106,30,.12)] border border-[rgba(138,106,30,.5)] rounded-md px-3 py-2 flex items-center gap-1.5">
+                                                                                        <span>Оберіть хоча б один рівень, або переключіть на «Для всіх рівнів». Якщо ви хочете вимкнути промоакцію, зніміть прапорець «Активна» в блоці основної інформації вище.</span>
                                         </p>
                                     )}
                                 </>
@@ -264,7 +263,7 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
                     </RadioGroup>
 
                     {memberScope === "all" ? (
-                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[rgba(201,158,58,.07)] border border-[rgba(201,158,58,.35)] text-accent-bright text-sm">
                             <Globe className="h-4 w-4 shrink-0" />
                             <span>Ця промоакція доступна <strong>всім учасникам</strong></span>
                         </div>
@@ -298,9 +297,8 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
 
                             {/* Warning when "specific" but no members selected */}
                             {displayList.length === 0 && (
-                                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 flex items-center gap-1.5">
-                                    <span>⚠️</span>
-                                    <span>Додайте хоча б одного учасника, або переключіть на «Для всіх учасників». Якщо ви хочете вимкнути промоакцію, зніміть прапорець «Активна» в блоці основної інформації вище.</span>
+                                <p className="text-xs text-brass bg-[rgba(138,106,30,.12)] border border-[rgba(138,106,30,.5)] rounded-md px-3 py-2 flex items-center gap-1.5">
+                                                                        <span>Додайте хоча б одного учасника, або переключіть на «Для всіх учасників». Якщо ви хочете вимкнути промоакцію, зніміть прапорець «Активна» в блоці основної інформації вище.</span>
                                 </p>
                             )}
 
@@ -318,7 +316,7 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
                                             return (
                                                 <div
                                                     key={memberId}
-                                                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border bg-white"
+                                                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border bg-surface"
                                                 >
                                                     {/* Name + phone */}
                                                     <div className="flex flex-col min-w-0">
@@ -334,11 +332,11 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
                                                     {assignment && (
                                                         <div className="flex items-center gap-2 shrink-0">
                                                             <span
-                                                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${isUsed
-                                                                    ? "bg-green-100 text-green-700"
+                                                                className={`text-xs px-2 py-0.5 font-medium ${isUsed
+                                                                    ? "bg-[rgba(201,158,58,.07)] text-accent-bright"
                                                                     : isExpired
-                                                                        ? "bg-red-100 text-red-700"
-                                                                        : "bg-yellow-100 text-yellow-700"
+                                                                        ? "bg-[rgba(126,43,33,.15)] text-destructive"
+                                                                        : "bg-[rgba(138,106,30,.12)] text-brass"
                                                                     }`}
                                                             >
                                                                 {isUsed ? "Використано" : isExpired ? "Прострочено" : "Доступно"}
@@ -355,7 +353,7 @@ export function AssignmentsPanel({ existingAssignments = [] }: AssignmentsPanelP
                                                     <button
                                                         type="button"
                                                         onClick={() => handleRemoveMember(memberId)}
-                                                        className="hover:bg-muted rounded-full p-1 transition-colors cursor-pointer shrink-0"
+                                                        className="hover:bg-muted p-1 transition-colors cursor-pointer shrink-0"
                                                         title="Видалити з призначених"
                                                     >
                                                         <X className="h-3 w-3 text-muted-foreground" />

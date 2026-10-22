@@ -4,9 +4,11 @@ import { calculateCartState } from "@/cart/calculate"
 import type { CartState, CartItem } from "@/cart/types"
 import type { Env } from "@/types/env"
 import { v7 as uuidv7 } from "uuid"
+import z from "zod"
+import { DEFAULT_DONATION_POINTS_PERCENT, donationName } from "@/cart/donation"
 
 import { eq, and } from "drizzle-orm"
-import { members, promotions, levelsTiers } from "@loyalty/db/schema"
+import { members, promotions, levelsTiers, activities } from "@loyalty/db/schema"
 
 export const cartRoute = new Hono<Env>()
 
@@ -160,6 +162,10 @@ cartRoute.post("/items", async (c) => {
             return c.json({ ok: false, error: "Missing entityId/id or type" }, 400)
         }
 
+        if (type !== "product" && type !== "activity") {
+            return c.json({ ok: false, error: "Invalid item type" }, 400)
+        }
+
         const qtyToAdd = quantity !== undefined ? quantity : 1;
 
         const cart = await getOrInitCart(c.req.raw, c.env)
@@ -192,6 +198,70 @@ cartRoute.post("/items", async (c) => {
     }
 })
 
+const DonationBodySchema = z.object({
+    label: z.string().trim().min(1, "Вкажіть назву донату").max(80, "Назва задовга"),
+    amount: z.number().positive("Сума має бути більшою за 0").max(100000, "Сума завелика"),
+    pointsPercent: z.number().min(0, "Відсоток від 0 до 100").max(100, "Відсоток від 0 до 100").default(DEFAULT_DONATION_POINTS_PERCENT),
+    activityId: z.string().min(1).nullish(),
+})
+
+/**
+ * POST /api/cart/donations
+ * Adds a free-amount donation line. Each call is its own line — donations never merge.
+ */
+cartRoute.post("/donations", async (c) => {
+    try {
+        const parsed = DonationBodySchema.safeParse(await c.req.json())
+        if (!parsed.success) {
+            return c.json({ ok: false, error: parsed.error.issues[0]?.message ?? "VALIDATION_ERROR", details: parsed.error.issues }, 400)
+        }
+        const { label, pointsPercent, activityId } = parsed.data
+        const amount = Math.round(parsed.data.amount * 100) / 100
+
+        const db = getDb(c.env)
+
+        let activityName: string | undefined
+        if (activityId) {
+            const [activity] = await db.select({ name: activities.name })
+                .from(activities)
+                .where(eq(activities.activityId, activityId))
+            if (!activity) {
+                return c.json({ ok: false, error: "Activity not found" }, 404)
+            }
+            activityName = activity.name
+        }
+
+        const cart = await getOrInitCart(c.req.raw, c.env)
+
+        const id = uuidv7()
+        cart.items.push({
+            id,
+            entityId: id,
+            type: "donation",
+            quantity: 1,
+            unitPrice: amount,
+            lineTotal: amount,
+            discountAmount: 0,
+            finalPrice: amount,
+            name: donationName(label),
+            donation: {
+                label,
+                pointsPercent,
+                ...(activityId ? { activityId, activityName } : {}),
+            },
+        })
+
+        const updatedCart = await calculateCartState(cart, db)
+
+        await c.env.KV_POS_CART.put(updatedCart.cartId, JSON.stringify(updatedCart), { expirationTtl: 3600 })
+
+        return c.json({ ok: true, data: updatedCart })
+    } catch (err: any) {
+        console.error("[POST /cart/donations] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: String(err?.message ?? err) }, 500)
+    }
+})
+
 /**
  * PUT /api/cart/items/:itemId
  * Updates the quantity of a specific cart item.
@@ -211,6 +281,10 @@ cartRoute.put("/items/:itemId", async (c) => {
         const item = cart.items.find((i: CartItem) => i.id === itemId)
         if (!item) {
             return c.json({ ok: false, error: "Item not found in cart" }, 404)
+        }
+
+        if (item.type === "donation" && quantity !== 0) {
+            return c.json({ ok: false, error: "Кількість донату змінити не можна" }, 400)
         }
 
         if (quantity === 0) {

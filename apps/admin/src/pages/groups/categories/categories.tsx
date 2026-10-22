@@ -64,7 +64,7 @@ export default function CategoriesPage() {
 
     return (
         <Layout breadcrumbs={[{ label: "Категорії", path: "/categories" }]}>
-            <div className="container mx-auto py-10">
+            <div className="p-7">
                 <CategoryTable
                     columns={categoryColumns}
                     searchProperties={searchProperties}

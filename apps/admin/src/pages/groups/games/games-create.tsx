@@ -38,16 +38,7 @@ export default function GamesCreatePage() {
                 { label: "Нова ігрова система", path: "/games/create" },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Створити ігрову систему</h1>
-                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нової ігрової системи</p>
-                </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    <GameForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} />
-                </div>
-            </div>
+            <GameForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} />
         </Layout>
     )
 }

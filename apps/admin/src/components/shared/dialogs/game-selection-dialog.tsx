@@ -121,7 +121,7 @@ export function GameSelectionDialog({
                                     }`}
                             >
                                 <div
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep === step.id
+                                    className={`w-6 h-6 flex items-center justify-center text-sm font-semibold ${currentStep === step.id
                                         ? "bg-primary text-primary-foreground"
                                         : step.enabled
                                             ? "bg-muted"
@@ -146,6 +146,7 @@ export function GameSelectionDialog({
                                 selectionMode="single"
                                 onSelectionChange={handleGameSelection}
                                 pageSize={5}
+                                meta={{ isDialog: true }}
                             />
                         </div>
                     )}
@@ -170,7 +171,7 @@ export function GameSelectionDialog({
                                                     }`}
                                             >
                                                 <div
-                                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedSystem?.systemId === system.systemId ? "border-primary bg-primary" : "border-muted"
+                                                    className={`w-5 h-5 border-2 flex items-center justify-center ${selectedSystem?.systemId === system.systemId ? "border-primary bg-primary" : "border-muted"
                                                         }`}
                                                 >
                                                     {selectedSystem?.systemId === system.systemId && (

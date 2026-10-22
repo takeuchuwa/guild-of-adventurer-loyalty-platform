@@ -22,6 +22,7 @@ interface GamesTableProps {
     onSelectionChange?: (selected: Map<string, Game>) => void
     pageSize?: number
     storageKey?: string
+    meta?: Record<string, any>
 }
 
 export function GameTable({
@@ -35,6 +36,7 @@ export function GameTable({
     onSelectionChange,
     pageSize = 10,
     storageKey,
+    meta,
 }: GamesTableProps) {
     const [games, setGames] = useState<Game[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -121,6 +123,7 @@ export function GameTable({
                 searchProps.onSimpleSearch(query);
                 resetCursors();
             }}
+            meta={meta}
         />
     )
 }

@@ -94,7 +94,7 @@ export default function PromotionsPage() {
 
     return (
         <Layout breadcrumbs={[{ label: "Промоакції", path: "/promotions" }]}>
-            <div className="container mx-auto py-10">
+            <div className="p-7">
                 <PromotionsTable
                     columns={promotionsColumns}
                     searchProperties={searchProperties}

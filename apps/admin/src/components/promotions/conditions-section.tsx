@@ -147,9 +147,8 @@ export function ConditionsSection() {
             <div className="space-y-3 mb-4">
                 {activeConditions.length === 0 && (
                     <div className="py-3 space-y-3">
-                        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 flex items-center gap-1.5">
-                            <span>⚠️</span>
-                            <span>Якщо ви не оберете жодної умови, промоакція застосовуватиметься завжди для обраної аудиторії. Якщо ви хочете вимкнути її, зніміть прапорець «Активна» в блоці основної інформації вище.</span>
+                        <p className="text-xs text-brass bg-[rgba(138,106,30,.12)] border border-[rgba(138,106,30,.5)] rounded-md px-3 py-2 flex items-center gap-1.5">
+                                                        <span>Якщо ви не оберете жодної умови, промоакція застосовуватиметься завжди для обраної аудиторії. Якщо ви хочете вимкнути її, зніміть прапорець «Активна» в блоці основної інформації вище.</span>
                         </p>
                         <div>
                             <p className="text-xs text-muted-foreground mb-2">Швидкий старт:</p>
@@ -157,26 +156,23 @@ export function ConditionsSection() {
                             <button
                                 type="button"
                                 onClick={() => addCondition("cart_total")}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-full bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
                             >
-                                <span>🛒</span>
-                                <span>Від суми замовлення</span>
+                                                                <span>Від суми замовлення</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => addCondition("member_is_birthday")}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-full bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
                             >
-                                <span>🎂</span>
-                                <span>До дня народження</span>
+                                                                <span>До дня народження</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => addCondition("member_is_new")}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-full bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border bg-background hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer text-sm text-foreground"
                             >
-                                <span>⭐</span>
-                                <span>Для нових учасників</span>
+                                                                <span>Для нових учасників</span>
                             </button>
                         </div>
                     </div>
@@ -409,9 +405,9 @@ function ContainsItemCondition({ type, value, onUpdate }: ContainsItemConditionP
     }
 
     const chipIcons = {
-        contains_category: "📁",
-        contains_product: "📦",
-        contains_activity: "🎯",
+        contains_category: "",
+        contains_product: "",
+        contains_activity: "",
     }
 
     return (
@@ -481,7 +477,7 @@ function ContainsItemCondition({ type, value, onUpdate }: ContainsItemConditionP
                             {value.values.map((itemId) => (
                                 <div
                                     key={itemId}
-                                    className="bg-background border px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm"
+                                    className="bg-background border px-3 py-1.5 text-sm flex items-center gap-2 shadow-sm"
                                 >
                                     <span className="text-muted-foreground">{chipIcons[type]}</span>
                                     <span className="font-medium">{displayMap.get(itemId) || itemId}</span>

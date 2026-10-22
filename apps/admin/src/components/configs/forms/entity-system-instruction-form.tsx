@@ -15,7 +15,7 @@ export const entitySystemInstructionSchema = z.object({
         required_error: "Оберіть тип сутності",
     }),
     systemPrompt: z.string().min(1, "Промпт є обов'язковим"),
-    length: z.coerce.number().int().min(1, "Довжина має бути більшою за 0").default(500),
+    length: z.coerce.number().int().min(1, "Довжина має бути більшою за 0").max(1000, "Максимальна довжина не може перевищувати 1000 символів").default(500),
     outputTokens: z.coerce.number().int().min(1, "Кількість токенів має бути більшою за 0").optional().nullable(),
 })
 
@@ -135,7 +135,7 @@ export function EntitySystemInstructionForm({ disableEntity }: { disableEntity?:
                                     />
                                     {showSuggestion && (
                                         <div className="absolute right-3 bottom-3 bg-accent border text-accent-foreground text-xs px-2 py-1 rounded shadow-sm flex items-center gap-1.5 animate-in fade-in slide-in-from-bottom-1 duration-150">
-                                            <Sparkles className="h-3 w-3 text-amber-500" />
+                                            <Sparkles className="h-3 w-3 text-brass" />
                                             <span>Натисніть <kbd className="bg-muted px-1 rounded font-mono font-bold border">Tab</kbd> для автодоповнення <code className="font-mono text-primary font-bold">{"length}}"}</code></span>
                                         </div>
                                     )}
@@ -173,6 +173,7 @@ export function EntitySystemInstructionForm({ disableEntity }: { disableEntity?:
                                     <Input 
                                         type="number" 
                                         placeholder="500" 
+                                        max={1000}
                                         {...field} 
                                     />
                                 </FormControl>
@@ -204,7 +205,7 @@ export function EntitySystemInstructionForm({ disableEntity }: { disableEntity?:
                                     />
                                 </FormControl>
                                 <FormDescription>
-                                    Якщо не вказано, система автоматично вирахує ліміт токенів на основі ліміту символів (ліміт * 2).
+                                    Якщо не вказано, система автоматично вирахує ліміт токенів на основі ліміту символів (ліміт * 3).
                                 </FormDescription>
                                 <FormMessage />
                             </FormItem>

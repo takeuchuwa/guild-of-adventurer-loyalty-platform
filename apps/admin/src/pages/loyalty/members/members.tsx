@@ -14,6 +14,7 @@ import { DeleteConfirmationDialog } from "@/components/shared/dialogs/delete-con
 import { deleteMember } from "@/components/members/api/api"
 import { toast } from "sonner"
 import { LevelFilter } from "@/components/shared/filters/level-filter"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function MembersPage() {
   const [activeTab, setActiveTab] = useState<"all" | "unclaimed">("all")
@@ -82,7 +83,7 @@ export default function MembersPage() {
     if (!memberToDelete) return
     try {
       await deleteMember(memberToDelete.memberId)
-      toast.success("Авантюриста успішно деактивовано")
+      toast.success("Підкорювача успішно деактивовано")
       if (loadMembersRef.current) {
         await loadMembersRef.current()
       }
@@ -106,36 +107,26 @@ export default function MembersPage() {
   }
 
   return (
-    <Layout breadcrumbs={[{ label: "Авантюристи", path: "/members" }]}>
-      <div className="container mx-auto py-10 flex flex-col gap-6">
-        <div className="flex bg-muted p-1 rounded-md w-fit">
-          <button
-            onClick={() => setActiveTab("all")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-sm transition-colors cursor-pointer ${activeTab === "all"
-                ? "bg-background shadow text-foreground"
-                : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
-              }`}
-          >
-            <Users className="h-4 w-4" />
-            Всі авантюристи
-          </button>
-          <button
-            onClick={() => setActiveTab("unclaimed")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-sm transition-colors cursor-pointer ${activeTab === "unclaimed"
-                ? "bg-background shadow text-foreground"
-                : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
-              }`}
-          >
-            <Gift className="h-4 w-4" />
-            Неотримані призи
-          </button>
-        </div>
+    <Layout breadcrumbs={[{ label: "Підкорювачі", path: "/members" }]}>
+      <div className="flex flex-col gap-6 p-7">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "all" | "unclaimed")}>
+          <TabsList variant="line">
+            <TabsTrigger value="all" className="cursor-pointer">
+              <Users className="h-4 w-4" />
+              Всі підкорювачі
+            </TabsTrigger>
+            <TabsTrigger value="unclaimed" className="cursor-pointer">
+              <Gift className="h-4 w-4" />
+              Неотримані призи
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {activeTab === "all" ? (
           <MemberTable
             columns={memberColumns}
             searchPlaceholder={searchPlaceholder}
-            title="Авантюристи"
+            title="Підкорювачі"
             onLoadMembersRef={loadMembersRef}
             storageKey="members"
             filters={filters}
@@ -184,8 +175,8 @@ export default function MembersPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDelete}
-        title="Деактивувати авантюриста"
-        description="Ця дія деактивує авантюриста в базі даних гільдії."
+        title="Деактивувати підкорювача"
+        description="Ця дія деактивує підкорювача в базі даних Вежі."
         itemName={memberToDelete ? `${memberToDelete.firstName || ""} ${memberToDelete.lastName || ""}`.trim() || memberToDelete.phone || memberToDelete.memberId : undefined}
       />
     </Layout>

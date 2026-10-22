@@ -58,7 +58,7 @@ export default function RoomEditPage() {
                     { label: "Редагувати кімнату", path: `/rooms/${id}` },
                 ]}
             >
-                <div className="container mx-auto py-10 max-w-2xl flex justify-center">
+                <div className="flex justify-center p-10">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             </Layout>
@@ -76,16 +76,13 @@ export default function RoomEditPage() {
                 { label: room.name, path: `/rooms/${id}` },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <h1 className="text-3xl font-bold mb-6">Редагувати кімнату</h1>
-                <RoomForm
-                    mode="edit"
-                    initialData={room}
-                    onSubmit={handleSubmit}
-                    onCancel={handleCancel}
-                    isLoading={isLoading}
-                />
-            </div>
+            <RoomForm
+                mode="edit"
+                initialData={room}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isLoading={isLoading}
+            />
         </Layout>
     )
 }

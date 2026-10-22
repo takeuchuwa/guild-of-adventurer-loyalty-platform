@@ -185,3 +185,25 @@ export async function deleteProduct(productId: string): Promise<void> {
         throw error
     }
 }
+
+export interface BulkUpdateProductsRequest {
+    ids: string[]
+    price?: number
+    overridePoints?: number | null
+}
+
+export async function bulkUpdateProducts(data: BulkUpdateProductsRequest): Promise<void> {
+    try {
+        const response = await axiosInstance.post("/products/bulk-update", data)
+        if (!response.data.ok) {
+            throw new Error(response.data.error || "Не вдалося виконати групове оновлення")
+        }
+    } catch (error: any) {
+        console.error("[v0] Bulk update products error:", error)
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data?.message || error.response?.data?.error || "Помилка при груповому оновленні")
+        }
+        throw error
+    }
+}
+

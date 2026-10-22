@@ -3,6 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { FormShell } from "@/components/shared/form-shell"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -246,7 +247,48 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <FormShell
+            title={mode === "create" ? "Створити активність" : "Редагувати активність"}
+            description={mode === "create" ? "Заповніть форму для створення нової активності" : "Оновіть інформацію активності"}
+            onSubmit={handleSubmit}
+            actions={
+                <>
+                    {showCreateAndAdd ? (
+                        <Button
+                            type="submit"
+                            size="lg"
+                            className="w-full cursor-pointer"
+                            disabled={isLoading}
+                            onClick={() => setSubmitAction("createAndAdd")}
+                        >
+                            {isLoading && submitAction === "createAndAdd" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Створити та додати в кошик
+                        </Button>
+                    ) : (
+                        <Button
+                            type="submit"
+                            size="lg"
+                            className="w-full cursor-pointer"
+                            disabled={isLoading}
+                            onClick={() => setSubmitAction("standard")}
+                        >
+                            {isLoading && submitAction === "standard" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {mode === "create" ? "Створити" : "Зберегти"}
+                        </Button>
+                    )}
+                    <Button
+                        type="button"
+                        size="lg"
+                        variant="outline"
+                        className="w-full cursor-pointer"
+                        onClick={onCancel}
+                        disabled={isLoading}
+                    >
+                        Скасувати
+                    </Button>
+                </>
+            }
+        >
             <div className="space-y-2">
                 <Label htmlFor="name">
                     Назва активності <span className="text-destructive">*</span>
@@ -483,39 +525,6 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
                 {errors.categoryIds && <p className="text-sm text-destructive">{errors.categoryIds}</p>}
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-                <Button
-                    type="button"
-                    className="cursor-pointer bg-transparent"
-                    variant="outline"
-                    onClick={onCancel}
-                    disabled={isLoading}
-                >
-                    Скасувати
-                </Button>
-                {showCreateAndAdd ? (
-                    <Button
-                        type="submit"
-                        className="cursor-pointer"
-                        disabled={isLoading}
-                        onClick={() => setSubmitAction("createAndAdd")}
-                    >
-                        {isLoading && submitAction === "createAndAdd" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Створити та додати в кошик
-                    </Button>
-                ) : (
-                    <Button
-                        type="submit"
-                        className="cursor-pointer"
-                        disabled={isLoading}
-                        onClick={() => setSubmitAction("standard")}
-                    >
-                        {isLoading && submitAction === "standard" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {mode === "create" ? "Створити" : "Зберегти"}
-                    </Button>
-                )}
-            </div>
-
             <GameSelectionDialog
                 open={gameDialogOpen}
                 onOpenChange={setGameDialogOpen}
@@ -533,6 +542,6 @@ export function ActivityForm({ initialData, onSubmit, onCancel, isLoading = fals
             />
 
             <RoomSelectionDialog open={roomDialogOpen} onOpenChange={setRoomDialogOpen} onConfirm={handleRoomSelection} />
-        </form>
+        </FormShell>
     )
 }

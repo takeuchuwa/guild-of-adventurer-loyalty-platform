@@ -225,7 +225,7 @@ export function TargetsSection({ targetsMap }: { targetsMap?: Record<string, str
                                 <Layers className="mr-2 h-4 w-4" />
                                 Категорії
                                 {targetCategories.length > 0 && (
-                                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5">
                                         {targetCategories.length}
                                     </span>
                                 )}
@@ -237,14 +237,14 @@ export function TargetsSection({ targetsMap }: { targetsMap?: Record<string, str
                                         return (
                                             <div
                                                 key={catId}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary text-sm"
                                             >
                                                 <Layers className="h-3 w-3" />
                                                 <span>{cat?.name || catId}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveCategory(catId)}
-                                                    className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer"
+                                                    className="hover:bg-primary/20 p-0.5 transition-colors cursor-pointer"
                                                 >
                                                     <X className="h-3 w-3" />
                                                 </button>
@@ -266,7 +266,7 @@ export function TargetsSection({ targetsMap }: { targetsMap?: Record<string, str
                                 <Package className="mr-2 h-4 w-4" />
                                 Товари
                                 {targetProducts.length > 0 && (
-                                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5">
                                         {targetProducts.length}
                                     </span>
                                 )}
@@ -278,14 +278,14 @@ export function TargetsSection({ targetsMap }: { targetsMap?: Record<string, str
                                         return (
                                             <div
                                                 key={prodId}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary text-sm"
                                             >
                                                 <Package className="h-3 w-3" />
                                                 <span>{prod?.name || prodId}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveProduct(prodId)}
-                                                    className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer"
+                                                    className="hover:bg-primary/20 p-0.5 transition-colors cursor-pointer"
                                                 >
                                                     <X className="h-3 w-3" />
                                                 </button>
@@ -307,7 +307,7 @@ export function TargetsSection({ targetsMap }: { targetsMap?: Record<string, str
                                 <CalendarDays className="mr-2 h-4 w-4" />
                                 Сесії (активності)
                                 {targetActivities.length > 0 && (
-                                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5">
                                         {targetActivities.length}
                                     </span>
                                 )}
@@ -319,14 +319,14 @@ export function TargetsSection({ targetsMap }: { targetsMap?: Record<string, str
                                         return (
                                             <div
                                                 key={actId}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary text-sm"
                                             >
                                                 <CalendarDays className="h-3 w-3" />
                                                 <span>{act?.name || actId}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveActivity(actId)}
-                                                    className="hover:bg-primary/20 rounded-full p-0.5 transition-colors cursor-pointer"
+                                                    className="hover:bg-primary/20 p-0.5 transition-colors cursor-pointer"
                                                 >
                                                     <X className="h-3 w-3" />
                                                 </button>

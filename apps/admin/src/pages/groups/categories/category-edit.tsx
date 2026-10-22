@@ -68,7 +68,7 @@ export default function CategoryEditPage() {
                     { label: "Редагувати категорію", path: `/categories/${id}` },
                 ]}
             >
-                <div className="container mx-auto py-10 max-w-2xl">
+                <div className="p-10">
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin" />
                     </div>
@@ -88,22 +88,13 @@ export default function CategoryEditPage() {
                 { label: "Редагувати категорію", path: `/categories/${id}` },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагувати категорію</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть інформацію про категорію</p>
-                </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    <CategoryForm
-                        mode="edit"
-                        initialData={category}
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancel}
-                        isLoading={isLoading}
-                    />
-                </div>
-            </div>
+            <CategoryForm
+                mode="edit"
+                initialData={category}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isLoading={isLoading}
+            />
         </Layout>
     )
 }

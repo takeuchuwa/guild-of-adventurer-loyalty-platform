@@ -61,7 +61,7 @@ export default function RoomsPage() {
 
     return (
         <Layout breadcrumbs={[{ label: "Кімнати", path: "/rooms" }]}>
-            <div className="container mx-auto py-10">
+            <div className="p-7">
                 <RoomsTable
                     columns={roomColumns}
                     searchProperties={searchProperties}

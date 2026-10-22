@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/api-utils"
-import type { CartState } from "@/components/checkout/types/checkout"
+import type { CartState, DonationPayload } from "@/components/checkout/types/checkout"
 
 export interface CartResponse {
     ok: boolean
@@ -30,6 +30,13 @@ export async function fetchCart(cartId: string | null): Promise<CartResponse> {
 
 export async function addItemToCart(cartId: string | null, entityId: string, type: "product" | "activity", quantity: number): Promise<CartResponse> {
     const res = await axiosInstance.post("/cart/items", { entityId, type, quantity }, {
+        headers: getHeaders(cartId)
+    })
+    return res.data
+}
+
+export async function addDonationToCart(cartId: string | null, payload: DonationPayload): Promise<CartResponse> {
+    const res = await axiosInstance.post("/cart/donations", payload, {
         headers: getHeaders(cartId)
     })
     return res.data

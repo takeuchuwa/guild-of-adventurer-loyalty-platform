@@ -1,24 +1,29 @@
 "use client"
 
 import { Layout } from "@/components/layout/layout"
-import { MemberForm } from "@/components/members/member-form"
-import type { MemberFormData } from "@/components/members/member-form"
 import { useNavigate, useParams } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { getMemberById, updateMember } from "@/components/members/api/api"
+import { getMemberById } from "@/components/members/api/api"
 import { toast } from "sonner"
 import type { Member } from "@/components/members/types/member"
 import { Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { PointsLedgerTable } from "@/components/members/points-ledger-table"
-import { LevelInfoCard } from "@/components/members/level-info-card"
+import { MemberRail } from "@/components/members/member-rail"
+import { MemberEditDialog } from "@/components/shared/dialogs/member-edit-dialog"
+import { PointsAdjustmentWarningDialog } from "@/components/shared/dialogs/points-adjustment-warning-dialog"
+import { PointsAdjustmentDialog } from "@/components/shared/dialogs/points-adjustment-dialog"
 
 export default function MemberEditPage() {
     const navigate = useNavigate()
     const { id } = useParams<{ id: string }>()
-    const [isLoading, setIsLoading] = useState(false)
     const [isFetching, setIsFetching] = useState(true)
     const [member, setMember] = useState<Member | null>(null)
     const [reloadLedger, setReloadLedger] = useState<(() => Promise<void>) | null>(null)
+
+    const [editDialogOpen, setEditDialogOpen] = useState(false)
+    const [warningDialogOpen, setWarningDialogOpen] = useState(false)
+    const [pointsDialogOpen, setPointsDialogOpen] = useState(false)
 
     const fetchMember = async () => {
         if (!id) {
@@ -44,23 +49,6 @@ export default function MemberEditPage() {
         fetchMember()
     }, [id, navigate])
 
-    const handleSubmit = async (data: MemberFormData) => {
-        if (!id) return
-
-        setIsLoading(true)
-        try {
-            await updateMember(id, data)
-            toast.success("Профіль учасника успішно оновлено")
-            navigate("/members")
-        } catch (error) {
-            console.error("Error updating member:", error)
-            const errorMessage = error instanceof Error ? error.message : "Не вдалося зберегти зміни"
-            toast.error(errorMessage)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
     const handlePointsAdjusted = async () => {
         await fetchMember()
         if (reloadLedger) {
@@ -69,22 +57,16 @@ export default function MemberEditPage() {
         toast.success("Бали учасника успішно оновлено")
     }
 
-    const handleCancel = () => {
-        navigate("/members")
-    }
+    const breadcrumbs = [
+        { label: "Підкорювачі", path: "/members" },
+        { label: "Редагування профілю", path: `/members/${id}` },
+    ]
 
     if (isFetching) {
         return (
-            <Layout
-                breadcrumbs={[
-                    { label: "Авантюристи", path: "/members" },
-                    { label: "Редагування профілю", path: `/members/${id}` },
-                ]}
-            >
-                <div className="container mx-auto py-10 max-w-2xl">
-                    <div className="flex items-center justify-center h-64">
-                        <Loader2 className="h-8 w-8 animate-spin" />
-                    </div>
+            <Layout breadcrumbs={breadcrumbs}>
+                <div className="flex h-64 items-center justify-center">
+                    <Loader2 className="text-primary h-8 w-8 animate-spin" />
                 </div>
             </Layout>
         )
@@ -95,40 +77,53 @@ export default function MemberEditPage() {
     }
 
     return (
-        <Layout
-            breadcrumbs={[
-                { label: "Авантюристи", path: "/members" },
-                { label: "Редагування профілю", path: `/members/${id}` },
-            ]}
-        >
-            <div className="container mx-auto py-10 max-w-6xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагування профілю авантюриста</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть ім'я, прізвище або вручно отримайте призи.</p>
+        <Layout breadcrumbs={breadcrumbs}>
+            <div className="grid min-h-0 grid-cols-1 xl:grid-cols-[600px_1fr]">
+                <div className="border-b border-[rgba(201,158,58,.14)] p-7 xl:border-r xl:border-b-0">
+                    <MemberRail member={member} />
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">
-                    <div className="flex flex-col gap-6">
-                        <div className="bg-card border rounded-lg p-6">
-                            <MemberForm
-                                initialData={member}
-                                onSubmit={handleSubmit}
-                                onCancel={handleCancel}
-                                onPointsAdjusted={handlePointsAdjusted}
-                                isLoading={isLoading}
-                            />
-                        </div>
-
-                        <div className="bg-card border rounded-lg p-6">
-                            <PointsLedgerTable memberId={id!} onLoadLedger={setReloadLedger} />
-                        </div>
+                <div className="flex min-w-0 flex-col gap-5 p-7">
+                    <div className="flex flex-wrap items-center justify-end gap-2.5">
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            className="cursor-pointer"
+                            onClick={() => setWarningDialogOpen(true)}
+                        >
+                            Коригування балів вручну
+                        </Button>
+                        <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => setEditDialogOpen(true)}>
+                            Редагувати
+                        </Button>
                     </div>
 
-                    <div>
-                        <LevelInfoCard memberId={id!} />
-                    </div>
+                    <PointsLedgerTable memberId={id!} onLoadLedger={setReloadLedger} />
                 </div>
             </div>
+
+            <MemberEditDialog
+                open={editDialogOpen}
+                onOpenChange={setEditDialogOpen}
+                member={member}
+                onSuccess={fetchMember}
+            />
+
+            <PointsAdjustmentWarningDialog
+                open={warningDialogOpen}
+                onOpenChange={setWarningDialogOpen}
+                onConfirm={() => {
+                    setWarningDialogOpen(false)
+                    setPointsDialogOpen(true)
+                }}
+            />
+
+            <PointsAdjustmentDialog
+                open={pointsDialogOpen}
+                onOpenChange={setPointsDialogOpen}
+                member={member}
+                onSuccess={handlePointsAdjusted}
+            />
         </Layout>
     )
 }

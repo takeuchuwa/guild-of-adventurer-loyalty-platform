@@ -76,7 +76,7 @@ export function PromoFilter({ active, date, onActiveChange, onDateChange }: Prom
                                 e.stopPropagation()
                                 handleClear()
                             }}
-                            className="ml-1 rounded-full p-0.5 hover:bg-accent cursor-pointer"
+                            className="ml-1 p-0.5 hover:bg-accent cursor-pointer"
                             title="Очистити фільтри"
                         >
                             <X className="h-3 w-3" />

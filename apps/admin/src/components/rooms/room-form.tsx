@@ -2,10 +2,8 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2 } from "lucide-react"
+import { FormActions, FormField, FormShell } from "@/components/shared/form-shell"
 import type { Room } from "./types/room"
 import { z } from "zod"
 import { type RoomFormData, roomSchema } from "./types/validations/room-validation"
@@ -69,81 +67,72 @@ export function RoomForm({ initialData, onSubmit, onCancel, isLoading = false, m
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name">
-                        Назва кімнати <span className="text-destructive">*</span>
-                    </Label>
+        <FormShell
+            title={mode === "create" ? "Створити кімнату" : "Редагувати кімнату"}
+            onSubmit={handleSubmit}
+            actions={<FormActions mode={mode} isLoading={isLoading} onCancel={onCancel} />}
+        >
+            <FormField label="Назва кімнати" htmlFor="name" required error={errors.name}>
+                <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value })
+                        if (errors.name) {
+                            setErrors({ ...errors, name: undefined })
+                        }
+                    }}
+                    placeholder="Введіть назву кімнати"
+                    disabled={isLoading}
+                    aria-invalid={!!errors.name}
+                />
+            </FormField>
+
+            <FormField
+                label="Колір"
+                htmlFor="color"
+                required
+                error={errors.color}
+                hint="Колір буде використовуватися в календарі"
+            >
+                <div className="flex gap-2.5">
                     <Input
-                        id="name"
-                        value={formData.name}
+                        id="color"
+                        type="color"
+                        value={formData.color}
                         onChange={(e) => {
-                            setFormData({ ...formData, name: e.target.value })
-                            if (errors.name) {
-                                setErrors({ ...errors, name: undefined })
+                            setFormData({ ...formData, color: e.target.value })
+                            if (errors.color) {
+                                setErrors({ ...errors, color: undefined })
                             }
                         }}
-                        placeholder="Введіть назву кімнати"
                         disabled={isLoading}
-                        className={errors.name ? "border-destructive" : ""}
+                        className="w-20 p-1.5"
+                        aria-invalid={!!errors.color}
                     />
-                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                    <Input
+                        type="text"
+                        value={formData.color}
+                        onChange={(e) => {
+                            let val = e.target.value;
+                            if (val && !val.startsWith("#")) {
+                                val = "#" + val;
+                            }
+                            if (val.startsWith("#")) {
+                                val = "#" + val.slice(1).replace(/[^0-9A-Fa-f]/g, "").slice(0, 6);
+                            }
+                            setFormData({ ...formData, color: val })
+                            if (errors.color) {
+                                setErrors({ ...errors, color: undefined })
+                            }
+                        }}
+                        placeholder="#3b82f6"
+                        disabled={isLoading}
+                        className="max-w-[220px] font-mono"
+                        aria-invalid={!!errors.color}
+                    />
                 </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="color">
-                        Колір <span className="text-destructive">*</span>
-                    </Label>
-                    <div className="flex gap-2">
-                        <Input
-                            id="color"
-                            type="color"
-                            value={formData.color}
-                            onChange={(e) => {
-                                setFormData({ ...formData, color: e.target.value })
-                                if (errors.color) {
-                                    setErrors({ ...errors, color: undefined })
-                                }
-                            }}
-                            disabled={isLoading}
-                            className={`w-20 h-10 ${errors.color ? "border-destructive" : ""}`}
-                        />
-                        <Input
-                            type="text"
-                            value={formData.color}
-                            onChange={(e) => {
-                                let val = e.target.value;
-                                if (val && !val.startsWith("#")) {
-                                    val = "#" + val;
-                                }
-                                if (val.startsWith("#")) {
-                                    val = "#" + val.slice(1).replace(/[^0-9A-Fa-f]/g, "").slice(0, 6);
-                                }
-                                setFormData({ ...formData, color: val })
-                                if (errors.color) {
-                                    setErrors({ ...errors, color: undefined })
-                                }
-                            }}
-                            placeholder="#3b82f6"
-                            disabled={isLoading}
-                            className={errors.color ? "border-destructive" : ""}
-                        />
-                    </div>
-                    {errors.color && <p className="text-sm text-destructive">{errors.color}</p>}
-                    <p className="text-sm text-muted-foreground">Колір буде використовуватися в календарі</p>
-                </div>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-                <Button type="button" className="cursor-pointer" variant="outline" onClick={onCancel} disabled={isLoading}>
-                    Скасувати
-                </Button>
-                <Button type="submit" className="cursor-pointer" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {mode === "create" ? "Створити" : "Зберегти"}
-                </Button>
-            </div>
-        </form>
+            </FormField>
+        </FormShell>
     )
 }

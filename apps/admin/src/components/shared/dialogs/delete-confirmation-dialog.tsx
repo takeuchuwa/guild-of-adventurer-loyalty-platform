@@ -18,6 +18,7 @@ interface DeleteConfirmationDialogProps {
     title: string
     description: string
     itemName?: string
+    itemCount?: number
 }
 
 export function DeleteConfirmationDialog({
@@ -27,6 +28,7 @@ export function DeleteConfirmationDialog({
                                              title,
                                              description,
                                              itemName,
+                                             itemCount,
                                          }: DeleteConfirmationDialogProps) {
     const [confirmText, setConfirmText] = useState("")
     const isValid = confirmText === "видалити"
@@ -51,13 +53,19 @@ export function DeleteConfirmationDialog({
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
-                {itemName && (
+                {itemCount && itemCount > 1 ? (
+                    <div>
+                        <p className="text-sm font-medium">
+                            Ви збираєтесь видалити: <span className="font-bold">{itemCount} елементів</span>
+                        </p>
+                    </div>
+                ) : itemName ? (
                     <div>
                         <p className="text-sm font-medium">
                             Ви збираєтесь видалити: <span className="font-bold">{itemName}</span>
                         </p>
                     </div>
-                )}
+                ) : null}
                 <div className="space-y-2 items-center">
                     <Label htmlFor="confirm-text">
                         Введіть <span className="font-bold text-destructive">видалити</span> для підтвердження
@@ -82,3 +90,4 @@ export function DeleteConfirmationDialog({
         </Dialog>
     )
 }
+

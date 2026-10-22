@@ -5,10 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { AddChip, FormActions, FormShell, RailSection } from "@/components/shared/form-shell"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { Level, LevelFormData } from "./types/level-types"
-import { X, Plus } from "lucide-react"
+import { X } from "lucide-react"
 import { useState } from "react"
 import { AiTextarea } from "@/components/ui/ai-textarea"
 
@@ -57,7 +58,48 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
 
     return (
         <Form {...form} >
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <FormShell
+                title={mode === "create" ? "Створити рівень" : "Редагувати рівень"}
+                description={mode === "create" ? "Заповніть форму для створення нового рівня лояльності" : "Оновіть інформацію про рівень лояльності"}
+                onSubmit={form.handleSubmit(handleSubmit)}
+                actions={<FormActions mode={mode} isLoading={isLoading} onCancel={onCancel} />}
+                rail={
+                    <RailSection title="Налаштування">
+                        <FormField
+                            control={form.control}
+                            name="sortOrder"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Порядок сортування</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" {...field} placeholder="0" />
+                                    </FormControl>
+                                    <FormDescription>Порядок відображення рівня (менше число = вище)</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="defaultLevel"
+                            render={({ field }) => (
+                                <FormItem className="border-hairline flex flex-row items-start space-y-0 space-x-3 border p-4">
+                                    <FormControl>
+                                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                    </FormControl>
+                                    <div className="space-y-1 leading-none">
+                                        <FormLabel>Рівень за замовчуванням</FormLabel>
+                                        <FormDescription>
+                                            Цей рівень буде призначатися новим користувачам (може бути тільки один)
+                                        </FormDescription>
+                                    </div>
+                                </FormItem>
+                            )}
+                        />
+                    </RailSection>
+                }
+            >
                 <FormField
                     control={form.control}
                     name="levelId"
@@ -106,18 +148,12 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <FormLabel>Переваги</FormLabel>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setBenefits([...benefits, { name: "", description: "" }])}
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Додати перевагу
-                        </Button>
+                        <AddChip onClick={() => setBenefits([...benefits, { name: "", description: "" }])}>
+                            + Додати перевагу
+                        </AddChip>
                     </div>
                     {benefits.map((benefit, index) => (
-                        <div key={index} className="flex gap-2 items-start border p-4 rounded-md">
+                        <div key={index} className="border-hairline flex items-start gap-2 border p-4">
                             <div className="flex-1 space-y-2">
                                 <Input
                                     placeholder="Назва переваги"
@@ -156,18 +192,12 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <FormLabel>Призи</FormLabel>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPrizes([...prizes, { name: "", description: "" }])}
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Додати приз
-                        </Button>
+                        <AddChip onClick={() => setPrizes([...prizes, { name: "", description: "" }])}>
+                            + Додати приз
+                        </AddChip>
                     </div>
                     {prizes.map((prize, index) => (
-                        <div key={index} className="flex gap-2 items-start border p-4 rounded-md">
+                        <div key={index} className="border-hairline flex items-start gap-2 border p-4">
                             <div className="flex-1 space-y-2">
                                 <Input
                                     placeholder="Назва призу"
@@ -203,48 +233,7 @@ export function LevelForm({ mode, initialData, onSubmit, onCancel, isLoading }: 
                     ))}
                 </div>
 
-                <FormField
-                    control={form.control}
-                    name="sortOrder"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Порядок сортування</FormLabel>
-                            <FormControl>
-                                <Input type="number" {...field} placeholder="0" />
-                            </FormControl>
-                            <FormDescription>Порядок відображення рівня (менше число = вище)</FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="defaultLevel"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                                <FormLabel>Рівень за замовчуванням</FormLabel>
-                                <FormDescription>
-                                    Цей рівень буде призначатися новим користувачам (може бути тільки один)
-                                </FormDescription>
-                            </div>
-                        </FormItem>
-                    )}
-                />
-
-                <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" className="cursor-pointer" variant="outline" onClick={onCancel} disabled={isLoading}>
-                        Скасувати
-                    </Button>
-                    <Button type="submit" className="cursor-pointer" disabled={isLoading}>
-                        {isLoading ? "Збереження..." : mode === "create" ? "Створити" : "Зберегти"}
-                    </Button>
-                </div>
-            </form>
+            </FormShell>
         </Form>
     )
 }

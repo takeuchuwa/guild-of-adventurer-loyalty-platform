@@ -68,7 +68,7 @@ export function CategoryFilter({ kind, selectedCategoryId, onChange }: CategoryF
                                 e.stopPropagation()
                                 onChange(undefined)
                             }}
-                            className="ml-1 rounded-full p-0.5 hover:bg-accent cursor-pointer"
+                            className="ml-1 p-0.5 hover:bg-accent cursor-pointer"
                             title="Очистити фільтр"
                         >
                             <X className="h-3 w-3" />

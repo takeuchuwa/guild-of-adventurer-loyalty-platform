@@ -27,13 +27,7 @@ export default function ConfigCreatePage() {
 
     return (
         <Layout breadcrumbs={[{label: "Автоматизація", path: "/configs"}, {label: "Нова конфігурація", path: "/configs/create"}]}>
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Нова конфігурація автоматизації</h1>
-                    <p className="text-muted-foreground mt-2">Оберіть тригер та налаштуйте параметри автоматизації</p>
-                </div>
-                <ConfigForm mode="create" onSubmit={onSubmit} onCancel={() => navigate("/configs")}/>
-            </div>
+            <ConfigForm mode="create" onSubmit={onSubmit} onCancel={() => navigate("/configs")}/>
         </Layout>
     )
 }

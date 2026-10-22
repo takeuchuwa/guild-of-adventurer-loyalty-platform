@@ -19,7 +19,7 @@ export const ProductBody = z.object({
         .optional(),
     name: z.string().trim().min(1, "Назва обов'язкова").max(255),
     price: z.number().min(0).default(0),
-    overridePoints: z.number().min(0).default(0).nullable(),
+    overridePoints: z.number().min(0).nullable().default(null),
     active: z.boolean().default(true),
     inventory: z.number().int().min(-1, "Інвентар не може бути менше -1").default(-1),
     categoryIds: z.array(z.string()).min(1, "Оберіть хоча б одну категорію"),
@@ -29,6 +29,9 @@ export const ProductBody = z.object({
 const ProductBodyPartial = ProductBody.partial()
 
 export const productsRoute = new Hono<Env>()
+
+/** Upper bound on the `ids` filter so one request can never fan out unbounded. */
+const MAX_IDS = 50
 
 /**
  * GET /products?page=0&pageSize=20&sort=name,asc&q=куб
@@ -44,6 +47,7 @@ productsRoute.get("/", async (c) => {
 
         const sortParam = url.searchParams.get("sort")
         const categoryId = url.searchParams.get("categoryId")
+        const idsParam = url.searchParams.get("ids")
         const priceValParam = url.searchParams.get("priceVal")
         const priceOpParam = url.searchParams.get("priceOp")
         const pointsValParam = url.searchParams.get("pointsVal")
@@ -54,6 +58,24 @@ productsRoute.get("/", async (c) => {
         const baseWhereConditions = []
         if (q) {
             baseWhereConditions.push(buildSearch(q.toUpperCase(), [products.uppercaseName]))
+        }
+
+        // 🎯 Explicit id set. Lets a client revalidate a known handful of products
+        // (the Каса "recently used" strip) in one read instead of one read each.
+        if (idsParam) {
+            const ids = idsParam
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .slice(0, MAX_IDS)
+            if (ids.length === 0) {
+                return c.json({
+                    ok: true,
+                    data: [],
+                    pagination: buildPagination({ pageSize, hasNextPage: false, nextCursor: null, total: 0 }),
+                })
+            }
+            baseWhereConditions.push(inArray(products.productId, ids))
         }
 
         if (priceValParam) {
@@ -111,18 +133,38 @@ productsRoute.get("/", async (c) => {
 
         const countWhereExpr = baseWhereConditions.length > 0 ? and(...baseWhereConditions) : undefined
 
-        // 1. Extract Sorting Details
         const sortField = sortParam?.split(',')[0] || 'productId';
         const sortDir = (sortParam?.split(',')[1]?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
         const isCustomSort = sortField !== 'productId';
+
+        let sortColumn;
+        let cursorKey = sortField;
+        let productCategoryMinName: any = null;
+
+        if (sortField === "categories") {
+            productCategoryMinName = db
+                .select({
+                    productId: entityCategories.entityId,
+                    minCategoryName: sql<string>`min(${categories.name})`.as("minCategoryName"),
+                })
+                .from(entityCategories)
+                .innerJoin(categories, eq(categories.categoryId, entityCategories.categoryId))
+                .where(eq(entityCategories.entityType, "product"))
+                .groupBy(entityCategories.entityId)
+                .as("pc_min");
+            sortColumn = productCategoryMinName.minCategoryName;
+            cursorKey = "categoryName";
+        } else {
+            sortColumn = (products as any)[sortField] || products.productId;
+        }
 
         // 2. Configure drizzle-cursor
         const cursorConfig = generateCursor({
             cursors: isCustomSort ? [
                 {
                     order: sortDir,
-                    key: sortField,
-                    schema: (products as any)[sortField] || products.productId
+                    key: cursorKey,
+                    schema: sortColumn
                 }
             ] : [],
             primaryCursor: {
@@ -138,7 +180,7 @@ productsRoute.get("/", async (c) => {
             try {
                 const decodedJson = Buffer.from(cursor, 'base64').toString('utf-8');
                 const cursorObj = JSON.parse(decodedJson);
-                if (isCustomSort && !(sortField in cursorObj)) {
+                if (isCustomSort && !(cursorKey in cursorObj)) {
                     validCursor = null;
                 } else if (!('productId' in cursorObj)) {
                     validCursor = null;
@@ -156,7 +198,26 @@ productsRoute.get("/", async (c) => {
         }
         const dataWhereExpr = dataWhereConditions.length > 0 ? and(...dataWhereConditions) : undefined
 
-        const query = db.select().from(products)
+        const query = db
+            .select({
+                productId: products.productId,
+                sku: products.sku,
+                name: products.name,
+                uppercaseName: products.uppercaseName,
+                price: products.price,
+                overridePoints: products.overridePoints,
+                active: products.active,
+                inventory: products.inventory,
+                createdAt: products.createdAt,
+                updatedAt: products.updatedAt,
+                categoryName: sortField === "categories" ? productCategoryMinName.minCategoryName : sql<string | null>`NULL`,
+            })
+            .from(products);
+
+        if (sortField === "categories" && productCategoryMinName) {
+            query.leftJoin(productCategoryMinName, eq(products.productId, productCategoryMinName.productId));
+        }
+
         if (dataWhereExpr) query.where(dataWhereExpr as any)
         query.orderBy(...cursorConfig.orderBy)
 
@@ -425,6 +486,56 @@ productsRoute.put("/:id", async (c) => {
 })
 
 // ==================================================
+// 🟠 POST /products/bulk-update
+// ==================================================
+export const ProductBulkUpdateBody = z.object({
+    ids: z.array(z.string()).min(1, "Оберіть хоча б один товар"),
+    price: z.number().min(0).optional(),
+    overridePoints: z.number().min(0).nullable().optional(),
+})
+
+productsRoute.post("/bulk-update", async (c) => {
+    try {
+        const db = getDb(c.env)
+        const body = await c.req.json()
+        const parsed = ProductBulkUpdateBody.parse(body)
+
+        const now = Math.floor(Date.now() / 1000)
+
+        const updates: any = {
+            updatedAt: now,
+        }
+        if (parsed.price !== undefined) {
+            updates.price = parsed.price
+        }
+        if (parsed.overridePoints !== undefined) {
+            updates.overridePoints = parsed.overridePoints
+        }
+
+        if (parsed.price === undefined && parsed.overridePoints === undefined) {
+            return c.json({ ok: false, error: "VALIDATION_ERROR", message: "Не вказано полів для оновлення" }, 400)
+        }
+
+        await db.update(products).set(updates).where(inArray(products.productId, parsed.ids))
+
+        return c.json({ ok: true, message: "Товари успішно оновлено" })
+    } catch (err: any) {
+        if (err instanceof z.ZodError) {
+            return c.json(
+                {
+                    ok: false,
+                    error: "VALIDATION_ERROR",
+                    details: err.issues,
+                },
+                400,
+            )
+        }
+        console.error("[POST /products/bulk-update] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
+    }
+})
+
+// ==================================================
 // 🔴 DELETE /products/:id
 // ==================================================
 productsRoute.delete("/:id", async (c) => {
@@ -432,15 +543,19 @@ productsRoute.delete("/:id", async (c) => {
         const id = c.req.param("id")
         const db = getDb(c.env)
 
-        const existing = await db.select().from(products).where(eq(products.productId, id)).get()
+        const ids = id.split(",")
 
-        if (!existing) return c.json({ ok: false, error: "NOT_FOUND" }, 404)
+        const existing = await db.select().from(products).where(inArray(products.productId, ids)).all()
+
+        if (existing.length === 0) return c.json({ ok: false, error: "NOT_FOUND" }, 404)
+
+        const foundIds = existing.map(p => p.productId)
 
         await db.batch([
             db
                 .delete(entityCategories)
-                .where(and(eq(entityCategories.entityType, "product"), eq(entityCategories.entityId, id))),
-            db.delete(products).where(eq(products.productId, id)),
+                .where(and(eq(entityCategories.entityType, "product"), inArray(entityCategories.entityId, foundIds))),
+            db.delete(products).where(inArray(products.productId, foundIds)),
         ])
 
         return c.json({ ok: true })
@@ -449,6 +564,7 @@ productsRoute.delete("/:id", async (c) => {
         return c.json({ ok: false, error: "INTERNAL_ERROR", message: err.message }, 500)
     }
 })
+
 
 function generateSKU(): string {
     // Generate 11-digit SKU based on timestamp and random digits

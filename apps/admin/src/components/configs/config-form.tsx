@@ -13,6 +13,7 @@ import { ActivityTimeSlotForm, activityTimeSlotSchema } from "@/components/confi
 import { MainSystemInstructionForm, mainSystemInstructionSchema } from "@/components/configs/forms/main-system-instruction-form"
 import { EntitySystemInstructionForm, entitySystemInstructionSchema } from "@/components/configs/forms/entity-system-instruction-form"
 import { Button } from "@/components/ui/button"
+import { FormShell } from "@/components/shared/form-shell"
 
 const baseSchema = z.object({
     name: z.string().min(1, "Назва є обов'язковою"),
@@ -95,21 +96,37 @@ export function ConfigForm({
 
     return (
         <Form {...form}>
-            <form className="space-y-6" onSubmit={form.handleSubmit((vals) => {
-                // Map triggerKey back to the suffix-based key "entity_system_instruction:entity" for saving
-                let finalVals = { ...vals }
-                if (vals.triggerKey === "entity_system_instruction") {
-                    const entity = (vals as any).config?.entity
-                    finalVals.triggerKey = `entity_system_instruction:${entity}` as any
+            <FormShell
+                title={mode === "create" ? "Нова конфігурація автоматизації" : "Редагування конфігурації"}
+                description={mode === "create" ? "Оберіть тригер та налаштуйте параметри автоматизації" : "Оновіть параметри автоматизації"}
+                onSubmit={form.handleSubmit((vals) => {
+                    // Map triggerKey back to the suffix-based key "entity_system_instruction:entity" for saving
+                    let finalVals = { ...vals }
+                    if (vals.triggerKey === "entity_system_instruction") {
+                        const entity = (vals as any).config?.entity
+                        finalVals.triggerKey = `entity_system_instruction:${entity}` as any
+                    }
+                    onSubmit(finalVals)
+                })}
+                actions={
+                    <>
+                        <Button type="submit" size="lg" className="w-full cursor-pointer">
+                            {mode === "create" ? "Створити" : "Зберегти"}
+                        </Button>
+                        {onCancel && (
+                            <Button type="button" size="lg" variant="outline" className="w-full cursor-pointer" onClick={onCancel}>
+                                Скасувати
+                            </Button>
+                        )}
+                    </>
                 }
-                onSubmit(finalVals)
-            })}>
-                <Card className="bg-card border rounded-lg">
+            >
+                <Card>
                     <CardHeader>
                         <CardTitle>Основна інформація</CardTitle>
                         <CardDescription>Назва, тип тригера та статус конфігурації</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2">
+                    <CardContent className="space-y-4">
                         <FormField
                             control={form.control}
                             name="name"
@@ -163,7 +180,7 @@ export function ConfigForm({
                 </Card>
 
                 {selectedTrigger && (
-                    <Card className="bg-card border rounded-lg">
+                    <Card>
                         <CardHeader>
                             <CardTitle>Конфігурація тригера</CardTitle>
                             <CardDescription>
@@ -182,15 +199,7 @@ export function ConfigForm({
                     </Card>
                 )}
 
-                <div className="flex gap-3">
-                    {onCancel && (
-                        <Button type="button" variant="outline" className="cursor-pointer" onClick={onCancel}>
-                            Скасувати
-                        </Button>
-                    )}
-                    <Button type="submit" className="cursor-pointer">{mode === "create" ? "Створити" : "Зберегти"}</Button>
-                </div>
-            </form>
+            </FormShell>
         </Form>
     )
 }

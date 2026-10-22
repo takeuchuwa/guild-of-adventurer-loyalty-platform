@@ -182,3 +182,25 @@ export async function deleteActivity(activityId: string): Promise<void> {
         throw error
     }
 }
+
+export interface BulkUpdateActivitiesRequest {
+    ids: string[]
+    price?: number
+    overridePoints?: number | null
+}
+
+export async function bulkUpdateActivities(data: BulkUpdateActivitiesRequest): Promise<void> {
+    try {
+        const response = await axiosInstance.post("/activities/bulk-update", data)
+        if (!response.data.ok) {
+            throw new Error(response.data.error || "Не вдалося виконати групове оновлення")
+        }
+    } catch (error: any) {
+        console.error("[v0] Bulk update activities error:", error)
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data?.message || error.response?.data?.error || "Помилка при груповому оновленні")
+        }
+        throw error
+    }
+}
+

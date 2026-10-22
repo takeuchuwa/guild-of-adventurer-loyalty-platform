@@ -2,14 +2,15 @@
 
 import { Layout } from "@/components/layout/layout.tsx"
 import { ActivityTable } from "@/components/activities/activities-table.tsx"
-import { Pencil, PlusCircle, Trash2 } from "lucide-react"
+import { Pencil, PlusCircle, Trash2, Sliders } from "lucide-react"
 import type { UseSearchOptions } from "@/hooks/use-search.tsx"
 import type { Activity } from "@/components/activities/types/activity.tsx"
 import { activitiesColumns } from "@/components/activities/columns/activities-columns.tsx"
 import { useNavigate } from "react-router-dom"
-import { useState, useRef, useMemo } from "react"
+import { useState, useRef, useMemo, useCallback } from "react"
 import { DeleteConfirmationDialog } from "@/components/shared/dialogs/delete-confirmation-dialog"
-import { deleteActivity } from "@/components/activities/api/activity-api.ts"
+import { BulkUpdateDialog } from "@/components/shared/dialogs/bulk-update-dialog"
+import { deleteActivity, bulkUpdateActivities } from "@/components/activities/api/activity-api.ts"
 import { toast } from "sonner"
 import { DateFilter } from "@/components/activities/filters/date-filter"
 import type { DataTableFilter } from "@/components/table/data-table"
@@ -24,7 +25,10 @@ export default function ActivitiesPage() {
 
     const navigate = useNavigate()
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [activityToDelete, setActivityToDelete] = useState<Activity | null>(null)
+    const [activitiesToDelete, setActivitiesToDelete] = useState<Activity[]>([])
+    const [bulkUpdateDialogOpen, setBulkUpdateDialogOpen] = useState(false)
+    const [selectedActivities, setSelectedActivities] = useState<Activity[]>([])
+    const [tableKey, setTableKey] = useState(0)
     const loadActivitiesRef = useRef<(() => Promise<void>) | null>(null)
 
     const [startDate, setStartDate] = useState<Date | undefined>(() => {
@@ -110,34 +114,93 @@ export default function ActivitiesPage() {
     }
 
     const handleDeleteActivity = (selected: Activity[]) => {
-        const activity = selected[0]
-        if (activity) {
-            setActivityToDelete(activity)
+        if (selected.length > 0) {
+            setActivitiesToDelete(selected)
             setDeleteDialogOpen(true)
         }
     }
 
+    const handleBulkUpdate = () => {
+        if (selectedActivities.length >= 2) {
+            setBulkUpdateDialogOpen(true)
+        }
+    }
+
+    const handleConfirmBulkUpdate = async (data: { price?: number; overridePoints?: number | null }) => {
+        try {
+            const ids = selectedActivities.map((a) => a.activityId)
+            await bulkUpdateActivities({ ids, ...data })
+            toast.success("Активності успішно оновлено")
+            // Reset selection by updating tableKey
+            setTableKey((prev) => prev + 1)
+            setSelectedActivities([])
+        } catch (error: any) {
+            console.error("Error updating activities in bulk:", error)
+            toast.error(error.message || "Помилка при груповому оновленні")
+        }
+    }
+
+    const handleSelectionChange = useCallback((selectedMap: Map<string, Activity>) => {
+        setSelectedActivities(Array.from(selectedMap.values()))
+    }, [])
+
+
     const confirmDelete = async () => {
-        if (!activityToDelete) return
+        if (activitiesToDelete.length === 0) return
 
         try {
-            await deleteActivity(activityToDelete.activityId)
-            toast.success("Активність успішно видалено")
-            if (loadActivitiesRef.current) {
-                await loadActivitiesRef.current()
-            }
+            const ids = activitiesToDelete.map((a) => a.activityId).join(",")
+            await deleteActivity(ids)
+            toast.success(activitiesToDelete.length > 1 ? "Активності успішно видалено" : "Активність успішно видалено")
+            // Reset selection by updating tableKey
+            setTableKey((prev) => prev + 1)
+            setSelectedActivities([])
         } catch (error: any) {
             toast.error(error.message || "Помилка при видаленні активності")
         } finally {
             setDeleteDialogOpen(false)
-            setActivityToDelete(null)
+            setActivitiesToDelete([])
         }
     }
 
+    const tableActions = useMemo(() => {
+        const selectedCount = selectedActivities.length
+        return [
+            {
+                label: "Додати",
+                icon: <PlusCircle className="mr-0.5 h-4 w-4" />,
+                onClick: handleCreateActivity,
+                variant: selectedCount === 0 ? ("default" as const) : ("outline" as const),
+            },
+            {
+                label: "Редагувати",
+                icon: <Pencil className="mr-0.5 h-4 w-4" />,
+                onClick: handleEditActivity,
+                isDisabled: (selected: Activity[]) => selected.length !== 1,
+                variant: selectedCount === 1 ? ("default" as const) : ("outline" as const),
+            },
+            {
+                label: "Групове оновлення",
+                icon: <Sliders className="mr-0.5 h-4 w-4" />,
+                onClick: handleBulkUpdate,
+                isDisabled: (selected: Activity[]) => selected.length < 2,
+                variant: selectedCount >= 2 ? ("default" as const) : ("outline" as const),
+            },
+            {
+                label: "Видалити",
+                icon: <Trash2 className="mr-0.5 h-4 w-4" />,
+                onClick: handleDeleteActivity,
+                isDisabled: (selected: Activity[]) => selected.length < 1,
+                variant: "destructiveOutline" as const,
+            },
+        ]
+    }, [selectedActivities])
+
     return (
         <Layout breadcrumbs={[{ label: "Активності", path: "/activities" }]}>
-            <div className="container mx-auto py-10">
+            <div className="p-7">
                 <ActivityTable
+                    key={tableKey}
                     columns={activitiesColumns}
                     searchProperties={searchProperties}
                     title="Сесії / Активності"
@@ -145,26 +208,8 @@ export default function ActivitiesPage() {
                     filters={filters}
                     filterParams={filterParams}
                     storageKey="activities"
-                    actions={[
-                        {
-                            label: "Додати",
-                            icon: <PlusCircle className="mr-0.5 h-4 w-4" />,
-                            onClick: handleCreateActivity,
-                        },
-                        {
-                            label: "Редагувати",
-                            icon: <Pencil className="mr-0.5 h-4 w-4" />,
-                            onClick: handleEditActivity,
-                            isDisabled: (selected: Activity[]) => selected.length !== 1,
-                        },
-                        {
-                            label: "Видалити",
-                            icon: <Trash2 className="mr-0.5 h-4 w-4" />,
-                            onClick: handleDeleteActivity,
-                            isDisabled: (selected: Activity[]) => selected.length !== 1,
-                            variant: "destructiveOutline",
-                        },
-                    ]}
+                    onSelectionChange={handleSelectionChange}
+                    actions={tableActions}
                 />
             </div>
 
@@ -172,10 +217,21 @@ export default function ActivitiesPage() {
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
                 onConfirm={confirmDelete}
-                title="Видалити активність"
-                description="Ця дія незворотна. Активність буде видалена назавжди."
-                itemName={activityToDelete?.name}
+                title={activitiesToDelete.length > 1 ? "Видалити активності" : "Видалити активність"}
+                description={activitiesToDelete.length > 1 ? "Ця дія незворотна. Обрані активності будуть видалені назавжди." : "Ця дія незворотна. Активність буде видалена назавжди."}
+                itemName={activitiesToDelete.length === 1 ? activitiesToDelete[0]?.name : undefined}
+                itemCount={activitiesToDelete.length}
+            />
+
+            <BulkUpdateDialog
+                open={bulkUpdateDialogOpen}
+                onOpenChange={setBulkUpdateDialogOpen}
+                onConfirm={handleConfirmBulkUpdate}
+                title="Масове оновлення активностей"
+                description={`Виберіть показники, які хочете оновити для обраних активностей (${selectedActivities.length} шт.).`}
+                count={selectedActivities.length}
             />
         </Layout>
     )
 }
+

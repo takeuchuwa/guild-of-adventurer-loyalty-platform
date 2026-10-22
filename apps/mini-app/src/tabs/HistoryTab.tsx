@@ -1,8 +1,9 @@
 import { useRef, useEffect, useContext } from "react"
-import { Dice5, ShoppingBag, Tag, Wrench, FileText, BowArrow } from "lucide-react"
 import { useHistory, type HistoryEntry } from "@/context/HistoryContext"
 import { MemberContext } from "@/context/MemberContext"
 import { LevelContext } from "@/context/LevelContext"
+import { CategoryIcon } from "@/components/CategoryIcon"
+import { isDonationNote } from "@/lib/donation"
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -39,9 +40,11 @@ function formatTime(timestamp: number): string {
 }
 
 function getCategoryLabel(entry: HistoryEntry): string {
+  // Donations may be linked to an event, so they must be recognised before activities.
+  if (isDonationNote(entry.adminNote)) return "Донат"
   if (entry.activity?.hasGame || entry.game) return "Сесія НРІ"
   if (entry.activity) return "Активність"
-  if (entry.product) return "Крамниця Гільдії"
+  if (entry.product) return "Крамниця Вежі"
   if (entry.promo) return "Промо-акція"
   if (entry.adminNote && entry.delta < 0) return "Штраф"
   if (entry.adminNote) return "Адмін"
@@ -49,6 +52,9 @@ function getCategoryLabel(entry: HistoryEntry): string {
 }
 
 function getEntryTitle(entry: HistoryEntry): string {
+  if (isDonationNote(entry.adminNote)) {
+    return entry.activity ? `${entry.adminNote} · ${entry.activity.name}` : entry.adminNote
+  }
   if (entry.activity) {
     const gameName = entry.game?.name ? ` (${entry.game.name})` : ""
     return `${entry.activity.name}${gameName}`
@@ -59,18 +65,20 @@ function getEntryTitle(entry: HistoryEntry): string {
   return "Не вказано"
 }
 
-function getReasonIcon(entry: HistoryEntry) {
+function getCategoryIcon(entry: HistoryEntry) {
+  if (isDonationNote(entry.adminNote))
+    return <CategoryIcon shape="diamond" glyph="₴" className="text-guild-gold" />
   if (entry.game || entry.activity?.hasGame)
-    return <Dice5 className="w-5 h-5 text-guild-gold" />
+    return <CategoryIcon shape="hex" glyph="20" className="text-guild-gold" />
   if (entry.activity)
-    return <BowArrow className="w-5 h-5 text-guild-green-light" />
+    return <CategoryIcon shape="hex" glyph="XP" className="text-guild-gold" />
   if (entry.product)
-    return <ShoppingBag className="w-5 h-5 text-guild-green-light" />
+    return <CategoryIcon shape="square" glyph="₴" className="text-guild-gold" />
   if (entry.promo)
-    return <Tag className="w-5 h-5 text-guild-pure-gold" />
+    return <CategoryIcon shape="square" glyph="%" className="text-guild-gold" />
   if (entry.adminNote)
-    return <Wrench className="w-5 h-5 text-guild-text-muted" />
-  return <FileText className="w-5 h-5 text-guild-text-muted" />
+    return <CategoryIcon shape="triangle" glyph="!" className="text-guild-text-muted" />
+  return <CategoryIcon shape="square" glyph="?" className="text-guild-text-muted" />
 }
 
 // ─── Group by day ────────────────────────────────────────────────────────────
@@ -131,36 +139,36 @@ export function HistoryTab() {
 
       {/* ── Hero / Subtitle ───────────────────────────────────────────── */}
       <div className="mb-6 mt-2">
-        <p className="text-[0.6875rem] font-bold tracking-[0.2em] text-guild-gold/60 uppercase mb-1">
+        <p className="font-mono text-[10px] tracking-[0.24em] text-guild-gold uppercase mb-2">
           Артефакт Пам'яті
         </p>
-        <h2 className="text-2xl font-extrabold tracking-tight text-guild-text">
+        <h2 className="font-heading text-[28px] font-semibold uppercase tracking-wide text-guild-text">
           Історія досвіду
         </h2>
-        <p className="text-guild-text-muted text-sm mt-1">
-          Ваш шлях крізь пригоди та випробування Гільдії.
+        <p className="text-guild-text-muted text-sm mt-2">
+          Ваш шлях крізь пригоди та випробування у Вежі.
         </p>
       </div>
 
-      {/* ── XP Summary Bento Cards ───────────────────────────────────── */}
-      <div className="grid gap-3 mb-8">
-        <div className="glass-card p-5 flex flex-col justify-between gap-3">
-          <span className="text-xs font-semibold text-guild-text-muted uppercase tracking-wider">
+      {/* ── XP Summary Cards ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-[2px] bg-guild-card-border mb-8">
+        <div className="bg-guild-modal-bg p-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] text-guild-gold uppercase block">
             Рівень
           </span>
-          <span className="text-xl font-bold text-guild-gold leading-tight min-w-0">
+          <span className="font-heading text-lg uppercase tracking-wide text-guild-text leading-tight min-w-0 block mt-2">
             {memberCtx?.isLoading ? (
-              <span className="inline-block w-20 h-5 bg-white/10 rounded animate-pulse" />
+              <span className="inline-block w-20 h-5 bg-white/10 animate-pulse" />
             ) : levelName}
           </span>
         </div>
-        <div className="glass-card p-5 flex flex-col justify-between gap-3">
-          <span className="text-xs font-semibold text-guild-text-muted uppercase tracking-wider">
+        <div className="bg-guild-modal-bg p-4">
+          <span className="font-mono text-[9px] tracking-[0.2em] text-guild-gold uppercase block">
             Усього зароблено досвіду
           </span>
-          <span className="text-xl font-bold text-guild-orange leading-tight min-w-0">
+          <span className="font-mono text-xl font-bold text-guild-pure-gold leading-tight min-w-0 block mt-1.5">
             {memberCtx?.isLoading ? (
-              <span className="inline-block w-20 h-5 bg-white/10 rounded animate-pulse" />
+              <span className="inline-block w-20 h-5 bg-white/10 animate-pulse" />
             ) : totalXp}
           </span>
         </div>
@@ -172,7 +180,7 @@ export function HistoryTab() {
           <div className="w-8 h-8 border-2 border-guild-gold/30 border-t-guild-gold rounded-full animate-spin" />
         </div>
       ) : items.length === 0 ? (
-        <div className="glass-card p-6 text-center">
+        <div className="border border-guild-card-border p-6 text-center">
           <p className="text-guild-text-muted">Історія досвіду порожня</p>
           <p className="text-xs text-guild-text-dim mt-1">
             Починайте грати в ігри та купувати товари!
@@ -183,44 +191,44 @@ export function HistoryTab() {
           {dayGroups.map((group) => (
             <section key={group.key}>
               {/* Day header */}
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-2.5">
                 <h3
-                  className={`text-xs font-bold tracking-widest uppercase shrink-0 ${group.label === "Сьогодні"
+                  className={`font-mono text-[10px] tracking-[0.2em] uppercase shrink-0 ${group.label === "Сьогодні"
                     ? "text-guild-gold"
                     : "text-guild-text-muted"
                     }`}
                 >
                   {group.label}
                 </h3>
-                <div className="h-px flex-grow bg-guild-divider" />
+                <div className="h-px flex-grow bg-guild-card-border" />
               </div>
 
               {/* Entries */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col">
                 {group.entries.map((entry, i) => (
                   <div
                     key={entry.entryId || i}
-                    className="glass-card p-4 flex items-center gap-4"
+                    className="flex items-center gap-3 py-2.5 border-b border-guild-gold/10"
                   >
-                    {/* Icon container */}
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
-                      {getReasonIcon(entry)}
+                    {/* Icon */}
+                    <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                      {getCategoryIcon(entry)}
                     </div>
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-guild-text truncate">
+                      <p className="text-sm font-semibold text-guild-text truncate leading-tight">
                         {getEntryTitle(entry)}
                       </p>
-                      <p className="text-[11px] text-guild-text-muted mt-0.5">
-                        {formatTime(entry.occurredAt)} • {getCategoryLabel(entry)}
+                      <p className="font-mono text-[10px] uppercase tracking-wide text-guild-text-muted mt-1">
+                        {formatTime(entry.occurredAt)} · {getCategoryLabel(entry)}
                       </p>
                     </div>
 
                     {/* Delta */}
                     <div className="shrink-0 text-right">
                       <span
-                        className={`text-sm font-bold ${entry.delta > 0
+                        className={`font-mono text-sm font-bold ${entry.delta > 0
                           ? "text-guild-positive"
                           : entry.delta < 0
                             ? "text-guild-negative"
@@ -229,7 +237,7 @@ export function HistoryTab() {
                       >
                         {entry.delta > 0 ? `+${entry.delta}` : entry.delta}
                       </span>
-                      <p className="text-[10px] text-guild-text-dim font-bold uppercase">
+                      <p className="font-mono text-[9px] text-guild-text-dim font-bold uppercase">
                         досвіду
                       </p>
                     </div>

@@ -28,6 +28,8 @@ interface PromotionsTableProps {
     storageKey?: string
 }
 
+const EMPTY_FILTER_PARAMS: Record<string, any> = {}
+
 export function PromotionsTable({
     columns,
     selectionMode = "single",
@@ -35,7 +37,7 @@ export function PromotionsTable({
     emptyStateMessage = "Не знайдено промоакцій за вашим запитом",
     actions = [],
     filters = [],
-    filterParams = {},
+    filterParams = EMPTY_FILTER_PARAMS,
     searchProperties,
     onLoadPromotionsRef,
     onSelectionChange,

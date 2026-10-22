@@ -37,10 +37,7 @@ export default function RoomCreatePage() {
                 { label: "Створити кімнату", path: "/rooms/create" },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <h1 className="text-3xl font-bold mb-6">Створити кімнату</h1>
-                <RoomForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} />
-            </div>
+            <RoomForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} />
         </Layout>
     )
 }

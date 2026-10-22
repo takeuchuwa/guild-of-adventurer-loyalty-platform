@@ -8,8 +8,11 @@ export interface CartItem {
     /** UUID of the product or activity being purchased. */
     entityId: string;
 
-    /** Indicates whether the item is an activity or a physical product. */
-    type: "activity" | "product";
+    /**
+     * Indicates whether the item is an activity, a physical product, or a free-amount donation.
+     * Donations carry no DB entity: `entityId` mirrors `id` and the price lives on the line itself.
+     */
+    type: "activity" | "product" | "donation";
 
     /** The quantity of this item in the cart. */
     quantity: number;
@@ -40,6 +43,19 @@ export interface CartItem {
 
     /** Total expected points the user will earn for purchasing this item. */
     pointsEarned?: number;
+
+    /** Donation details — present only when `type === "donation"`. */
+    donation?: DonationDetails;
+}
+
+export interface DonationDetails {
+    /** Admin-entered name, without the "Донат: " prefix. */
+    label: string;
+    /** Share of the amount converted to points, 0–100. */
+    pointsPercent: number;
+    /** Optional event the donation was collected at. */
+    activityId?: string;
+    activityName?: string;
 }
 
 export interface PromoState {

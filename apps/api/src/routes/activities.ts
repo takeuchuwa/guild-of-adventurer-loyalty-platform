@@ -8,8 +8,13 @@ import { parsePagination, parseSort, buildPagination, buildSearch } from "@/util
 import type { Env } from "@/types/env"
 import { v7 as uuidv7 } from 'uuid';
 import { generateCursor } from "drizzle-cursor";
+import z from "zod"
+
 
 export const activitiesRoute = new Hono<Env>()
+
+/** Upper bound on the `ids` filter so one request can never fan out unbounded. */
+const MAX_IDS = 50
 
 /**
  * GET /activities?startDate=...&endDate=...&cursor=...&pageSize=20&sort=name,asc&q=session
@@ -29,6 +34,7 @@ activitiesRoute.get("/", async (c) => {
         const sortParam = url.searchParams.get("sort")
         const categoryId = url.searchParams.get("categoryId")?.trim() || null
         const gameId = url.searchParams.get("gameId")?.trim() || null
+        const idsParam = url.searchParams.get("ids")?.trim() || null
 
         const db = getDb(c.env)
 
@@ -60,6 +66,24 @@ activitiesRoute.get("/", async (c) => {
             baseWhereConditions.push(eq(activities.gameId, gameId))
         }
 
+        // 🎯 Explicit id set — mirrors GET /products?ids=… so the Каса can revalidate
+        // its "recently used" strip in one read per entity type.
+        if (idsParam) {
+            const ids = idsParam
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .slice(0, MAX_IDS)
+            if (ids.length === 0) {
+                return c.json({
+                    ok: true,
+                    data: [],
+                    pagination: buildPagination({ pageSize, hasNextPage: false, nextCursor: null, total: 0 }),
+                })
+            }
+            baseWhereConditions.push(inArray(activities.activityId, ids))
+        }
+
         // 🔗 Optional category filter — only if truly provided and valid
         if (categoryId) {
             const rels = await db
@@ -85,13 +109,40 @@ activitiesRoute.get("/", async (c) => {
         const sortDir = (sortParam?.split(',')[1]?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
         const isCustomSort = sortField !== 'activityId';
 
+        let sortColumn;
+        let cursorKey = sortField;
+        let activityCategoryMinName: any = null;
+
+        if (sortField === "game") {
+            sortColumn = games.name;
+            cursorKey = "gameName";
+        } else if (sortField === "room") {
+            sortColumn = rooms.name;
+            cursorKey = "roomName";
+        } else if (sortField === "categories") {
+            activityCategoryMinName = db
+                .select({
+                    activityId: entityCategories.entityId,
+                    minCategoryName: sql<string>`min(${categories.name})`.as("minCategoryName"),
+                })
+                .from(entityCategories)
+                .innerJoin(categories, eq(categories.categoryId, entityCategories.categoryId))
+                .where(eq(entityCategories.entityType, "activity"))
+                .groupBy(entityCategories.entityId)
+                .as("act_cat_min");
+            sortColumn = activityCategoryMinName.minCategoryName;
+            cursorKey = "categoryName";
+        } else {
+            sortColumn = (activities as any)[sortField] || activities.activityId;
+        }
+
         // 2. Configure drizzle-cursor
         const cursorConfig = generateCursor({
             cursors: isCustomSort ? [
                 {
                     order: sortDir,
-                    key: sortField,
-                    schema: (activities as any)[sortField] || activities.activityId
+                    key: cursorKey,
+                    schema: sortColumn
                 }
             ] : [],
             primaryCursor: {
@@ -107,7 +158,7 @@ activitiesRoute.get("/", async (c) => {
             try {
                 const decodedJson = Buffer.from(cursor, 'base64').toString('utf-8');
                 const cursorObj = JSON.parse(decodedJson);
-                if (isCustomSort && !(sortField in cursorObj)) {
+                if (isCustomSort && !(cursorKey in cursorObj)) {
                     validCursor = null;
                 } else if (!('activityId' in cursorObj)) {
                     validCursor = null;
@@ -144,11 +195,16 @@ activitiesRoute.get("/", async (c) => {
                 roomId: activities.roomId,
                 roomName: rooms.name,
                 roomColor: rooms.color,
+                categoryName: sortField === "categories" ? activityCategoryMinName.minCategoryName : sql<string | null>`NULL`,
             })
             .from(activities)
             .leftJoin(games, eq(activities.gameId, games.gameId))
             .leftJoin(systems, eq(activities.systemId, systems.systemId))
-            .leftJoin(rooms, eq(activities.roomId, rooms.roomId))
+            .leftJoin(rooms, eq(activities.roomId, rooms.roomId));
+
+        if (sortField === "categories" && activityCategoryMinName) {
+            query.leftJoin(activityCategoryMinName, eq(activities.activityId, activityCategoryMinName.activityId));
+        }
 
         if (dataWhereExpr) {
             query.where(dataWhereExpr as any)
@@ -334,7 +390,7 @@ activitiesRoute.post("/", async (c) => {
                     uppercaseName: name.toUpperCase(),
                     description: description || null,
                     price,
-                    overridePoints: overridePoints || null,
+                    overridePoints: (overridePoints !== undefined && overridePoints !== null) ? overridePoints : null,
                     startDate,
                     endDate,
                     gameId: gameId || null,
@@ -405,7 +461,7 @@ activitiesRoute.put("/:id", async (c) => {
                     uppercaseName: name.toUpperCase(),
                     description: description || null,
                     price,
-                    overridePoints: overridePoints || null,
+                    overridePoints: (overridePoints !== undefined && overridePoints !== null) ? overridePoints : null,
                     startDate,
                     endDate,
                     gameId: gameId || null,
@@ -447,27 +503,80 @@ activitiesRoute.put("/:id", async (c) => {
     }
 })
 
+// ==================================================
+// 🟠 POST /activities/bulk-update
+// ==================================================
+const ActivityBulkUpdateBody = z.object({
+    ids: z.array(z.string()).min(1, "Оберіть хоча б одну активність"),
+    price: z.number().min(0).optional(),
+    overridePoints: z.number().min(0).nullable().optional(),
+})
+
+activitiesRoute.post("/bulk-update", async (c) => {
+    try {
+        const db = getDb(c.env)
+        const body = await c.req.json()
+        const parsed = ActivityBulkUpdateBody.parse(body)
+
+        const now = Math.floor(Date.now() / 1000)
+
+        const updates: any = {
+            updatedAt: now,
+        }
+        if (parsed.price !== undefined) {
+            updates.price = parsed.price
+        }
+        if (parsed.overridePoints !== undefined) {
+            updates.overridePoints = parsed.overridePoints
+        }
+
+        if (parsed.price === undefined && parsed.overridePoints === undefined) {
+            return c.json({ ok: false, error: "VALIDATION_ERROR", message: "Не вказано полів для оновлення" }, 400)
+        }
+
+        await db.update(activities).set(updates).where(inArray(activities.activityId, parsed.ids))
+
+        return c.json({ ok: true, message: "Активності успішно оновлено" })
+    } catch (err: any) {
+        if (err instanceof z.ZodError) {
+            return c.json(
+                {
+                    ok: false,
+                    error: "VALIDATION_ERROR",
+                    details: err.issues,
+                },
+                400,
+            )
+        }
+        console.error("[POST /activities/bulk-update] error", err)
+        return c.json({ ok: false, error: "INTERNAL_ERROR", message: String(err?.message ?? err) }, 500)
+    }
+})
+
 activitiesRoute.delete("/:id", async (c) => {
     try {
         const id = c.req.param("id")
         const db = getDb(c.env)
 
-        // Check if activity exists
-        const [found] = await db.select().from(activities).where(eq(activities.activityId, id))
+        const ids = id.split(",")
 
-        if (!found) {
+        const existing = await db.select().from(activities).where(inArray(activities.activityId, ids)).all()
+
+        if (existing.length === 0) {
             return c.json({ ok: false, error: "Activity not found" }, 404)
         }
+
+        const foundIds = existing.map(a => a.activityId)
 
         await db.batch([
             // Delete category relationships first
             db
                 .delete(entityCategories)
-                .where(and(eq(entityCategories.entityType, "activity"), eq(entityCategories.entityId, id))),
+                .where(and(eq(entityCategories.entityType, "activity"), inArray(entityCategories.entityId, foundIds))),
             // Delete activity
             db
                 .delete(activities)
-                .where(eq(activities.activityId, id)),
+                .where(inArray(activities.activityId, foundIds)),
         ])
 
         return c.json({ ok: true, message: "Activity deleted successfully" })
@@ -476,3 +585,4 @@ activitiesRoute.delete("/:id", async (c) => {
         return c.json({ ok: false, error: "INTERNAL_ERROR", message: String(err?.message ?? err) }, 500)
     }
 })
+

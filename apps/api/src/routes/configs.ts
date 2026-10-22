@@ -31,7 +31,7 @@ const MainSystemInstructionConfig = z.object({
 const EntitySystemInstructionConfig = z.object({
   entity: z.enum(["promotion", "activity", "game", "system", "benefit", "prize"] as const),
   systemPrompt: z.string().min(1),
-  length: z.coerce.number().int().min(1).default(500),
+  length: z.coerce.number().int().min(1).max(1000).default(500),
   outputTokens: z.coerce.number().int().min(1).optional().nullable(),
 })
 

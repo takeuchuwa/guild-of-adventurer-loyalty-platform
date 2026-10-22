@@ -6,7 +6,7 @@ export const systemSchema = z.object({
         .min(1, "Назва варіанта правил обов'язкова")
         .max(100, "Назва варіанта правил не може перевищувати 100 символів")
         .trim(),
-    description: z.string().max(255, "Опис не може перевищувати 255 символів").trim().optional().or(z.literal("")),
+    description: z.string().max(1000, "Опис не може перевищувати 1000 символів").trim().optional().or(z.literal("")),
 })
 
 export type SystemFormData = z.infer<typeof systemSchema>

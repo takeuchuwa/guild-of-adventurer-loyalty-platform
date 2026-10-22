@@ -49,7 +49,7 @@ export default function ConfigsPage() {
 
   return (
     <Layout breadcrumbs={[{ label: "Автоматизація", path: "/configs" }]}>
-      <div className="container mx-auto py-10">
+      <div className="p-7">
         <ConfigsTable
           columns={configColumns}
           title="Конфігурації автоматизації"

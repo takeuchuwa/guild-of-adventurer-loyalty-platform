@@ -58,7 +58,7 @@ export function MetadataPanel({ levels = [] }: MetadataPanelProps) {
     return (
         <div className="flex flex-col gap-6">
             {/* Card 1: Basic Info */}
-            <div className="border rounded-lg bg-white shadow-sm p-6">
+            <div className="border rounded-lg bg-surface shadow-sm p-6">
                 <h3 className="text-xl font-semibold mb-4">Основна інформація</h3>
                 <div className="space-y-4">
                     <div className="space-y-2">
@@ -108,8 +108,8 @@ export function MetadataPanel({ levels = [] }: MetadataPanelProps) {
                             </div>
                         </div>
                         {!active && (
-                            <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
-                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
+                            <div className="flex items-start gap-2 rounded-md border border-[rgba(138,106,30,.5)] bg-[rgba(138,106,30,.12)] px-3 py-2.5 text-sm text-brass">
+                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-brass" />
                                 <span>Промоакція вимкнена і <strong>не застосовуватиметься</strong> при оформленні замовлень. Увімкніть її, щоб вона почала діяти.</span>
                             </div>
                         )}
@@ -125,7 +125,7 @@ export function MetadataPanel({ levels = [] }: MetadataPanelProps) {
                             {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             <span>Розширені налаштування</span>
                             {advancedBadgeCount > 0 && !showAdvanced && (
-                                <span className="ml-1 text-[11px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                                <span className="ml-1 text-[11px] px-1.5 py-0.5 bg-primary/10 text-primary font-medium">
                                     {advancedBadgeCount}
                                 </span>
                             )}
@@ -145,16 +145,16 @@ export function MetadataPanel({ levels = [] }: MetadataPanelProps) {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="0">
-                                                <span className="flex items-center gap-2">🔥 Найвищий</span>
+                                                <span className="flex items-center gap-2">Найвищий</span>
                                             </SelectItem>
                                             <SelectItem value="1">
-                                                <span className="flex items-center gap-2">⬆️ Високий</span>
+                                                <span className="flex items-center gap-2">Високий</span>
                                             </SelectItem>
                                             <SelectItem value="5">
-                                                <span className="flex items-center gap-2">➡️ Нормальний</span>
+                                                <span className="flex items-center gap-2">Нормальний</span>
                                             </SelectItem>
                                             <SelectItem value="10">
-                                                <span className="flex items-center gap-2">⬇️ Низький</span>
+                                                <span className="flex items-center gap-2">Низький</span>
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -187,14 +187,14 @@ export function MetadataPanel({ levels = [] }: MetadataPanelProps) {
                                         </div>
                                     </div>
                                     {!combinable && (
-                                        <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm text-blue-800">
-                                            <Info className="h-4 w-4 mt-0.5 shrink-0 text-blue-500" />
+                                        <div className="flex items-start gap-2 rounded-md border border-[rgba(201,158,58,.35)] bg-[rgba(201,158,58,.07)] px-3 py-2.5 text-sm text-primary">
+                                            <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                                             <span>Якщо кілька некомбінованих промоакцій одночасно активні, система застосує лише ту, що має <strong>вищий пріоритет</strong>. Комбіновані промоакції при цьому продовжують діяти.</span>
                                         </div>
                                     )}
                                     {combinable && (
-                                        <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
-                                            <Info className="h-4 w-4 mt-0.5 shrink-0 text-emerald-500" />
+                                        <div className="flex items-start gap-2 rounded-md border border-[rgba(201,158,58,.35)] bg-[rgba(201,158,58,.07)] px-3 py-2.5 text-sm text-accent-bright">
+                                            <Info className="h-4 w-4 mt-0.5 shrink-0 text-accent-bright" />
                                             <span>Ця промоакція <strong>завжди застосовується</strong> разом з іншими — вона не блокує інші знижки і не блокується ними.</span>
                                         </div>
                                     )}
@@ -241,7 +241,7 @@ export function MetadataPanel({ levels = [] }: MetadataPanelProps) {
             </div>
 
             {/* Card 2: Trigger & Schedule */}
-            <div className="border rounded-lg bg-white shadow-sm p-6">
+            <div className="border rounded-lg bg-surface shadow-sm p-6">
                 <h3 className="text-xl font-semibold mb-4">Режим та розклад</h3>
                 <div className="space-y-4">
                     <div className="space-y-2">

@@ -97,7 +97,7 @@ export function MainSystemInstructionForm({ disabled }: { disabled?: boolean }) 
                                     />
                                     {showSuggestion && (
                                         <div className="absolute right-3 bottom-3 bg-accent border text-accent-foreground text-xs px-2 py-1 rounded shadow-sm flex items-center gap-1.5 animate-in fade-in slide-in-from-bottom-1 duration-150">
-                                            <Sparkles className="h-3 w-3 text-amber-500" />
+                                            <Sparkles className="h-3 w-3 text-brass" />
                                             <span>Натисніть <kbd className="bg-muted px-1 rounded font-mono font-bold border">Tab</kbd> для автодоповнення <code className="font-mono text-primary font-bold">{"length}}"}</code></span>
                                         </div>
                                     )}

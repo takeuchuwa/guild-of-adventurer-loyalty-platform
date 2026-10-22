@@ -43,7 +43,12 @@ export const promotionsColumns: CustomColumnDef<Promotion>[] = [
             return (
                 <div className="flex flex-wrap gap-1">
                     {parts.map((part, i) => (
-                        <Badge key={i} variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                        <Badge
+                            key={i}
+                            variant="secondary"
+                            // Generated rule fragments — sentence case, body face.
+                            className="border-[rgba(201,158,58,.35)] bg-[rgba(201,158,58,.07)] font-sans text-[11.5px] font-medium tracking-normal normal-case text-primary"
+                        >
                             {part}
                         </Badge>
                     ))}

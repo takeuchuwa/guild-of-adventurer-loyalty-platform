@@ -29,6 +29,9 @@ pnpm-debug.log*
 # wrangler and local db state
 .wrangler-shared-state/
 
+# local dev TLS certs (mkcert)
+certs/
+
 # temporary sql outputs
 output.sql
 schema.sql

@@ -15,9 +15,6 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx"
 import Logo from "@/components/logo.tsx";
 import { Link } from "react-router-dom";
@@ -70,7 +67,7 @@ const data = {
             title: "Програма лояльності",
             items: [
                 {
-                    title: "Авантюристи",
+                    title: "Підкорювачі",
                     icon: () => <UsersIcon />,
                     url: "/members",
                 },
@@ -98,28 +95,28 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar {...props}>
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem className="flex justify-between">
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link to="/">
-                                <div
-                                    className="flex w-8 h-22 items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                                    <Logo />
-                                </div>
-                                <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">Гільдія авантюристів</span>
-                                    <span className="truncate text-xs">Адміністрація</span>
-                                </div>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+            {/*
+                A plain Link, not SidebarMenuButton: that primitive forces
+                `[&>svg]:size-4` onto its child, which squashed the vertical
+                wordmark into a 16px square. This is a brand lockup, not a nav item.
+            */}
+            <SidebarHeader className="border-sidebar-border gap-0 border-b p-0">
+                <Link to="/" className="flex items-center gap-3.5 px-5 py-[18px] transition-opacity hover:opacity-85">
+                    <Logo className="text-primary h-[64px] w-auto shrink-0" />
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5 text-left">
+                        <span className="font-heading text-foreground truncate text-[24px] leading-none font-semibold uppercase tracking-[.1em]">
+                            Вежа
+                        </span>
+                        <span className="font-heading text-primary truncate text-[11px] leading-none font-medium uppercase tracking-[.18em]">
+                            Адміністрація
+                        </span>
+                    </div>
+                </Link>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="gap-0 py-[18px]">
                 <NavMain items={data.navMain} />
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="border-sidebar-border border-t p-5">
                 <NavCheckout />
             </SidebarFooter>
         </Sidebar>

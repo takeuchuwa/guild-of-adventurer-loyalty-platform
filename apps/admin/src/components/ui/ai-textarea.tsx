@@ -118,7 +118,7 @@ const AiTextarea = React.forwardRef<HTMLTextAreaElement, AiTextareaProps>(
                     {isGenerating ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                        <Sparkles className="h-3.5 w-3.5 text-blue-500 hover:text-blue-600 dark:text-blue-400" />
+                        <Sparkles className="h-3.5 w-3.5 text-primary hover:text-primary dark:text-primary" />
                     )}
                 </Button>
             </div>

@@ -36,16 +36,7 @@ export default function CategoryCreatePage() {
                 { label: "Створити категорію", path: "/categories/create" },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Створити категорію</h1>
-                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нової категорії</p>
-                </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    <CategoryForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} />
-                </div>
-            </div>
+            <CategoryForm mode="create" onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} />
         </Layout>
     )
 }

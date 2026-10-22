@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="width:252px; background:#121110; border-right:1px solid rgba(201,158,58,.22); display:flex; flex-direction:column; font-family:Manrope,sans-serif; flex:none;">
+  <div style="padding:22px 20px 20px; border-bottom:1px solid rgba(201,158,58,.14); display:flex; align-items:center; gap:14px;">
+    <img src="assets/logo-gold.png" alt="Vezha" style="height:52px; width:auto; display:block;">
+    <div style="display:flex; flex-direction:column; gap:4px;">
+      <div style="font-family:Oswald,sans-serif; font-weight:600; font-size:22px; letter-spacing:.1em; text-transform:uppercase; color:#EDE6D8; line-height:1;">Вежа</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#C99E3A;">Адміністрація</div>
+    </div>
+  </div>
+
+  <div style="flex:1; overflow:hidden; padding:18px 0 8px; display:flex; flex-direction:column; gap:22px;">
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:rgba(237,230,216,.38); padding:0 20px 10px;">{{ g.title }}</div>
+        <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+          <div style="display:flex; align-items:center; gap:12px; padding:9px 20px; border-left:2px solid {{ it.bar }}; background:{{ it.bg }}; color:{{ it.fg }};">
+            <span style="width:16px; height:16px; flex:none; border:2px solid {{ it.mark }}; background:{{ it.markFill }}; border-radius:{{ it.round }}; transform:{{ it.rot }};"></span>
+            <span style="font-size:14.5px; font-weight:{{ it.weight }}; letter-spacing:.01em;">{{ it.label }}</span>
+            <sc-if value="{{ it.soon }}" hint-placeholder-val="{{ false }}">
+              <span style="margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.14em; color:rgba(237,230,216,.3); border:1px solid rgba(237,230,216,.14); padding:2px 5px;">SOON</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="padding:16px 20px 20px; border-top:1px solid rgba(201,158,58,.14);">
+    <div style="background:#C99E3A; color:#0E0D0C; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; font-family:Oswald,sans-serif; font-weight:600; font-size:17px; letter-spacing:.12em; text-transform:uppercase;">
+      Каса
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; opacity:.65;">F2</span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Підкорювачі&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.active ?? "Підкорювачі";
+    const G = [
+      ["Класифікація", "sq", ["Категорії", "Кімнати", "Ігрові системи"]],
+      ["Клуб", "di", ["Товари", "Активності", "Промоакції"]],
+      ["Програма лояльності", "hx", ["Підкорювачі", "Рівні лояльності", "Автоматизація", "Завдання"]],
+    ];
+    const groups = G.map(([title, shape, items]) => ({
+      title,
+      items: items.map((label) => {
+        const on = label === active;
+        const soon = label === "Завдання";
+        return {
+          label, soon,
+          bar: on ? "#C99E3A" : "transparent",
+          bg: on ? "rgba(201,158,58,.10)" : "transparent",
+          fg: soon ? "rgba(237,230,216,.34)" : on ? "#EDE6D8" : "rgba(237,230,216,.66)",
+          weight: on ? 700 : 500,
+          mark: on ? "#C99E3A" : soon ? "rgba(237,230,216,.22)" : "rgba(237,230,216,.34)",
+          markFill: on ? "#C99E3A" : "transparent",
+          round: shape === "hx" ? "50%" : "0",
+          rot: shape === "di" ? "rotate(45deg)" : "none",
+        };
+      }),
+    }));
+    return { groups };
+  }
+}
+
+</script>
+</body>
+</html>

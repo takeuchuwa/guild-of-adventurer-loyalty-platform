@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
-import type { CartState } from "@/components/checkout/types/checkout"
+import type { CartState, DonationPayload } from "@/components/checkout/types/checkout"
 import {
     fetchCart,
     addItemToCart,
+    addDonationToCart,
     updateCartItemQuantity,
     removeCartItem,
     setMemberInCart,
@@ -17,37 +18,41 @@ import {
 export function useCart() {
     const [cartState, setCartState] = useState<CartState | null>(null)
     const [isCartUpdating, setIsCartUpdating] = useState(false)
+    const [isCartLoading, setIsCartLoading] = useState(true)
 
     const getCartId = () => localStorage.getItem("pos_cart_id")
     const saveCartId = (id: string) => localStorage.setItem("pos_cart_id", id)
     const clearCartId = () => localStorage.removeItem("pos_cart_id")
 
+    /**
+     * Pulls a cart from the server; `null` asks for a brand new empty one. Used
+     * on mount and after checkout/flush, so the till never sits on an absent
+     * cart — an empty cart is a state the cashier can work from, `null` is not.
+     */
+    const loadCart = useCallback(async (cartId: string | null) => {
+        setIsCartLoading(true)
+        try {
+            const res = await fetchCart(cartId)
+            if (res.ok && res.data) {
+                setCartState(res.data)
+                saveCartId(res.data.cartId)
+            } else {
+                clearCartId()
+                setCartState(null)
+            }
+        } catch (error) {
+            console.error("Failed to load cart:", error)
+            clearCartId()
+            setCartState(null)
+        } finally {
+            setIsCartLoading(false)
+        }
+    }, [])
+
     // Initial load
     useEffect(() => {
-        const init = async () => {
-            const id = getCartId()
-            if (id) {
-                setIsCartUpdating(true)
-                try {
-                    const res = await fetchCart(id)
-                    if (res.ok && res.data) {
-                        setCartState(res.data)
-                        saveCartId(res.data.cartId)
-                    } else {
-                        clearCartId()
-                        setCartState(null)
-                    }
-                } catch (error) {
-                    console.error("Failed to load cart:", error)
-                    clearCartId()
-                    setCartState(null)
-                } finally {
-                    setIsCartUpdating(false)
-                }
-            }
-        }
-        init()
-    }, [])
+        loadCart(getCartId())
+    }, [loadCart])
 
     const wrapCartAction = useCallback(async (action: () => Promise<any>) => {
         setIsCartUpdating(true)
@@ -79,6 +84,10 @@ export function useCart() {
         return wrapCartAction(() => addItemToCart(getCartId(), entityId, type, quantity))
     }
 
+    const addDonation = (payload: DonationPayload) => {
+        return wrapCartAction(() => addDonationToCart(getCartId(), payload))
+    }
+
     const updateQuantity = (itemId: string, newQuantity: number) => {
         return wrapCartAction(() => updateCartItemQuantity(getCartId(), itemId, newQuantity))
     }
@@ -108,7 +117,7 @@ export function useCart() {
         try {
             await flushCartState(getCartId())
             clearCartId()
-            setCartState(null)
+            await loadCart(null)
         } catch (error: any) {
             toast.error(error.message || "Помилка при очищенні кошика")
         } finally {
@@ -121,7 +130,8 @@ export function useCart() {
         try {
             const res = await checkoutCart(getCartId(), expectedTotal)
             clearCartId()
-            setCartState(null)
+            // The sold cart is gone server-side; start the next sale on a clean one.
+            await loadCart(null)
             toast.success("Каса успішно закрита! Бали нараховані!")
             return res
         } catch (error: any) {
@@ -142,8 +152,10 @@ export function useCart() {
     return {
         cartState,
         isCartUpdating,
+        isCartLoading,
         actions: {
             addItem,
+            addDonation,
             updateQuantity,
             removeItem,
             setMember,

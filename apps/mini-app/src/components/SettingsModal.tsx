@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react"
-import { X, Bell, BellOff, Eye, EyeOff, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
+import { BottomSheet, SheetTitleRow } from "@/components/BottomSheet"
+import { CategoryIcon } from "@/components/CategoryIcon"
 import { axiosInstance } from "@/lib/api-utils"
 import { useRawInitData } from "@tma.js/sdk-react"
 
@@ -8,28 +10,23 @@ interface SettingsModalProps {
   onClose: () => void
 }
 
+function Toggle({ on }: { on: boolean }) {
+  return (
+    <span
+      className={`relative w-[44px] h-6 shrink-0 flex items-center box-border transition-colors ${
+        on ? "border-2 border-guild-gold bg-guild-gold justify-end pr-[3px]" : "border border-guild-card-border justify-start pl-[3px]"
+      }`}
+    >
+      <span className={`w-[18px] h-[18px] block transition-colors ${on ? "bg-guild-bg-bottom" : "bg-guild-text-muted"}`} />
+    </span>
+  )
+}
+
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [notifications, setNotifications] = useState(true)
   const [leaderboardVisible, setLeaderboardVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-
-  const [isRendered, setIsRendered] = useState(isOpen)
-  const [isClosing, setIsClosing] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsRendered(true)
-      setIsClosing(false)
-    } else if (isRendered) {
-      setIsClosing(true)
-      const timer = setTimeout(() => {
-        setIsRendered(false)
-        setIsClosing(false)
-      }, 300)
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen, isRendered])
 
   const initDataRaw = useRawInitData()
 
@@ -88,146 +85,53 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     saveSettings([{ name: "leaderboard_visibility", value: String(newVal) }])
   }
 
-  // Absolutely Bulletproof iOS Tab Scroll Lock
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const scrollY = window.scrollY;
-    
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollY);
-    };
-  }, [isOpen]);
-
-  if (!isRendered) return null
-
   return (
-    <>
-      <div
-        className={`modal-overlay ${isClosing ? 'animate-fadeOut' : ''}`}
-        onClick={onClose}
-      />
-
-      <div
-        className={`modal-content flex flex-col overscroll-y-none ${isClosing ? 'animate-slideDown' : ''}`}
-        onClick={onClose}
-      >
-        <div className="flex-1 shrink-0 min-h-32 cursor-pointer" onClick={onClose} />
-        <div
-          className="w-full bg-guild-modal-bg rounded-t-[2.5rem] shadow-2xl flex flex-col relative border-t border-white/5 shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Drag Handle */}
-          <div className="flex justify-center pt-4 pb-2">
-            <div className="w-12 h-1.5 bg-white/10 rounded-full" />
-          </div>
-
-          {/* Header */}
-          <header className="flex items-center justify-between px-6 py-2 pb-4">
-            <h1 className="text-guild-gold font-bold text-xl tracking-tight">
-              Налаштування
-            </h1>
-            <button
-              onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors active:scale-95 duration-200"
-            >
-              <X className="w-5 h-5 text-guild-text-muted" />
-            </button>
-          </header>
-
-          {/* Content Area */}
-          <div className="px-6 space-y-6 flex-1 pb-10">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-10">
-                <Loader2 className="w-6 h-6 animate-spin text-guild-gold/50" />
-              </div>
-            ) : (
-              <>
-                {/* Notification Setting Item */}
-                <div
-                  className="relative group p-5 cursor-pointer rounded-2xl bg-black/20 border border-white/5 transition-colors hover:border-guild-gold/30"
-                  style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                  onClick={toggleNotifications}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${notifications ? 'bg-guild-gold/20 border-guild-gold/20' : 'bg-white/5 border-white/10'}`}>
-                      {notifications ? (
-                        <Bell className="w-6 h-6 text-guild-gold" fill="currentColor" />
-                      ) : (
-                        <BellOff className="w-6 h-6 text-white/70" />
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-guild-text leading-tight">Дозволити сповіщення</h3>
-                        {/* React Toggle */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            toggleNotifications()
-                          }}
-                          disabled={isSaving}
-                          className={`relative inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border shadow-inner transition-colors duration-200 focus:outline-none disabled:pointer-events-none ${notifications ? 'bg-guild-gold border-guild-gold/50' : 'bg-black/40 border-white/5'}`}
-                        >
-                          <div className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-sm ring-0 transition duration-200 ease-in-out ${notifications ? 'translate-x-[26px] bg-white' : 'translate-x-[2px] bg-white/50'}`} />
-                        </button>
-                      </div>
-                      <p className="text-sm text-guild-text-muted leading-relaxed mt-1">
-                        Отримуйте сповіщення про новий досвід та важливі події у Гільдії.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Privacy/Identity Setting Item */}
-                <div
-                  className="relative group p-5 cursor-pointer rounded-2xl bg-black/20 border border-white/5 transition-colors hover:border-guild-gold/30"
-                  style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-                  onClick={toggleLeaderboard}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${leaderboardVisible ? 'bg-[#a6cfbf]/20 border-[#a6cfbf]/20' : 'bg-white/5 border-white/10'}`}>
-                      {leaderboardVisible ? (
-                        <Eye className="w-6 h-6 text-[#a6cfbf]" />
-                      ) : (
-                        <EyeOff className="w-6 h-6 text-white/70" />
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-guild-text leading-tight pr-4">Показувати моє ім'я в таблиці лідерів</h3>
-                        {/* React Toggle */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            toggleLeaderboard()
-                          }}
-                          disabled={isSaving}
-                          className={`relative inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border shadow-inner transition-colors duration-200 focus:outline-none disabled:pointer-events-none ${leaderboardVisible ? 'bg-guild-gold border-guild-gold/50' : 'bg-black/40 border-white/5'}`}
-                        >
-                          <div className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-sm ring-0 transition duration-200 ease-in-out ${leaderboardVisible ? 'translate-x-[26px] bg-white' : 'translate-x-[2px] bg-white/50'}`} />
-                        </button>
-                      </div>
-                      <p className="text-sm text-guild-text-muted leading-relaxed mt-1">
-                        За замовчуванням ви анонімні. Увімкніть, щоб відображати ваше реальне ім'я іншим учасникам.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+    <BottomSheet isOpen={isOpen} onClose={onClose} header={<SheetTitleRow title="Налаштування" onClose={onClose} />}>
+      {isLoading ? (
+        <div className="flex justify-center items-center py-10">
+          <Loader2 className="w-6 h-6 animate-spin text-guild-gold/50" />
         </div>
-      </div>
-    </>
+      ) : (
+        <>
+          {/* Notification Setting Item */}
+          <button
+            type="button"
+            onClick={toggleNotifications}
+            disabled={isSaving}
+            className="w-full flex gap-3.5 items-start py-4 border-t border-guild-card-border text-left disabled:opacity-60"
+          >
+            <CategoryIcon shape="square" glyph="!" size={34} className="text-guild-gold shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-heading text-base uppercase tracking-wide text-guild-text leading-tight">
+                Дозволити сповіщення
+              </h3>
+              <p className="text-guild-text-muted text-[13px] mt-1.5 leading-relaxed">
+                Отримуйте сповіщення про новий досвід та важливі події у Вежі.
+              </p>
+            </div>
+            <Toggle on={notifications} />
+          </button>
+
+          {/* Privacy/Identity Setting Item */}
+          <button
+            type="button"
+            onClick={toggleLeaderboard}
+            disabled={isSaving}
+            className="w-full flex gap-3.5 items-start py-4 border-t border-guild-card-border text-left disabled:opacity-60"
+          >
+            <CategoryIcon shape="square" glyph="ТОП" size={34} className="text-guild-gold shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-heading text-base uppercase tracking-wide text-guild-text leading-tight">
+                Показувати ім'я в таблиці лідерів
+              </h3>
+              <p className="text-guild-text-muted text-[13px] mt-1.5 leading-relaxed">
+                За замовчуванням ви анонімні. Увімкніть, щоб інші бачили ваше справжнє ім'я.
+              </p>
+            </div>
+            <Toggle on={leaderboardVisible} />
+          </button>
+        </>
+      )}
+    </BottomSheet>
   )
 }

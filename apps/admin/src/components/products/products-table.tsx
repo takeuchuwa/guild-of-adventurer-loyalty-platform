@@ -26,22 +26,26 @@ interface ProductsTableProps {
     initialSelection?: string[]
     pageSize?: number
     storageKey?: string
+    meta?: Record<string, any>
 }
+
+const EMPTY_FILTER_PARAMS: Record<string, any> = {}
 
 export function ProductTable({
     columns,
-    selectionMode = "single",
+    selectionMode = "multiple",
     title,
     emptyStateMessage = "Не знайдено товарів за вашим запитом",
     actions = [],
     filters = [],
-    filterParams = {},
+    filterParams = EMPTY_FILTER_PARAMS,
     searchProperties,
     onLoadProductsRef,
     onSelectionChange,
     initialSelection,
     pageSize = 10,
     storageKey,
+    meta,
 }: ProductsTableProps) {
     const [products, setProducts] = useState<Product[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -95,6 +99,11 @@ export function ProductTable({
         }
     }, [loadProducts, onLoadProductsRef])
 
+    const onSelectionChangeRef = useRef(onSelectionChange)
+    useEffect(() => {
+        onSelectionChangeRef.current = onSelectionChange
+    }, [onSelectionChange])
+
     // Notify parent about selection changes (cross-page tracking)
     useEffect(() => {
         if (products.length > 0) {
@@ -107,11 +116,11 @@ export function ProductTable({
                 }
             })
 
-            if (onSelectionChange) {
-                onSelectionChange(new Map(allSelectedProducts.current))
+            if (onSelectionChangeRef.current) {
+                onSelectionChangeRef.current(new Map(allSelectedProducts.current))
             }
         }
-    }, [rowSelection, products, onSelectionChange])
+    }, [rowSelection, products])
 
     useEffect(() => {
         allSelectedProducts.current.clear()
@@ -149,6 +158,7 @@ export function ProductTable({
                 searchProps.onSimpleSearch(query);
                 resetCursors();
             }}
+            meta={meta}
         />
     )
 }

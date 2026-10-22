@@ -164,6 +164,9 @@ checkoutRoute.post("/", async (c) => {
                 if (item.pointsEarned && item.pointsEarned > 0) {
                     currentBalance += item.pointsEarned
 
+                    // A donation is recorded by its "Донат: …" note, optionally tied to the event it was collected at.
+                    const isDonation = item.type === "donation"
+
                     ledgerEntries.push({
                         entryId: uuidv7(),
                         memberId: member.memberId,
@@ -171,9 +174,9 @@ checkoutRoute.post("/", async (c) => {
                         delta: item.pointsEarned,
                         balanceAfter: currentBalance,
                         productId: item.type === "product" ? item.entityId : null,
-                        activityId: item.type === "activity" ? item.entityId : null,
+                        activityId: item.type === "activity" ? item.entityId : isDonation ? (item.donation?.activityId ?? null) : null,
                         promoId: null,
-                        adminNote: null,
+                        adminNote: isDonation ? (item.name ?? null) : null,
                         idempotencyKey: `${transactionPrefix}-line-${item.id}`,
                     })
                 }
@@ -203,7 +206,7 @@ checkoutRoute.post("/", async (c) => {
             // Process Member Statistics
             const statsUpdates: Record<string, number> = {};
             for (const item of calculatedCart.items) {
-                if (item.quantity > 0) {
+                if (item.type !== "donation" && item.quantity > 0) {
                     if (!statsUpdates[item.entityId]) statsUpdates[item.entityId] = 0;
                     statsUpdates[item.entityId] += item.quantity;
                 }

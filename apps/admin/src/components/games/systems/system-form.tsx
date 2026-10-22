@@ -3,9 +3,8 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { AiTextarea } from "@/components/ui/ai-textarea"
+import { FormField } from "@/components/shared/form-shell"
 import { Loader2 } from "lucide-react"
 import type { System } from "@/components/games/systems/types/system"
 import { z } from "zod"
@@ -68,11 +67,8 @@ export function SystemForm({ mode, initialData, onSubmit, onCancel, isLoading = 
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="name">
-                    Назва <span className="text-destructive">*</span>
-                </Label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+            <FormField label="Назва" htmlFor="name" required error={errors.name}>
                 <Input
                     id="name"
                     value={formData.name}
@@ -84,26 +80,30 @@ export function SystemForm({ mode, initialData, onSubmit, onCancel, isLoading = 
                     }}
                     placeholder="Введіть назву редакції/правил"
                     disabled={isLoading}
-                    className={errors.name ? "border-destructive" : ""}
+                    aria-invalid={!!errors.name}
                 />
-                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-            </div>
+            </FormField>
 
-            <div className="space-y-2">
-                <Label htmlFor="description">Опис</Label>
+            <FormField label="Опис" htmlFor="description" error={errors.description}>
                 <AiTextarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) => {
+                        setFormData({ ...formData, description: e.target.value })
+                        if (errors.description) {
+                            setErrors({ ...errors, description: undefined })
+                        }
+                    }}
                     placeholder="Введіть опис редакції/правил"
                     disabled={isLoading}
                     rows={4}
                     entityType="system"
                     entityName={formData.name}
+                    aria-invalid={!!errors.description}
                 />
-            </div>
+            </FormField>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex justify-end gap-2.5 pt-2">
                 <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading} className="cursor-pointer">
                     Скасувати
                 </Button>

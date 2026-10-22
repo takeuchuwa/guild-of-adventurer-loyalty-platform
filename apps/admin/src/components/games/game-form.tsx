@@ -3,12 +3,9 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { AiTextarea } from "@/components/ui/ai-textarea"
-import { Loader2 } from "lucide-react"
+import { FormActions, FormField, FormShell } from "@/components/shared/form-shell"
 import type { Game } from "./types/game"
 import { z } from "zod"
 import {type GameFormData, gameSchema} from "@/components/games/types/validations/game.ts";
@@ -19,9 +16,12 @@ interface GameFormProps {
     onCancel: () => void
     isLoading?: boolean
     mode: "create" | "edit"
+    /** Edit screens title the page with the game's own name. */
+    title?: string
+    description?: string
 }
 
-export function GameForm({ initialData, onSubmit, onCancel, isLoading = false, mode }: GameFormProps) {
+export function GameForm({ initialData, onSubmit, onCancel, isLoading = false, mode, title, description }: GameFormProps) {
     const [formData, setFormData] = useState<GameFormData>({
         name: initialData?.name || "",
         description: initialData?.description || "",
@@ -75,52 +75,48 @@ export function GameForm({ initialData, onSubmit, onCancel, isLoading = false, m
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name">
-                        Назва ігрової системи <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => {
-                            setFormData({ ...formData, name: e.target.value })
-                            if (errors.name) {
-                                setErrors({ ...errors, name: undefined })
-                            }
-                        }}
-                        placeholder="Наприклад: D&D, Pathfinder"
-                        disabled={isLoading}
-                        className={errors.name ? "border-destructive" : ""}
-                    />
-                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                </div>
+        <FormShell
+            title={title ?? (mode === "create" ? "Створити ігрову систему" : "Редагувати ігрову систему")}
+            description={
+                description ?? (mode === "create" ? "Заповніть форму для створення нової ігрової системи" : "Оновіть назву та опис ігрової системи")
+            }
+            onSubmit={handleSubmit}
+            actions={<FormActions mode={mode} isLoading={isLoading} onCancel={onCancel} />}
+        >
+            <FormField label="Назва ігрової системи" htmlFor="name" required error={errors.name}>
+                <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value })
+                        if (errors.name) {
+                            setErrors({ ...errors, name: undefined })
+                        }
+                    }}
+                    placeholder="Наприклад: D&D, Pathfinder"
+                    disabled={isLoading}
+                    aria-invalid={!!errors.name}
+                />
+            </FormField>
 
-                <div className="space-y-2">
-                    <Label htmlFor="description">Опис</Label>
-                    <AiTextarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        placeholder="Опис ігрової системи (необов'язково)"
-                        disabled={isLoading}
-                        rows={4}
-                        entityType="game"
-                        entityName={formData.name}
-                    />
-                </div>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-                <Button type="button" className="cursor-pointer" variant="outline" onClick={onCancel} disabled={isLoading}>
-                    Скасувати
-                </Button>
-                <Button type="submit" className="cursor-pointer" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {mode === "create" ? "Створити" : "Зберегти"}
-                </Button>
-            </div>
-        </form>
+            <FormField label="Опис" htmlFor="description" error={errors.description}>
+                <AiTextarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => {
+                        setFormData({ ...formData, description: e.target.value })
+                        if (errors.description) {
+                            setErrors({ ...errors, description: undefined })
+                        }
+                    }}
+                    placeholder="Опис ігрової системи (необов'язково)"
+                    disabled={isLoading}
+                    rows={4}
+                    entityType="game"
+                    entityName={formData.name}
+                    aria-invalid={!!errors.description}
+                />
+            </FormField>
+        </FormShell>
     )
 }

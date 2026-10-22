@@ -1,6 +1,3 @@
-import { HelpCircleIcon, Users } from "lucide-react"
-import { GuildLogo } from "./GuildLogo"
-
 interface HeaderProps {
   onInviteClick: () => void
   onMenuClick: () => void
@@ -8,26 +5,29 @@ interface HeaderProps {
 
 export function Header({ onInviteClick, onMenuClick }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between px-4 pt-4 pb-2">
+    <header className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-guild-card-border">
       {/* Invite friends button */}
       <button
         onClick={onInviteClick}
-        className="p-2 rounded-xl transition-colors active:bg-white/10"
+        className="w-9 h-9 flex items-center justify-center border-2 border-guild-gold text-guild-gold font-mono text-[11px] transition-colors active:bg-guild-gold active:text-guild-bg-bottom"
         aria-label="Запросити друзів"
       >
-        <Users className="w-6 h-6 text-guild-gold" />
+        +1
       </button>
 
-      {/* Center logo only */}
-      <GuildLogo className="h-16 w-auto" />
+      {/* "V" monogram */}
+      <div className="w-[34px] h-[34px] flex items-center justify-center border-2 border-guild-gold text-guild-gold font-heading font-bold text-xl leading-none">
+        V
+      </div>
 
       {/* Help menu */}
       <button
         onClick={onMenuClick}
-        className="p-2 rounded-xl transition-colors active:bg-white/10"
+        className="relative w-9 h-9 flex items-center justify-center group"
         aria-label="Меню"
       >
-        <HelpCircleIcon className="w-6 h-6 text-guild-gold" />
+        <span className="absolute w-[27px] h-[27px] border-2 border-guild-gold rotate-45 transition-colors group-active:bg-guild-gold" />
+        <span className="relative font-mono text-[13px] text-guild-gold transition-colors group-active:text-guild-bg-bottom">?</span>
       </button>
     </header>
   )

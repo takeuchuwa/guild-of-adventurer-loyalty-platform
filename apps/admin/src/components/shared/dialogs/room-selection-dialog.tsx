@@ -56,6 +56,7 @@ export function RoomSelectionDialog({ open, onOpenChange, onConfirm }: RoomSelec
                         selectionMode="single"
                         onSelectionChange={handleRoomSelection}
                         pageSize={5}
+                        meta={{ isDialog: true }}
                     />
                 </div>
 

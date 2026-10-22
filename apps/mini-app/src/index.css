@@ -5,37 +5,39 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =============================
-   Guild of Adventurer Theme
+   Vezha Theme
    ============================= */
 
 @theme inline {
   /* Brand Colors */
-  --color-guild-bg-top: #011711;
-  --color-guild-bg-mid: #0b241d;
-  --color-guild-bg-bottom: #00110c;
-  --color-guild-card: rgba(40, 78, 65, 0.4);
-  --color-guild-card-hover: rgba(26, 92, 66, 0.5);
-  --color-guild-card-border: rgba(200, 166, 121, 0.15);
-  --color-guild-gold: #C8A679;
-  --color-guild-pure-gold: #FFD700;
-  --color-guild-orange: #D47826;
-  --color-guild-red: #C82813;
-  --color-guild-gold-light: #F4E5C4;
-  --color-guild-gold-dim: rgba(200, 166, 121, 0.6);
-  --color-guild-green-accent: #2D9B6E;
-  --color-guild-green-light: #3BBF89;
-  --color-guild-text: #FAFAF5;
-  --color-guild-text-muted: rgba(250, 250, 245, 0.6);
-  --color-guild-text-dim: rgba(250, 250, 245, 0.4);
-  --color-guild-positive: #4ADE80;
-  --color-guild-negative: #F87171;
-  --color-guild-progress-bg: rgba(255, 255, 255, 0.1);
-  --color-guild-progress-fill: #C8A679;
-  --color-guild-modal-bg: #0A1F17;
-  --color-guild-tab-active: #D47826;
-  --color-guild-tab-inactive: #6a7d75;
-  --color-guild-divider: rgba(200, 166, 121, 0.1);
+  --color-guild-bg-top: #1A1715;
+  --color-guild-bg-mid: #131110;
+  --color-guild-bg-bottom: #0E0D0C;
+  --color-guild-card: #1C1917;
+  --color-guild-card-hover: #23201C;
+  --color-guild-card-border: rgba(201, 158, 58, 0.22);
+  --color-guild-gold: #C99E3A;
+  --color-guild-pure-gold: #E3C46A;
+  --color-guild-orange: #8A6A1E;
+  --color-guild-red: #7E2B21;
+  --color-guild-gold-light: #E3C46A;
+  --color-guild-gold-dim: rgba(201, 158, 58, 0.6);
+  --color-guild-green-accent: #C99E3A;
+  --color-guild-green-light: #E3C46A;
+  --color-guild-text: #EDE6D8;
+  --color-guild-text-muted: rgba(237, 230, 216, 0.6);
+  --color-guild-text-dim: rgba(237, 230, 216, 0.42);
+  --color-guild-positive: #C99E3A;
+  --color-guild-negative: #7E2B21;
+  --color-guild-progress-bg: rgba(237, 230, 216, 0.08);
+  --color-guild-progress-fill: #C99E3A;
+  --color-guild-modal-bg: #141210;
+  --color-guild-tab-active: #C99E3A;
+  --color-guild-tab-inactive: #6C6862;
+  --color-guild-divider: rgba(201, 158, 58, 0.22);
   --font-sans: 'Manrope', sans-serif;
+  --font-heading: 'Oswald', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   /* MD3 Setting Token Overrides */
   --color-primary-container: #2b1900;
@@ -139,7 +141,7 @@ body {
   background:
     linear-gradient(to bottom,
       var(--color-guild-bg-top) 0%,
-      var(--color-guild-bg-mid) 20%,
+      var(--color-guild-bg-mid) 38%,
       var(--color-guild-bg-bottom) 100%) no-repeat top center / 100% 100vh,
     var(--color-guild-bg-bottom);
   width: 100%;
@@ -150,46 +152,40 @@ body {
 }
 
 /* =============================
-   Glass Card
+   Flat Card (opaque, no glass)
    ============================= */
 
 .glass-card {
   background: var(--color-guild-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 16px;
   position: relative;
   overflow: hidden;
-  /* Safari blur lag fix */
-  transform: translate3d(0, 0, 0);
 }
 
-.glass-card-bottom-tabs {
-  background: var(--color-guild-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: calc(infinity * 1px);
-  position: relative;
-  overflow: hidden;
-  /* Safari blur lag fix */
-  transform: translate3d(0, 0, 0);
+/* =============================
+   Global chrome rules: flat surfaces only.
+   No radius, shadow, blur or glow anywhere except
+   elements explicitly opted out via [data-radius-exempt]
+   (avatar circle, QR frame).
+   ============================= */
+
+#root * {
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
 }
 
+#root *:not([data-radius-exempt]):not([data-radius-exempt] *) {
+  border-radius: 0 !important;
+}
 
-.ripple-effect {
+.tap-invert {
   position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  transform: scale(0);
-  animation: rippleAnim 1.2s ease-out;
+  inset: 0;
+  background: var(--color-guild-gold);
+  opacity: 0;
   pointer-events: none;
-}
-
-@keyframes rippleAnim {
-  to {
-    transform: scale(2.5);
-    opacity: 0;
-  }
+  transition: opacity 90ms ease-out;
 }
 
 /* =============================
@@ -204,7 +200,7 @@ body {
 }
 
 .progress-bar-fill {
-  background: linear-gradient(90deg, var(--color-guild-orange), var(--color-guild-red));
+  background: var(--color-guild-gold);
   border-radius: 999px;
   height: 100%;
   transition: width 0.7s cubic-bezier(0.25, 1, 0.5, 1);
@@ -234,9 +230,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(14, 13, 12, 0.82);
   z-index: 50;
   animation: fadeIn 0.2s ease-out;
 }
@@ -246,7 +240,7 @@ body {
   inset: 0;
   z-index: 51;
   overflow-y: auto;
-  animation: slideUp 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  animation: slideUp 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @keyframes fadeIn {
@@ -290,11 +284,11 @@ body {
 }
 
 .animate-fadeOut {
-  animation: fadeOut 0.25s ease-in forwards;
+  animation: fadeOut 0.2s ease-in forwards;
 }
 
 .animate-slideDown {
-  animation: slideDown 0.3s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  animation: slideDown 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 /* =============================
@@ -311,7 +305,6 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-guild-text-dim);
-  border-radius: 4px;
 }
 
 :root {

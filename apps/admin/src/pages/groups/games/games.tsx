@@ -64,7 +64,7 @@ export default function GamesPage() {
 
     return (
         <Layout breadcrumbs={[{ label: "Ігрові системи", path: "/games" }]}>
-            <div className="container mx-auto py-10">
+            <div className="p-7">
                 <GameTable
                     columns={defaultColumns}
                     searchProperties={searchProperties}

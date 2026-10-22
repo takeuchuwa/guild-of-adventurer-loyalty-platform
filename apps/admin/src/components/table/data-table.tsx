@@ -37,6 +37,17 @@ export type DataTableAction<TData> = {
   onClick: (selectedRows: TData[]) => void
   isDisabled?: (selectedRows: TData[]) => boolean
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "destructiveOutline"
+  /**
+   * `global` actions sit next to the page title and are always available.
+   * `selection` actions live on the right of the toolbar and only appear once
+   * rows are selected. Defaults to `selection` for any action that declares
+   * `isDisabled` (those are the ones that read the selection), `global` otherwise.
+   */
+  scope?: "global" | "selection"
+}
+
+function actionScope<TData>(action: DataTableAction<TData>): "global" | "selection" {
+  return action.scope ?? (action.isDisabled ? "selection" : "global")
 }
 
 export type DataTableFilter = {
@@ -45,6 +56,8 @@ export type DataTableFilter = {
 
 interface DataTableProps<TData, TValue> {
   title?: string
+  /** `page` renders the Oswald page title; `section` for tables embedded in a screen. */
+  titleVariant?: "page" | "section"
   columns: CustomColumnDef<TData, TValue>[]
   data: TData[]
   pagination?: {
@@ -73,10 +86,12 @@ interface DataTableProps<TData, TValue> {
   rowId?: keyof TData
   searchMask?: string
   searchDefaultValue?: string
+  meta?: Record<string, any>
 }
 
 export function DataTable<TData, TValue>({
   title,
+  titleVariant = "page",
   columns,
   data,
   pagination,
@@ -93,6 +108,7 @@ export function DataTable<TData, TValue>({
   rowId,
   searchMask,
   searchDefaultValue = "",
+  meta,
 }: DataTableProps<TData, TValue>) {
   const [searchValue, setSearchValue] = useState(searchDefaultValue)
 
@@ -131,7 +147,7 @@ export function DataTable<TData, TValue>({
             <Checkbox
               checked={row.getIsSelected()}
               disabled={!row.getCanSelect()}
-              className="rounded-full cursor-pointer"
+              className="cursor-pointer"
               aria-label="Select row"
             />
           )
@@ -166,6 +182,7 @@ export function DataTable<TData, TValue>({
     manualSorting: !!sorting,
     enableSorting: !!sorting,
     getRowId: rowId ? (row) => row[rowId] as unknown as string : undefined,
+    meta,
   })
 
   const handleRowClick = useCallback((row: Row<TData>, event: MouseEvent) => {
@@ -191,10 +208,11 @@ export function DataTable<TData, TValue>({
   }, [onSimpleSearch, searchValue, searchMask, stripMask])
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-w-0 flex-col gap-5">
       <TableToolbar<TData>
         table={table}
         title={title}
+        titleVariant={titleVariant}
         actions={actions}
         filters={filters}
         selectionMode={selectionMode}
@@ -206,7 +224,8 @@ export function DataTable<TData, TValue>({
         searchMask={searchMask}
       />
 
-      <div className="rounded-md border relative">
+      {/* One hairline frame around header, rows and the footer strip. */}
+      <div className="border-hairline relative flex min-w-0 flex-col border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -219,18 +238,18 @@ export function DataTable<TData, TValue>({
                   >
                     {header.isPlaceholder ? null : (
                       <div
-                        className={cn("flex items-center", header.column.getCanSort() && "cursor-pointer select-none")}
+                        className={cn("group flex items-center", header.column.getCanSort() && "cursor-pointer select-none")}
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && (
                           <div className="ml-2">
                             {header.column.getIsSorted() === "asc" ? (
-                              <ChevronUp className="h-4 w-4" />
+                              <ChevronUp className="h-3.5 w-3.5" />
                             ) : header.column.getIsSorted() === "desc" ? (
-                              <ChevronDown className="h-4 w-4" />
+                              <ChevronDown className="h-3.5 w-3.5" />
                             ) : (
-                              <div className="h-4 w-4 opacity-0 group-hover:opacity-50">
+                              <div className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-50">
                                 <ChevronUp className="h-2 w-2" />
                                 <ChevronDown className="h-2 w-2" />
                               </div>
@@ -251,7 +270,7 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   onClick={(e) => handleRowClick(row, e)}
-                  className={cn(selectionMode !== "none" ? "cursor-pointer" : "", "hover:bg-muted/50")}
+                  className={cn(selectionMode !== "none" ? "cursor-pointer" : "")}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
@@ -259,31 +278,32 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ))
             ) : (
-              <TableRow>
-                <TableCell colSpan={tableColumns.length} className="h-24 text-center">
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={tableColumns.length} className="text-muted-foreground h-24 text-center">
                   {isLoading ? "" : emptyStateMessage}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+
+        {pagination && (
+          <TablePagination
+            pagination={pagination.pagination}
+            onPaginationChange={pagination.onPaginationChange}
+            sizes={[5, 10, 20, 50]}
+            hasNextPage={pagination.hasNextPage}
+            onCalculateTotal={pagination.onCalculateTotal}
+            total={pagination.total}
+          />
+        )}
+
         {isLoading && (
-          <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin" />
+          <div className="bg-background/60 absolute inset-0 flex items-center justify-center">
+            <Loader2 className="text-primary h-6 w-6 animate-spin" />
           </div>
         )}
       </div>
-
-      {pagination && (
-        <TablePagination
-          pagination={pagination.pagination}
-          onPaginationChange={pagination.onPaginationChange}
-          sizes={[5, 10, 20, 50]}
-          hasNextPage={pagination.hasNextPage}
-          onCalculateTotal={pagination.onCalculateTotal}
-          total={pagination.total}
-        />
-      )}
     </div>
   )
 }
@@ -291,6 +311,7 @@ export function DataTable<TData, TValue>({
 interface TableToolbarProps<TData> {
   table: ReturnType<typeof useReactTable<TData>>
   title?: string
+  titleVariant: "page" | "section"
   actions: DataTableAction<TData>[]
   filters: DataTableFilter[]
   selectionMode: "single" | "multiple" | "none"
@@ -305,6 +326,7 @@ interface TableToolbarProps<TData> {
 function TableToolbar<TData>({
   table,
   title,
+  titleVariant,
   actions,
   filters,
   searchPlaceholder,
@@ -315,71 +337,91 @@ function TableToolbar<TData>({
   searchMask,
 }: TableToolbarProps<TData>) {
   const selectedRows = table.getSelectedRowModel().rows
+  const selectedData = useMemo(() => selectedRows.map((row) => row.original), [selectedRows])
+  const selectedCount = selectedRows.length
+
+  const globalActions = actions.filter((action) => actionScope(action) === "global")
+  const selectionActions = actions.filter((action) => actionScope(action) === "selection")
+
+  const renderAction = (action: DataTableAction<TData>, index: number, fallbackVariant: "default" | "outline" | "secondary") => (
+    <Button
+      key={index}
+      variant={action.variant || fallbackVariant}
+      size="sm"
+      onClick={() => action.onClick(selectedData)}
+      disabled={action.isDisabled ? action.isDisabled(selectedData) : false}
+      className="flex cursor-pointer items-center gap-1"
+    >
+      {action.icon && <span className="mr-1">{action.icon}</span>}
+      {action.label}
+    </Button>
+  )
 
   return (
-    <div className="space-y-3">
-      {title && (
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold">{title}</h2>
+    <div className="flex flex-col gap-5">
+      {(title || globalActions.length > 0) && (
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          {title &&
+            (titleVariant === "page" ? (
+              <h1 className="font-heading text-[40px] leading-none font-bold uppercase tracking-[.03em]">{title}</h1>
+            ) : (
+              <h2 className="font-heading text-[20px] leading-none font-semibold uppercase tracking-[.06em]">{title}</h2>
+            ))}
+          {globalActions.length > 0 && (
+            <div className="ml-auto flex flex-wrap gap-2.5">
+              {/* The first global action is the screen's single filled gold button. */}
+              {globalActions.map((action, index) => renderAction(action, index, index === 0 ? "default" : "outline"))}
+            </div>
+          )}
         </div>
       )}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {actions.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {actions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant={action.variant || "outline"}
-                  size="sm"
-                  onClick={() => action.onClick(selectedRows.map((row) => row.original))}
-                  disabled={action.isDisabled ? action.isDisabled(selectedRows.map((row) => row.original)) : false}
-                  className="flex items-center gap-1 cursor-pointer"
-                >
-                  {action.icon && <span className="mr-1">{action.icon}</span>}
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
 
-        <div className="flex items-center gap-2">
-          {showSearch && (
-            <div className="relative w-full sm:w-64 md:w-80">
-              {searchMask ? (
-                <InputMask
-                  mask={searchMask}
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && onSearch()}
-                  placeholder={searchPlaceholder}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                />
-              ) : (
-                <Input
-                  placeholder={searchPlaceholder}
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && onSearch()}
-                  className="pr-10"
-                />
-              )}
-              <Button variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 cursor-pointer" onClick={onSearch}>
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+      <div className="flex flex-wrap items-center gap-3">
+        {showSearch && (
+          <div className="relative w-full sm:w-72 md:w-80">
+            {searchMask ? (
+              <InputMask
+                mask={searchMask}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onSearch()}
+                placeholder={searchPlaceholder}
+                className="bg-surface flex h-[42px] w-full border border-[rgba(201,158,58,.28)] px-3.5 py-1 pr-10 font-mono text-[13px] transition-colors outline-none placeholder:text-foreground/40 focus-visible:border-primary focus-visible:outline-1 focus-visible:outline-offset-0 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
+              />
+            ) : (
+              <Input
+                placeholder={searchPlaceholder}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onSearch()}
+                className="bg-surface h-[42px] border-[rgba(201,158,58,.28)] pr-10 text-[14px]"
+              />
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary absolute top-0 right-0 h-full cursor-pointer px-3 hover:bg-transparent"
+              onClick={onSearch}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {filters.map((filter, index) => (
+          <div key={index}>{filter.component}</div>
+        ))}
+
+        {/* Bulk actions surface only once something is selected. */}
+        {selectionActions.length > 0 && selectedCount > 0 && (
+          <div className="ml-auto flex flex-wrap items-center gap-2.5">
+            <span className="text-primary font-heading text-[12px] font-semibold uppercase tracking-[.14em]">
+              Обрано <span className="font-mono">{selectedCount}</span>
+            </span>
+            {selectionActions.map((action, index) => renderAction(action, index, "secondary"))}
+          </div>
+        )}
       </div>
-
-      {filters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          {filters.map((filter, index) => (
-            <div key={index}>{filter.component}</div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

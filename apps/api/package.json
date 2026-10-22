@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "predev": "pnpm --filter @loyalty/db build",
-    "dev": "wrangler dev --config wrangler.jsonc --persist-to=../../packages/db/.wrangler-shared-state",
+    "dev": "wrangler dev --config wrangler.jsonc --persist-to=../../packages/db/.wrangler-shared-state --local-protocol https --https-key-path ./certs/localhost-key.pem --https-cert-path ./certs/localhost.pem",
     "deploy:staging": "wrangler deploy --env staging --config wrangler.jsonc",
     "deploy:prod": "wrangler deploy --env production --config wrangler.jsonc",
     "typecheck": "tsc -p tsconfig.json",

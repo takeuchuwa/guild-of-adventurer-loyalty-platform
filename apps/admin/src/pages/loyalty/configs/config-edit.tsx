@@ -60,16 +60,10 @@ export default function ConfigEditPage() {
     return (
         <Layout
             breadcrumbs={[{label: "Автоматизація", path: "/configs"}, {label: initial.name, path: `/configs/${id}`}]}>
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагування конфігурації</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть параметри автоматизації</p>
-                </div>
-                {initial && (
-                    <ConfigForm mode="edit" initial={initial} disableTrigger onSubmit={onSubmit} onCancel={() => navigate("/configs")}/>
-                )}
-                {!initial && !loading && <div className="text-muted-foreground">Конфігурацію не знайдено</div>}
-            </div>
+            {initial && (
+                <ConfigForm mode="edit" initial={initial} disableTrigger onSubmit={onSubmit} onCancel={() => navigate("/configs")}/>
+            )}
+            {!initial && !loading && <div className="text-muted-foreground p-8">Конфігурацію не знайдено</div>}
         </Layout>
     )
 }

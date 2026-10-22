@@ -68,7 +68,7 @@ export default function ActivityEdit() {
                     { label: "Редагувати активність", path: `/activities/${id}` },
                 ]}
             >
-                <div className="container mx-auto py-10 max-w-2xl">
+                <div className="p-10">
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin" />
                     </div>
@@ -88,16 +88,7 @@ export default function ActivityEdit() {
                 { label: activity.name, path: `/activities/${id}` },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагувати активність</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть інформацію активності</p>
-                </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    <ActivityForm initialData={activity} onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} mode="edit"/>
-                </div>
-            </div>
+            <ActivityForm initialData={activity} onSubmit={handleSubmit} onCancel={handleCancel} isLoading={isLoading} mode="edit"/>
         </Layout>
     )
 }

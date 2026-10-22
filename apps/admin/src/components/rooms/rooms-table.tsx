@@ -22,6 +22,7 @@ interface RoomsTableProps {
     onSelectionChange?: (selected: Map<string, Room>) => void
     pageSize?: number
     storageKey?: string
+    meta?: Record<string, any>
 }
 
 export function RoomsTable({
@@ -35,6 +36,7 @@ export function RoomsTable({
     onSelectionChange,
     pageSize = 10,
     storageKey,
+    meta,
 }: RoomsTableProps) {
     const [rooms, setRooms] = useState<Room[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -120,6 +122,7 @@ export function RoomsTable({
                 searchProps.onSimpleSearch(query);
                 resetCursors();
             }}
+            meta={meta}
         />
     )
 }

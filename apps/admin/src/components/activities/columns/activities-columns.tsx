@@ -1,7 +1,7 @@
 import type { CustomColumnDef } from "@/types/table"
 import type { Activity } from "@/components/activities/types/activity"
 import type { Category } from "@/components/categories/types/category-types.tsx"
-import { CalendarDaysIcon, Dice5Icon, ListIcon, Clock } from "lucide-react"
+import { CalendarDaysIcon, Dice5Icon, ListIcon, Clock, ExternalLink } from "lucide-react"
 import { Link } from "react-router-dom"
 import { formatDate } from "@/lib/format-utils.ts"
 import { Button } from "@/components/ui/button.tsx"
@@ -37,11 +37,31 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
         header: "Назва активності",
         accessorKey: "name",
         size: 20,
-        cell: ({ row }) => (
-            <Link to={`/activities/${row.original.activityId}`} className="font-semibold hover:underline">
-                {row.original.name}
-            </Link>
-        ),
+        cell: ({ row, table }) => {
+            const isDialog = (table.options.meta as any)?.isDialog
+            if (isDialog) {
+                return (
+                    <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">{row.original.name}</span>
+                        <a
+                            href={`/activities/${row.original.activityId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors p-0.5"
+                            data-no-select="true"
+                            title="Відкрити сторінку активності в новій вкладці"
+                        >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                    </div>
+                )
+            }
+            return (
+                <Link to={`/activities/${row.original.activityId}`} className="font-semibold hover:underline">
+                    {row.original.name}
+                </Link>
+            )
+        },
     },
     {
         id: "price",
@@ -113,9 +133,10 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
         header: "Гра",
         accessorKey: "game",
         size: 20,
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const game = row.original.game
             const system = row.original.system
+            const isDialog = (table.options.meta as any)?.isDialog
 
             if (!game) {
                 return <span className="text-muted-foreground italic">—</span>
@@ -124,9 +145,13 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
             return (
                 <div className="line-clamp-2 flex items-center gap-2">
                     <Dice5Icon className="w-4 h-4 text-muted-foreground" />
-                    <Link to={`/games/${game.gameId}`} className="text-primary hover:underline">
-                        {game.name}
-                    </Link>
+                    {isDialog ? (
+                        <span className="font-semibold text-foreground">{game.name}</span>
+                    ) : (
+                        <Link to={`/games/${game.gameId}`} className="text-primary hover:underline">
+                            {game.name}
+                        </Link>
+                    )}
                     {system?.name && <span className="text-muted-foreground"> ({system.name})</span>}
                 </div>
             )
@@ -171,8 +196,9 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
         accessorKey: "categories",
         size: 15,
         minSize: 15,
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const categories = row.original.categories as Category[] | undefined
+            const isDialog = (table.options.meta as any)?.isDialog
             if (!categories || categories.length === 0) return <span className="text-muted-foreground italic">—</span>
 
             return (
@@ -181,11 +207,15 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
                     <div className="flex flex-wrap gap-x-1">
                         {categories.map((c, i) => (
                             <span key={c.categoryId} className="inline-flex items-center gap-1">
-                <Link to={`/categories/${c.categoryId}`} className="text-primary hover:underline">
-                  {c.name}
-                </Link>
+                                {isDialog ? (
+                                    <span className="font-semibold text-foreground">{c.name}</span>
+                                ) : (
+                                    <Link to={`/categories/${c.categoryId}`} className="text-primary hover:underline">
+                                        {c.name}
+                                    </Link>
+                                )}
                                 {i < categories.length - 1 && ","}
-              </span>
+                            </span>
                         ))}
                     </div>
                 </div>
@@ -197,8 +227,9 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
         header: "Кімната",
         accessorKey: "room",
         size: 15,
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const room = row.original.room
+            const isDialog = (table.options.meta as any)?.isDialog
 
             if (!room) {
                 return <span className="text-muted-foreground italic">—</span>
@@ -207,9 +238,13 @@ export const activitiesColumns: CustomColumnDef<Activity>[] = [
             return (
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded border border-border flex-shrink-0" style={{ backgroundColor: room.color }} />
-                    <Link to={`/rooms/${room.roomId}`} className="font-medium hover:underline">
-                        {room.name}
-                    </Link>
+                    {isDialog ? (
+                        <span className="font-semibold text-foreground">{room.name}</span>
+                    ) : (
+                        <Link to={`/rooms/${room.roomId}`} className="font-medium hover:underline">
+                            {room.name}
+                        </Link>
+                    )}
                 </div>
             )
         },

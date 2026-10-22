@@ -155,7 +155,11 @@ export default function GamesEditPage() {
             accessorKey: "description",
             header: "Опис",
             size: 50,
-            cell: ({ row }) => row.original.description || "—",
+            cell: ({ row }) => {
+                const desc = row.original.description || ""
+                if (!desc) return <span className="text-muted-foreground">—</span>
+                return desc.length > 50 ? desc.substring(0, 50) + "..." : desc
+            },
         },
         {
             id: "actions",
@@ -182,7 +186,7 @@ export default function GamesEditPage() {
                     { label: "Редагування", path: `/games/${id}` },
                 ]}
             >
-                <div className="container mx-auto py-10 max-w-2xl">
+                <div className="p-10">
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin" />
                     </div>
@@ -202,27 +206,21 @@ export default function GamesEditPage() {
                 { label: game.name, path: `/games/${id}` },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-4xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">{game.name}</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть назву та опис ігрової системи</p>
-                </div>
+            <div>
+                <GameForm
+                    mode="edit"
+                    initialData={game}
+                    onSubmit={handleSubmit}
+                    onCancel={handleCancel}
+                    isLoading={isLoading}
+                    title={game.name}
+                />
 
-                <div className="bg-card border rounded-lg p-6 mb-8">
-                    <GameForm
-                        mode="edit"
-                        initialData={game}
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancel}
-                        isLoading={isLoading}
-                    />
-                </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="border-t border-[rgba(201,158,58,.14)] px-8 py-[30px]">
+                    <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
-                            <h2 className="text-2xl font-bold">Варіанти правил</h2>
-                            <p className="text-muted-foreground mt-1">Редакції, системи або правила цієї гри</p>
+                            <h2 className="font-heading text-[24px] leading-none font-semibold uppercase tracking-[.06em]">Варіанти правил</h2>
+                            <p className="text-foreground/55 mt-2 text-[14px]">Редакції, системи або правила цієї гри</p>
                         </div>
                         <Button className="cursor-pointer" onClick={handleCreateSystem}>
                             <Plus className="h-4 w-4 mr-2" />

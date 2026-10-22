@@ -1,7 +1,7 @@
 export interface CartItem {
     id: string;
     entityId: string;
-    type: "activity" | "product";
+    type: "activity" | "product" | "donation";
     quantity: number;
     unitPrice: number;
     lineTotal: number;
@@ -14,6 +14,22 @@ export interface CartItem {
     } | null;
     pointsEarned?: number;
     inventory?: number;
+    donation?: DonationDetails;
+}
+
+export interface DonationDetails {
+    /** Admin-entered name, without the "Донат: " prefix. */
+    label: string;
+    pointsPercent: number;
+    activityId?: string;
+    activityName?: string;
+}
+
+export interface DonationPayload {
+    label: string;
+    amount: number;
+    pointsPercent: number;
+    activityId?: string | null;
 }
 
 export interface PromoState {

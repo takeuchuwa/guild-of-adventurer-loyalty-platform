@@ -126,7 +126,7 @@ export function ProductSelectionDialog({
                                     }`}
                             >
                                 <div
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep === step.id
+                                    className={`w-6 h-6 flex items-center justify-center text-sm font-semibold ${currentStep === step.id
                                         ? "bg-primary text-primary-foreground"
                                         : step.enabled
                                             ? "bg-muted"
@@ -153,6 +153,7 @@ export function ProductSelectionDialog({
                                 onSelectionChange={handleProductSelection}
                                 initialSelection={initialProductIds}
                                 pageSize={5}
+                                meta={{ isDialog: true }}
                             />
                         </div>
                     )}
@@ -167,7 +168,7 @@ export function ProductSelectionDialog({
                             <div className="space-y-2">
                                 {Array.from(selectedProducts.values()).map((product) => (
                                     <div key={product.productId} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                        <div className="w-5 h-5 bg-primary flex items-center justify-center">
                                             <Check className="w-3 h-3 text-primary-foreground" />
                                         </div>
                                         <div className="flex-1">

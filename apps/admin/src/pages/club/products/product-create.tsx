@@ -33,7 +33,7 @@ export default function ProductCreatePage() {
                 name: data.name,
                 price: data.price,
                 sku: data.sku || undefined,
-                overridePoints: data.overridePoints === null ? undefined : data.overridePoints,
+                overridePoints: data.overridePoints,
                 categoryIds: data.categoryIds,
                 inventory: data.inventory,
             })
@@ -68,23 +68,14 @@ export default function ProductCreatePage() {
                 { label: "Створити товар", path: "/products/create" },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-2xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Створити товар</h1>
-                    <p className="text-muted-foreground mt-2">Заповніть форму для створення нового товару</p>
-                </div>
-
-                <div className="bg-card border rounded-lg p-6">
-                    <ProductForm
-                        mode="create"
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancel}
-                        isLoading={isLoading}
-                        initialData={initialData}
-                        showCreateAndAdd={returnTo === "checkout"}
-                    />
-                </div>
-            </div>
+            <ProductForm
+                mode="create"
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isLoading={isLoading}
+                initialData={initialData}
+                showCreateAndAdd={returnTo === "checkout"}
+            />
         </Layout>
     )
 }

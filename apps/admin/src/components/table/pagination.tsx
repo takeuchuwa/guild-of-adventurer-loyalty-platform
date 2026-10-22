@@ -1,4 +1,3 @@
-import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { ChevronLeft, ChevronRight, Calculator, Loader2 } from "lucide-react";
@@ -20,6 +19,7 @@ interface TablePaginationProps {
     total?: number;
 }
 
+/** The mono footer strip that closes the table frame. */
 export function TablePagination({ pagination, onPaginationChange, sizes, hasNextPage = false, onCalculateTotal, total }: TablePaginationProps) {
     const [isCalculating, setIsCalculating] = useState(false);
 
@@ -34,68 +34,73 @@ export function TablePagination({ pagination, onPaginationChange, sizes, hasNext
         }
     };
 
+    const pageCount = total !== undefined && pagination.pageSize > 0
+        ? Math.max(1, Math.ceil(total / pagination.pageSize))
+        : undefined;
+
     return (
-        <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 text-sm">
-            <div className="text-muted-foreground flex items-center space-x-4">
+        <div className="bg-surface-alt text-foreground/55 border-hairline flex min-h-[52px] flex-wrap items-center justify-between gap-3 border-t px-4 py-2 text-[13px]">
+            <div className="flex items-center gap-4">
                 {total !== undefined ? (
-                    <span>Всього: {total}</span>
+                    <span>Всього: <span className="text-accent-bright font-mono font-medium">{total}</span></span>
                 ) : onCalculateTotal ? (
                     <Button
-                        variant="outline"
+                        variant="ghostOutline"
                         size="sm"
                         onClick={handleCalculate}
                         disabled={isCalculating}
-                        className="h-8 shadow-sm flex items-center bg-background cursor-pointer"
+                        className="h-7 cursor-pointer px-0 text-[12px] tracking-[.06em]"
                     >
-                        {isCalculating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Calculator className="h-4 w-4 mr-2" />}
+                        {isCalculating ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Calculator className="mr-2 h-3.5 w-3.5" />}
                         Порахувати всього
                     </Button>
                 ) : null}
             </div>
 
-            <div className="flex items-center space-x-4">
-                <Pagination className="w-auto pr-4">
-                    <PaginationContent className="gap-4">
-                        <PaginationItem>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8 cursor-pointer"
-                                disabled={pagination.pageIndex === 0}
-                                onClick={() => onPaginationChange(prev => ({ ...prev, pageIndex: Math.max(0, prev.pageIndex - 1) }))}
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                        </PaginationItem>
-                        <span className="w-24 text-center">Сторінка {pagination.pageIndex + 1}</span>
-                        <PaginationItem>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-8 w-8 cursor-pointer"
-                                disabled={!hasNextPage}
-                                onClick={() => onPaginationChange(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-                <div className="flex items-center space-x-2">
-                    <Label className="font-normal" htmlFor="page-size-trigger">Рядків на сторінці:</Label>
+            <div className="flex flex-wrap items-center gap-5">
+                <div className="flex items-center gap-2">
+                    <Label variant="inline" className="text-[13px] font-normal text-foreground/55" htmlFor="page-size-trigger">
+                        Рядків на сторінці:
+                    </Label>
                     <Select
                         value={pagination.pageSize.toString()}
                         onValueChange={(value) => onPaginationChange(prev => ({ ...prev, pageSize: parseInt(value, 10), pageIndex: 0 }))}
                     >
-                        <SelectTrigger id="page-size-trigger" className="h-8 w-[4.5rem] cursor-pointer">
+                        <SelectTrigger id="page-size-trigger" size="sm" className="h-7 w-[4.25rem] cursor-pointer border-[rgba(237,230,216,.15)] bg-transparent px-2.5 font-mono text-[12px]">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent side="top">
                             {sizes.map((size) => (
-                                <SelectItem key={size} value={size.toString()} className="cursor-pointer">{size}</SelectItem>
+                                <SelectItem key={size} value={size.toString()} className="cursor-pointer font-mono">{size}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+
+                <span>
+                    Сторінка <span className="text-foreground/80 font-mono font-medium">{pagination.pageIndex + 1}</span>
+                    {pageCount !== undefined ? <> з <span className="font-mono">{pageCount}</span></> : null}
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                    <Button
+                        variant="outline"
+                        size="icon-sm"
+                        className="h-7 w-[30px] cursor-pointer border-[rgba(237,230,216,.15)]"
+                        disabled={pagination.pageIndex === 0}
+                        onClick={() => onPaginationChange(prev => ({ ...prev, pageIndex: Math.max(0, prev.pageIndex - 1) }))}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon-sm"
+                        className="text-primary h-7 w-[30px] cursor-pointer border-[rgba(201,158,58,.5)]"
+                        disabled={!hasNextPage}
+                        onClick={() => onPaginationChange(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
         </div>

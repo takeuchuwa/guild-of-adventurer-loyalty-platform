@@ -56,6 +56,7 @@ export function PointsLedgerTable({ memberId, onLoadLedger }: PointsLedgerTableP
     return (
         <DataTable
             title="Історія балів"
+            titleVariant="section"
             columns={pointsLedgerColumns}
             data={entries}
             pagination={{

@@ -23,7 +23,7 @@ export function PointsAdjustmentWarningDialog({ open, onOpenChange, onConfirm }:
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+                        <div className="flex h-10 w-10 items-center justify-center bg-destructive/10">
                             <AlertTriangle className="h-5 w-5 text-destructive" />
                         </div>
                         <DialogTitle>Попередження про зміну балів</DialogTitle>
@@ -31,7 +31,7 @@ export function PointsAdjustmentWarningDialog({ open, onOpenChange, onConfirm }:
                 </DialogHeader>
                 <DialogDescription className="space-y-3 text-base">
                     <p>
-                        Ручна зміна балів може вплинути на рівень авантюриста. Використовуйте лише у виняткових випадках.
+                        Ручна зміна балів може вплинути на рівень підкорювача. Використовуйте лише у виняткових випадках.
                     </p>
                     <p className="font-semibold text-foreground">Прийнятні причини для коригування:</p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground">

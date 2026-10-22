@@ -25,7 +25,10 @@ interface MembersTableProps {
   initialSelection?: string[]
   pageSize?: number
   storageKey?: string
+  meta?: Record<string, any>
 }
+
+const EMPTY_FILTER_PARAMS: Record<string, any> = {}
 
 export function MemberTable({
   columns,
@@ -34,13 +37,14 @@ export function MemberTable({
   emptyStateMessage = "Не знайдено учасників за вашим запитом",
   actions = [],
   filters = [],
-  filterParams = {},
+  filterParams = EMPTY_FILTER_PARAMS,
   searchPlaceholder,
   onLoadMembersRef,
   onSelectionChange,
   initialSelection,
   pageSize = 10,
   storageKey,
+  meta,
 }: MembersTableProps) {
   const [members, setMembers] = useState<Member[]>([])
   const [totalElements, setTotalElements] = useState(0)
@@ -152,6 +156,7 @@ export function MemberTable({
         searchProps.onSimpleSearch(query);
         resetCursors();
       }}
+      meta={meta}
     />
   )
 }

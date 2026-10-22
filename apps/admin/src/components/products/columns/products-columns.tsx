@@ -1,7 +1,7 @@
 import type {CustomColumnDef} from "@/types/table"
 import type {Product} from "@/components/products/types/product"
 import {categoryKindMap} from "@/components/categories/columns/category-columns.tsx";
-import {PackageIcon} from "lucide-react";
+import {PackageIcon, ExternalLink} from "lucide-react";
 import type {Category} from "@/components/categories/types/category-types.tsx";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
@@ -12,7 +12,25 @@ export const productsColumns: CustomColumnDef<Product>[] = [
         id: "name",
         header: "Назва",
         accessorKey: "name",
-        cell: ({row}) => {
+        cell: ({row, table}) => {
+            const isDialog = (table.options.meta as any)?.isDialog
+            if (isDialog) {
+                return (
+                    <div className="flex items-center gap-1.5">
+                        <span className="font-semibold">{row.original.name}</span>
+                        <a
+                            href={`/products/${row.original.productId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors p-0.5"
+                            data-no-select="true"
+                            title="Відкрити сторінку товару в новій вкладці"
+                        >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                    </div>
+                )
+            }
             return (
                 <Link to={`/products/${row.original.productId}`} className="font-semibold hover:underline">
                     {row.original.name}
@@ -63,7 +81,7 @@ export const productsColumns: CustomColumnDef<Product>[] = [
 
             if (inventory === -1) {
                 return (
-                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-medium">
+                    <Badge variant="secondary" className="bg-[rgba(201,158,58,.07)] text-accent-bright border-[rgba(201,158,58,.35)] font-medium">
                         Необмежено
                     </Badge>
                 )

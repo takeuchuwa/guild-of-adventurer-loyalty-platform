@@ -28,11 +28,12 @@ interface ActivitiesTableProps {
     initialSelection?: string[]
     pageSize?: number
     storageKey?: string
+    meta?: Record<string, any>
 }
 
 export function ActivityTable({
     columns,
-    selectionMode = "single",
+    selectionMode = "multiple",
     title,
     emptyStateMessage = "Не знайдено активностей за вашим запитом",
     actions = [],
@@ -44,6 +45,7 @@ export function ActivityTable({
     initialSelection,
     pageSize = 10,
     storageKey,
+    meta,
 }: ActivitiesTableProps) {
     const [activities, setActivities] = useState<Activity[]>([])
     const [totalElements, setTotalElements] = useState(0)
@@ -97,6 +99,11 @@ export function ActivityTable({
         }
     }, [loadActivities, onLoadActivitiesRef])
 
+    const onSelectionChangeRef = useRef(onSelectionChange)
+    useEffect(() => {
+        onSelectionChangeRef.current = onSelectionChange
+    }, [onSelectionChange])
+
     // Notify parent about selection changes (cross-page tracking)
     useEffect(() => {
         if (activities.length > 0) {
@@ -109,11 +116,11 @@ export function ActivityTable({
                 }
             })
 
-            if (onSelectionChange) {
-                onSelectionChange(new Map(allSelectedActivities.current))
+            if (onSelectionChangeRef.current) {
+                onSelectionChangeRef.current(new Map(allSelectedActivities.current))
             }
         }
-    }, [rowSelection, activities, onSelectionChange])
+    }, [rowSelection, activities])
 
     useEffect(() => {
         allSelectedActivities.current.clear()
@@ -151,6 +158,7 @@ export function ActivityTable({
                 searchProps.onSimpleSearch(query);
                 resetCursors();
             }}
+            meta={meta}
         />
     )
 }

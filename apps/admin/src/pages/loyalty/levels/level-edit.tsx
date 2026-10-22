@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { fetchLevel, updateLevel } from "@/components/levels/api/level-api.ts"
 import { toast } from "sonner"
+import { refreshLevels } from "@/hooks/use-levels"
 import type { Level, LevelFormData } from "@/components/levels/types/level-types.tsx"
 import { Loader2 } from "lucide-react"
 import { PromotionsTable } from "@/components/promotions/promotions-table.tsx"
@@ -43,6 +44,7 @@ export default function LevelEditPage() {
         setIsLoading(true)
         try {
             await updateLevel(id, data)
+            await refreshLevels().catch(() => { })
             toast.success("Рівень успішно оновлено")
             navigate("/levels")
         } catch (error) {
@@ -61,7 +63,7 @@ export default function LevelEditPage() {
     if (loading) {
         return (
             <Layout breadcrumbs={[{ label: "Рівні", path: "/levels" }]}>
-                <div className="container mx-auto py-10 flex justify-center">
+                <div className="flex justify-center p-10">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             </Layout>
@@ -79,24 +81,17 @@ export default function LevelEditPage() {
                 { label: level.name, path: `/levels/${id}` },
             ]}
         >
-            <div className="container mx-auto py-10 max-w-7xl">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Редагувати рівень</h1>
-                    <p className="text-muted-foreground mt-2">Оновіть інформацію про рівень лояльності</p>
-                </div>
+            <div>
+                <LevelForm
+                    mode="edit"
+                    initialData={level}
+                    onSubmit={handleSubmit}
+                    onCancel={handleCancel}
+                    isLoading={isLoading}
+                />
 
-                <div className="bg-card border rounded-lg p-6">
-                    <LevelForm
-                        mode="edit"
-                        initialData={level}
-                        onSubmit={handleSubmit}
-                        onCancel={handleCancel}
-                        isLoading={isLoading}
-                    />
-                </div>
-
-                <div className="bg-card border rounded-lg p-6 mt-6">
-                    <h2 className="text-xl font-semibold mb-4">Промоакції рівня</h2>
+                <div className="border-t border-[rgba(201,158,58,.14)] px-8 py-[30px]">
+                    <h2 className="font-heading mb-5 text-[24px] leading-none font-semibold uppercase tracking-[.06em]">Промоакції рівня</h2>
                     <PromotionsTable
                         columns={promotionsColumns}
                         staticData={(level as any).promotions || []}

@@ -25,10 +25,16 @@ function App() {
     window.history.replaceState({}, "", url)
   }, [activeTab])
 
-  // Global Ripple Effect
+  // Global tap feedback: a soft translucent gold wash that fades in and out
+  // (replaces the old ripple; kept subtle so it never flashes bright/white).
   useEffect(() => {
+    const TAP_MS = 120
+    const FADE_OUT_MS = 160
+    const ACTIVE_OPACITY = 0.18
+    const MOVE_THRESHOLD = 10
+
     const handlePointerDown = (e: PointerEvent) => {
-      let target = (e.target as HTMLElement).closest<HTMLElement>(".glass-card, [data-ripple]")
+      let target = (e.target as HTMLElement).closest<HTMLElement>(".glass-card, [data-tap]")
       if (!target) {
         target = (e.target as HTMLElement).closest<HTMLElement>("button")
       }
@@ -42,75 +48,45 @@ function App() {
         target.style.overflow = "hidden"
       }
 
-      const rect = target.getBoundingClientRect()
-      const size = Math.sqrt(rect.width * rect.width + rect.height * rect.height) * 2;
-      const x = e.clientX - rect.left - size / 2
-      const y = e.clientY - rect.top - size / 2
-
-      const ripple = document.createElement("span")
-      ripple.className = "ripple-effect"
-      ripple.style.width = ripple.style.height = `${size}px`
-      ripple.style.left = `${x}px`
-      ripple.style.top = `${y}px`
+      const overlay = document.createElement("span")
+      overlay.className = "tap-invert"
+      target.appendChild(overlay)
+      requestAnimationFrame(() => {
+        overlay.style.opacity = String(ACTIVE_OPACITY)
+      })
 
       let isRemoved = false
-      let isAppended = false
-
-      const removeRipple = () => {
-        if (!isRemoved) {
-          isRemoved = true
-          if (isAppended && ripple.parentNode === target) {
-            target.removeChild(ripple)
+      const removeOverlay = () => {
+        if (isRemoved) return
+        isRemoved = true
+        overlay.style.opacity = "0"
+        setTimeout(() => {
+          if (overlay.parentNode === target) {
+            target.removeChild(overlay)
           }
-        }
+        }, FADE_OUT_MS)
+        cleanup()
       }
-
-      const appendTimeout = setTimeout(() => {
-        if (!isRemoved) {
-          target.appendChild(ripple)
-          isAppended = true
-        }
-      }, 75)
 
       const handlePointerMove = (moveEv: PointerEvent) => {
         const dx = Math.abs(moveEv.clientX - e.clientX)
         const dy = Math.abs(moveEv.clientY - e.clientY)
-        if (dx > 10 || dy > 10) {
-          clearTimeout(appendTimeout)
-          removeRipple()
-          cleanup()
+        if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
+          removeOverlay()
         }
-      }
-
-      const handlePointerUp = () => {
-        if (!isRemoved && !isAppended) {
-          clearTimeout(appendTimeout)
-          target.appendChild(ripple)
-          isAppended = true
-        }
-        cleanup()
-      }
-
-      const cleanupCancel = () => {
-        clearTimeout(appendTimeout)
-        removeRipple()
-        cleanup()
       }
 
       const cleanup = () => {
         document.removeEventListener("pointermove", handlePointerMove)
-        document.removeEventListener("pointerup", handlePointerUp)
-        document.removeEventListener("pointercancel", cleanupCancel)
+        document.removeEventListener("pointerup", removeOverlay)
+        document.removeEventListener("pointercancel", removeOverlay)
       }
 
       document.addEventListener("pointermove", handlePointerMove)
-      document.addEventListener("pointerup", handlePointerUp)
-      document.addEventListener("pointercancel", cleanupCancel)
+      document.addEventListener("pointerup", removeOverlay)
+      document.addEventListener("pointercancel", removeOverlay)
 
-      setTimeout(() => {
-        removeRipple()
-        cleanup()
-      }, 1200)
+      setTimeout(removeOverlay, TAP_MS)
     }
 
     document.addEventListener("pointerdown", handlePointerDown)

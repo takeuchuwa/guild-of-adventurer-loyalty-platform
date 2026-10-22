@@ -1,6 +1,7 @@
 import { inArray, eq, or, and, isNull, lte, gte } from "drizzle-orm"
 import { activities, products, promotions, promotionAssignments, levelPromotions, entityCategories, games, members, memberPromotionUsages } from "@loyalty/db/schema"
 import type { CartState, CartItem } from "./types"
+import { donationPoints } from "./donation"
 
 /**
  * Main calculation engine for the cart. 
@@ -56,7 +57,7 @@ export async function calculateCartState(cart: CartState, db: any): Promise<Cart
 async function hydrateItemPricesAndCategories(items: CartItem[], db: any): Promise<Map<string, string[]>> {
     const activityIds = items.filter(i => i.type === "activity").map(i => i.entityId);
     const productIds = items.filter(i => i.type === "product").map(i => i.entityId);
-    const allItemIds = items.map(i => i.entityId);
+    const allItemIds = items.filter(i => i.type !== "donation").map(i => i.entityId);
 
     const [liveActivities, liveProducts, itemCategoriesData] = await Promise.all([
         activityIds.length > 0
@@ -89,6 +90,12 @@ async function hydrateItemPricesAndCategories(items: CartItem[], db: any): Promi
     const productPriceMap = new Map(liveProducts.map((p: any) => [p.id, p]));
 
     items.forEach(item => {
+        // Donations have no DB entity — the admin-entered amount and percent are the source of truth.
+        if (item.type === "donation") {
+            item.pointsEarned = donationPoints(item.unitPrice, item.donation?.pointsPercent ?? 0);
+            return;
+        }
+
         const liveData: any = item.type === "activity" ? activityPriceMap.get(item.entityId) : productPriceMap.get(item.entityId);
         if (liveData !== undefined && liveData !== null) {
             item.unitPrice = liveData.price;
@@ -276,6 +283,16 @@ function applyPromotionsToCart(cart: CartState, eligiblePromos: any[], itemCateg
     const newlyAppliedPromos: { id: string, name: string, bonusPoints?: number }[] = [];
     let nonCombinableApplied = false;
 
+    // Donations stay outside the promo engine: they are never discounted, never multiplied,
+    // and never count towards cart conditions. A donation-only cart gets no promos at all,
+    // otherwise an unconditional cart-wide bonus would fire on a bare donation.
+    const promoItems = cart.items.filter(item => item.type !== "donation");
+    if (promoItems.length === 0) {
+        cart.appliedPromos = [];
+        return;
+    }
+    const promoSubtotal = promoItems.reduce((sum, item) => sum + item.lineTotal, 0);
+
     for (const promo of eligiblePromos) {
         // If we've already applied a non-combinable promo, we can only apply combinable ones
         if (nonCombinableApplied && !promo.combinable) {
@@ -290,13 +307,13 @@ function applyPromotionsToCart(cart: CartState, eligiblePromos: any[], itemCateg
         }
 
         if (config.conditions?.cartConditions?.cart_total) {
-            if (cart.totals.subtotal < config.conditions.cartConditions.cart_total) {
+            if (promoSubtotal < config.conditions.cartConditions.cart_total) {
                 continue;
             }
         }
 
         if (config.conditions?.cartConditions?.cart_item_count) {
-            const totalItems = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+            const totalItems = promoItems.reduce((acc, item) => acc + item.quantity, 0);
             if (totalItems < config.conditions.cartConditions.cart_item_count) {
                 continue;
             }
@@ -361,7 +378,7 @@ function applyPromotionsToCart(cart: CartState, eligiblePromos: any[], itemCateg
         }
 
         if (config.conditions?.itemConditions) {
-            const passed = evaluateItemConditions(cart.items, config.conditions.itemConditions, itemCategoriesMap);
+            const passed = evaluateItemConditions(promoItems, config.conditions.itemConditions, itemCategoriesMap);
             if (!passed) continue;
         }
 
@@ -429,6 +446,8 @@ function applyPromotionsToCart(cart: CartState, eligiblePromos: any[], itemCateg
  * Evaluates filters and target entities to determine if an item is eligible for a given promo.
  */
 function isItemEligibleForPromo(item: CartItem, itemCategories: string[], config: any): boolean {
+    if (item.type === "donation") return false;
+
     const filters = config.filter || {};
     if (item.type === "product" && filters.excludeProducts?.includes(item.entityId)) return false;
     if (item.type === "activity" && filters.excludeActivities?.includes(item.entityId)) return false;
